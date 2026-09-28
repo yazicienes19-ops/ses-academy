@@ -4,6 +4,7 @@ import Link from "next/link";
 import { statusListe, useHeute, type Status } from "./status";
 import type { Modul } from "@/i18n/daten";
 import type { Texte } from "@/i18n/typ";
+import { Pfeil } from "./Pfeil";
 
 /** Vom Server vorbereitete, sprachspezifische Moduldaten. */
 export type Eintrag = Modul & { titel: string; datum: string; ortText: string; artText: string; href: string; teaser: string };
@@ -41,7 +42,7 @@ export function Naechstes({ eintraege, t }: { eintraege: Eintrag[]; t: Texte }) 
               <p className="mt-2 text-ink-soft">{m.ortText}</p>
             </div>
             <Link href={m.href} className="self-start rounded-full bg-signal px-7 py-4 font-semibold text-ink transition hover:bg-paper">
-              {t.naechstes.mehr} →
+              {t.naechstes.mehr} <Pfeil className="ml-1.5" />
             </Link>
           </div>
         </div>
@@ -80,7 +81,7 @@ export function ProgrammListe({ eintraege, t }: { eintraege: Eintrag[]; t: Texte
                   {m.datum} · {m.ortText}
                 </p>
               </div>
-              <span className="text-sm font-semibold whitespace-nowrap underline-offset-4 group-hover:underline">{t.programm.details} →</span>
+              <span className="text-sm font-semibold whitespace-nowrap underline-offset-4 group-hover:underline">{t.programm.details} <Pfeil className="ml-1" /></span>
             </Link>
           </li>
         );
@@ -94,7 +95,7 @@ export function ProgrammListe({ eintraege, t }: { eintraege: Eintrag[]; t: Texte
 }
 
 /** Sticker im Hero: nächstes Modul mit Datum – wechselt automatisch nach jedem Modul. */
-export function NaechstesSticker({ eintraege, kicker, kurzDaten }: { eintraege: Eintrag[]; kicker: string; kurzDaten: string[] }) {
+export function NaechstesSticker({ eintraege, kicker, kurzDaten, inKoeln }: { eintraege: Eintrag[]; kicker: string; kurzDaten: string[]; inKoeln: string }) {
   const status = useStatus(eintraege);
   const i = status.indexOf("naechstes");
   if (i < 0) return null;
@@ -108,7 +109,7 @@ export function NaechstesSticker({ eintraege, kicker, kurzDaten }: { eintraege: 
         {kicker} · {m.artText}
       </span>
       <span className="font-display block text-3xl leading-none font-extrabold">{kurzDaten[i]}</span>
-      <span className="block text-xs font-semibold">{m.ort ? m.ort.split(",").pop()!.replace(/\d+/g, "").trim() : ""} →</span>
+      {m.ort?.includes("Köln") && <span className="block text-xs font-semibold">{inKoeln}</span>}
     </Link>
   );
 }

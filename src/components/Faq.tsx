@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import type { Texte } from "@/i18n/typ";
+import { Pfeil } from "./Pfeil";
 
 export function Faq({ t }: { t: Texte["faq"] }) {
   const [suche, setSuche] = useState("");
@@ -44,7 +45,7 @@ export function Faq({ t }: { t: Texte["faq"] }) {
                 <ul className="space-y-1.5 pl-1">
                   {f.punkte.map((p) => (
                     <li key={p} className="flex gap-3">
-                      <span className="text-sage" aria-hidden>→</span>
+                      <Pfeil className="mt-[0.3em] text-sage" />
                       {p}
                     </li>
                   ))}

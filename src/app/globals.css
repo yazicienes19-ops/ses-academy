@@ -115,3 +115,11 @@ h1, h2, h3 {
 .ohne-trennung {
   hyphens: manual !important;
 }
+
+/* Pfeile gleiten beim Hover in ihre Richtung */
+.pfeil { transition: transform 0.25s ease; }
+a:hover .pfeil-rechts, button:hover .pfeil-rechts { transform: translateX(3px); }
+a:hover .pfeil-links, button:hover .pfeil-links { transform: translateX(-3px); }
+a:hover .pfeil-runter, button:hover .pfeil-runter { transform: translateY(3px); }
+a:hover .pfeil-extern, button:hover .pfeil-extern { transform: translate(2px, -2px); }
+@media (prefers-reduced-motion: reduce) { .pfeil { transition: none; } }

@@ -52,7 +52,7 @@ export type Texte = {
   };
   laufband: string[];
   bewerbung: { titel: string; text: string; cta: string };
-  naechstes: { kicker: string; mehr: string };
+  naechstes: { kicker: string; mehr: string; inKoeln: string };
   programm: {
     kicker: string;
     titel: string;

@@ -33,7 +33,7 @@ export const nl: Texte = {
     text: "De aanmelding sloot op 15 januari 2026. Wil je op de hoogte blijven van toekomstige lichtingen? Schrijf ons.",
     cta: "ses@islamrat.de",
   },
-  naechstes: { kicker: "Hierna", mehr: "Meer informatie" },
+  naechstes: { kicker: "Hierna", mehr: "Meer informatie", inKoeln: "in Keulen" },
   programm: {
     kicker: "Kalender van dit traject",
     titel: "Het programma",

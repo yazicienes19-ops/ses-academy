@@ -33,7 +33,7 @@ export const de: Texte = {
     text: "Die Bewerbungsphase endete am 15. Januar 2026. Du willst über künftige Jahrgänge informiert werden? Schreib uns.",
     cta: "ses@islamrat.de",
   },
-  naechstes: { kicker: "Als Nächstes", mehr: "Mehr erfahren" },
+  naechstes: { kicker: "Als Nächstes", mehr: "Mehr erfahren", inKoeln: "in Köln" },
   programm: {
     kicker: "Veranstaltungsplan",
     titel: "Das Programm",

@@ -8,6 +8,7 @@ import { Faq } from "./Faq";
 import { Naechstes, NaechstesSticker, ProgrammListe, type Eintrag } from "./Programm";
 import { fotos, gaeste, modulplan } from "@/i18n/daten";
 import { locale, pfad, sprachen, texte, zeitraum, zeitraumKurz, type ModulSlug, type Sprache, type Texte } from "@/i18n";
+import { Pfeil } from "./Pfeil";
 
 const SITE = "https://ses.islamrat.de";
 
@@ -83,11 +84,7 @@ export function Startseite({ l }: { l: Sprache }) {
       <section>
         <div className="mx-auto grid max-w-7xl gap-10 px-4 pt-8 pb-14 sm:px-6 sm:pt-14 lg:grid-cols-[1.15fr_1fr] lg:items-center lg:gap-14 lg:px-10 lg:pb-20">
           <div>
-            <p className="inline-flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-xs font-semibold tracking-wide text-paper">
-              <span className="h-1.5 w-1.5 rounded-full bg-signal" aria-hidden />
-              {h.kicker}
-            </p>
-            <h1 className="ohne-trennung font-display mt-7 text-[clamp(3.1rem,6.2vw,5rem)] leading-[0.88] font-extrabold">
+            <h1 className="ohne-trennung font-display text-[clamp(3.1rem,6.2vw,5rem)] leading-[0.88] font-extrabold">
               <span className="sr-only">SES Academy – </span>
               {h.zeilen[0]}
               <br />
@@ -99,7 +96,7 @@ export function Startseite({ l }: { l: Sprache }) {
             <p className="mt-4 max-w-xl text-lg text-ink-soft">{h.intro}</p>
             <div className="mt-8 flex flex-wrap gap-3">
               <a href={pfad(l, "/bewerbung/")} className="rounded-full bg-ink px-7 py-4 font-semibold text-paper transition hover:bg-forest">
-                {t.bewerbungSeite.nav} →
+                {t.bewerbungSeite.nav} <Pfeil className="ml-1.5" />
               </a>
               <a href="#programm" className="rounded-full px-7 py-4 font-semibold ring-1 ring-ink/25 transition hover:bg-paper-deep">
                 {h.ctaProgramm}
@@ -116,6 +113,7 @@ export function Startseite({ l }: { l: Sprache }) {
             <NaechstesSticker
               eintraege={e}
               kicker={t.naechstes.kicker}
+              inKoeln={t.naechstes.inKoeln}
               kurzDaten={modulplan.map((m) => zeitraumKurz(l, m.von, m.bis))}
             />
           </div>
@@ -261,7 +259,7 @@ export function Startseite({ l }: { l: Sprache }) {
                         <p className="text-sm text-ink-soft">{m.datum}</p>
                         <p className="font-display mt-2 text-xl leading-tight font-bold">{m.titel}</p>
                         <p className="mt-auto pt-5 text-sm font-semibold">
-                          {t.berichte.module[m.slug] ? `${t.berichte.kicker} →` : t.berichte.folgt}
+                          {t.berichte.module[m.slug] ? <>{t.berichte.kicker} <Pfeil className="ml-1" /></> : t.berichte.folgt}
                         </p>
                       </div>
                     </Link>
@@ -303,7 +301,7 @@ function Kontakt({ l, t }: { l: Sprache; t: Texte }) {
             <strong className="text-paper">{t.bewerbung.titel}</strong> {t.bewerbungSeite.status}
           </p>
           <a href={pfad(l, "/bewerbung/")} className="mt-6 inline-block rounded-full px-6 py-3 font-semibold ring-1 ring-paper/30 transition hover:bg-paper hover:text-ink">
-            {t.bewerbungSeite.nav} →
+            {t.bewerbungSeite.nav} <Pfeil className="ml-1.5" />
           </a>
         </div>
         <a
@@ -314,7 +312,7 @@ function Kontakt({ l, t }: { l: Sprache; t: Texte }) {
             {t.kontakt.cta}
             <span className="mt-1 block font-sans text-base font-medium">ses@islamrat.de</span>
           </span>
-          <span className="transition-transform group-hover:translate-x-1" aria-hidden>→</span>
+          <Pfeil className="text-3xl" />
         </a>
       </div>
     </section>
@@ -335,7 +333,7 @@ export function Seminarseite({ l, slug }: { l: Sprache; slug: ModulSlug }) {
       <article>
         <header className="mx-auto max-w-7xl px-4 pt-10 pb-12 sm:px-6 sm:pt-16 lg:px-10">
           <Link href={`${pfad(l)}#programm`} className="text-sm font-semibold text-ink-soft hover:text-ink">
-            ← {t.seminar.zurueck}
+            <Pfeil richtung="links" className="mr-1.5" />{t.seminar.zurueck}
           </Link>
           <p className="mt-10 w-fit rounded-full bg-ink px-4 py-1.5 text-xs font-semibold text-paper">
             {t.programm.modul} {String(i + 1).padStart(2, "0")} · {m.artText}
@@ -418,7 +416,7 @@ export function Seminarseite({ l, slug }: { l: Sprache; slug: ModulSlug }) {
         <nav className="mx-auto grid max-w-7xl gap-3 px-4 pb-24 sm:grid-cols-2 sm:px-6 lg:px-10" aria-label={t.programm.titel}>
           {vorher ? (
             <Link href={vorher.href} className="rounded-3xl bg-white/50 p-6 ring-1 ring-line hover:bg-white">
-              <p className="text-sm text-ink-soft">← {t.seminar.vorher}</p>
+              <p className="text-sm text-ink-soft"><Pfeil richtung="links" className="mr-1.5" />{t.seminar.vorher}</p>
               <p className="font-display mt-2 text-xl font-bold">{vorher.titel}</p>
             </Link>
           ) : (
@@ -426,7 +424,7 @@ export function Seminarseite({ l, slug }: { l: Sprache; slug: ModulSlug }) {
           )}
           {nachher && (
             <Link href={nachher.href} className="rounded-3xl bg-white/50 p-6 text-right ring-1 ring-line hover:bg-white">
-              <p className="text-sm text-ink-soft">{t.seminar.nachher} →</p>
+              <p className="text-sm text-ink-soft">{t.seminar.nachher}<Pfeil className="ml-1.5" /></p>
               <p className="font-display mt-2 text-xl font-bold">{nachher.titel}</p>
             </Link>
           )}
@@ -534,7 +532,7 @@ export function Beitragsseite({ l, slug }: { l: Sprache; slug: string }) {
   return (
     <article className="mx-auto max-w-3xl px-4 pt-10 pb-24 sm:px-6 sm:pt-16">
       <Link href={pfad(l, "/stimmen/")} className="text-sm font-semibold text-ink-soft hover:text-ink">
-        ← {t.zurueck}
+        <Pfeil richtung="links" className="mr-1.5" />{t.zurueck}
       </Link>
       <div className="mt-10 flex flex-wrap items-center gap-2 text-xs font-semibold">
         {k.muster && <span className="rounded-full bg-signal px-2.5 py-1 uppercase">{t.muster}</span>}
@@ -583,10 +581,10 @@ export function Presseseite({ l }: { l: Sprache }) {
         <p className="mt-8 max-w-2xl text-xl text-ink-soft">{p.intro}</p>
         <div className="mt-8 flex flex-wrap gap-3">
           <a href={`/presse/SES-Academy-${l}.pdf`} download className="rounded-full bg-ink px-7 py-4 font-semibold text-paper transition hover:bg-forest">
-            ↓ {p.onepager}
+            <Pfeil richtung="runter" className="mr-2" />{p.onepager}
           </a>
           <a href="/brand/ses-logo.png" download="SES-Academy-Logo.png" className="rounded-full px-7 py-4 font-semibold ring-1 ring-ink/25 transition hover:bg-paper-deep">
-            ↓ {p.logo}
+            <Pfeil richtung="runter" className="mr-2" />{p.logo}
           </a>
         </div>
       </section>
@@ -636,7 +634,7 @@ export function Presseseite({ l }: { l: Sprache }) {
                 <span className="relative block aspect-[4/3] overflow-hidden rounded-2xl bg-paper-deep">
                   <Image src={src} alt="" fill sizes="(min-width:768px) 25vw, 50vw" className="object-cover transition group-hover:scale-105" />
                 </span>
-                <span className="mt-2 block text-sm text-ink-soft">↓ {p.fotoCredit}</span>
+                <span className="mt-2 block text-sm text-ink-soft"><Pfeil richtung="runter" className="mr-1.5" />{p.fotoCredit}</span>
               </a>
             </li>
           ))}

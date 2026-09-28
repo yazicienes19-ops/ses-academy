@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { SprachMenue } from "./SprachWahl";
 import type { Sprache, Texte } from "@/i18n/typ";
+import { Pfeil } from "./Pfeil";
 
 type Props = {
   lang: Sprache;
@@ -86,7 +87,7 @@ export function Header({ lang, start, nav, bewerben, stimmen }: Props) {
           ))}
           <li>
             <a href={bewerben.href} className="font-display mt-2 block rounded-2xl bg-signal px-4 py-3 text-3xl font-bold">
-              {bewerben.label} →
+              {bewerben.label} <Pfeil className="ml-2" />
             </a>
           </li>
         </ul>

@@ -33,7 +33,7 @@ export const en: Texte = {
     text: "Applications closed on 15 January 2026. Want to hear about future cohorts? Write to us.",
     cta: "ses@islamrat.de",
   },
-  naechstes: { kicker: "Up next", mehr: "Learn more" },
+  naechstes: { kicker: "Up next", mehr: "Learn more", inKoeln: "in Cologne" },
   programm: {
     kicker: "Event schedule",
     titel: "The programme",

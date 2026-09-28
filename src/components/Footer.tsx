@@ -1,5 +1,6 @@
 import Image from "next/image";
 import type { Texte } from "@/i18n/typ";
+import { Pfeil } from "./Pfeil";
 
 export function Footer({ t, presse }: { t: Texte; presse: string }) {
   return (
@@ -26,9 +27,9 @@ export function Footer({ t, presse }: { t: Texte; presse: string }) {
           </div>
           <ul className="space-y-1 text-paper/85">
             <li><a href={presse} className="hover:text-signal">{t.presse.nav}</a></li>
-            <li><a href="https://www.islamrat.de/" className="hover:text-signal">{t.footer.islamrat} ↗</a></li>
-            <li><a href="https://www.islamrat.de/impressum/" className="hover:text-signal">{t.footer.impressum} ↗</a></li>
-            <li><a href="https://www.islamrat.de/disclaimer/" className="hover:text-signal">{t.footer.datenschutz} ↗</a></li>
+            <li><a href="https://www.islamrat.de/" className="hover:text-signal">{t.footer.islamrat} <Pfeil richtung="extern" className="ml-0.5 text-[0.8em]" /></a></li>
+            <li><a href="https://www.islamrat.de/impressum/" className="hover:text-signal">{t.footer.impressum} <Pfeil richtung="extern" className="ml-0.5 text-[0.8em]" /></a></li>
+            <li><a href="https://www.islamrat.de/disclaimer/" className="hover:text-signal">{t.footer.datenschutz} <Pfeil richtung="extern" className="ml-0.5 text-[0.8em]" /></a></li>
           </ul>
         </div>
 

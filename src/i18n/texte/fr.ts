@@ -33,7 +33,7 @@ export const fr: Texte = {
     text: "Les candidatures ont été clôturées le 15 janvier 2026. Tu veux être informé·e des prochaines promotions ? Écris-nous.",
     cta: "ses@islamrat.de",
   },
-  naechstes: { kicker: "Prochainement", mehr: "En savoir plus" },
+  naechstes: { kicker: "Prochainement", mehr: "En savoir plus", inKoeln: "à Cologne" },
   programm: {
     kicker: "Calendrier des rencontres",
     titel: "Le programme",

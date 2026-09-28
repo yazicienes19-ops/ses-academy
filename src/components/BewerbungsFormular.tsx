@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { Texte } from "@/i18n/typ";
+import { Pfeil } from "./Pfeil";
 
 const EMPFAENGER = "ses@islamrat.de";
 
@@ -106,7 +107,7 @@ export function BewerbungsFormular({ t }: { t: Texte["bewerbungSeite"] }) {
 
       <div className="sm:col-span-2">
         <button type="submit" className="w-full rounded-full bg-ink px-8 py-4 text-lg font-semibold text-paper transition hover:bg-forest sm:w-auto">
-          {t.senden} →
+          {t.senden} <Pfeil className="ml-2" />
         </button>
         <p className="mt-3 text-sm text-ink-soft" role="status">
           {gesendet ? t.danke : t.hinweis}

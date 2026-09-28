@@ -33,7 +33,7 @@ export const tr: Texte = {
     text: "Başvurular 15 Ocak 2026’da sona erdi. Gelecek dönemlerden haberdar olmak ister misin? Bize yaz.",
     cta: "ses@islamrat.de",
   },
-  naechstes: { kicker: "Sıradaki", mehr: "Daha fazla" },
+  naechstes: { kicker: "Sıradaki", mehr: "Daha fazla", inKoeln: "Köln’de" },
   programm: {
     kicker: "Etkinlik Takvimi",
     titel: "Program",
