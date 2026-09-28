@@ -3,17 +3,16 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { sprachen, sprachNamen, type Sprache, type Texte } from "@/i18n/typ";
+import { SprachMenue } from "./SprachWahl";
+import type { Sprache, Texte } from "@/i18n/typ";
 
 type Props = {
   lang: Sprache;
   start: string;
   nav: Texte["nav"];
-  /** Link auf dieselbe Seite in jeder Sprache */
-  alternativen: Record<Sprache, string>;
 };
 
-export function Header({ lang, start, nav, alternativen }: Props) {
+export function Header({ lang, start, nav }: Props) {
   const [offen, setOffen] = useState(false);
   const [gescrollt, setGescrollt] = useState(false);
 
@@ -31,27 +30,6 @@ export function Header({ lang, start, nav, alternativen }: Props) {
     { href: `${start}#faq`, label: nav.faq },
     { href: `${start}#kontakt`, label: nav.kontakt },
   ];
-
-  const sprachwahl = (
-    <ul className="flex items-center gap-1" aria-label="Sprache / Language">
-      {sprachen.map((s) => (
-        <li key={s}>
-          <a
-            href={alternativen[s]}
-            hrefLang={s}
-            lang={s}
-            title={sprachNamen[s]}
-            aria-current={s === lang ? "true" : undefined}
-            className={`block rounded-full px-2.5 py-1.5 text-xs font-bold tracking-wide uppercase transition-colors ${
-              s === lang ? "bg-ink text-paper" : "text-ink-soft hover:bg-paper-deep hover:text-ink"
-            }`}
-          >
-            {s}
-          </a>
-        </li>
-      ))}
-    </ul>
-  );
 
   return (
     <header
@@ -72,7 +50,9 @@ export function Header({ lang, start, nav, alternativen }: Props) {
           ))}
         </nav>
 
-        <div className="ml-auto hidden sm:block lg:ml-0">{sprachwahl}</div>
+        <div className="ml-auto lg:ml-0">
+          <SprachMenue lang={lang} />
+        </div>
 
         <button
           type="button"
@@ -99,7 +79,6 @@ export function Header({ lang, start, nav, alternativen }: Props) {
             </li>
           ))}
         </ul>
-        <div className="border-t border-line px-3 py-4 sm:hidden">{sprachwahl}</div>
       </nav>
     </header>
   );
