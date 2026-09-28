@@ -298,31 +298,11 @@ export const en: Texte = {
     "folgt": "Photos and a report on this module will follow soon.",
     "laut": "According to the programme",
     "module": {
-      "auftakt": {
-        "absaetze": [
-          "Around 200 young Muslims from various European countries came together in Cologne on 11 and 12 April 2026 for the launch of the SES Academy. After the opening by Burhan Kesici, chairman of the Islamrat, former Scottish First Minister Humza Yousaf gave the first keynote. This was followed by a welcome address by Kemal Ergün, a lecture by Prof. Dr. Mathias Rohe and video messages from Hubertus Heil and Prof. Jocelyne Cesari.",
-          "Three panels explored the lived realities of young Muslims in Europe, forms of political and social involvement, and religious identity and political participation. Prof. Mahmut Hakkı Akın presented a survey of 2,091 young people in nine countries: 63.5 per cent want politicians to seek closer contact with Muslims – yet only 29 per cent can imagine going into politics themselves.",
-          "The second day was dedicated to workshops and group work. Closing remarks were given by Murat Gümüş, Secretary General of the Islamrat."
-        ],
-        "zitate": [
-          {
-            "text": "Be yourselves.",
-            "wer": "Humza Yousaf"
-          },
-          {
-            "text": "The aim is to enable young Muslims to be informed, reflective and responsible actors in their societies.",
-            "wer": "Murat Gümüş (paraphrased, translated)"
-          },
-          {
-            "text": "Muslims are not a community on the margins.",
-            "wer": "Burhan Kesici (paraphrased, translated)"
-          }
-        ]
-      },
+      "auftakt": {"absaetze": ["Around 200 young women and men from various European countries came together in Cologne on 11 and 12 April 2026 for the launch of the SES Academy. Burhan Kesici, chairman of the Islamrat, opened the programme; former Scottish First Minister Humza Yousaf gave the first keynote. Kemal Ergün, chairman of the IGMG, and legal scholar Prof. Dr. Mathias Rohe also spoke. Hubertus Heil and Prof. Jocelyne Cesari sent video messages.", "Prof. Mahmut Hakkı Akın (Medeniyet University, Istanbul) presented a study among IGMG youth in nine European countries with 2,091 respondents. According to the study, 63.5 per cent think politicians should seek closer contact with Muslims – yet only 29 per cent can imagine going into politics themselves.", "Forums and panels explored the lived realities of young Muslims in Europe, paths to social and political participation, and Muslim identity in the public sphere. To close the first day, Oğuzhan Yazıcı (CDU) and Hakan Gördü (SÖZ) shared their experience of everyday politics. The second day was dedicated to workshops and group work; closing remarks were given by Murat Gümüş, Secretary General of the Islamrat."], "zitate": [{"text": "„keine Gemeinschaft am Rand“", "wer": "Burhan Kesici on Muslims in Europe", "quelle": "Opening speech, quoted verbatim (German) from IGMG and IslamiQ, 13/14 April 2026"}]},
       "verfassungen": {
         "absaetze": [
           "The second module on 13 and 14 June 2026 focused on Europe’s constitutions. The module was opened by Burhan Kesici, chairman of the Islamrat. The programme opened with a keynote by Farid Hafez (William & Mary, USA) on the history and current challenges of European constitutions, followed by panels with Hafez and Bünyamin Kalem (IGMG Youth) and with Dr. Mustafa Cerić, former Reis-ul-Ulema of Bosnia, and Büşra Çatal (IGMG Women’s Youth).",
-          "In the country groups, participants explored the topic for their own country – for France with lawyer Selda Can, for Germany with Jun.-Prof. Dr. Idris Nassery (Paderborn University). In the evening, the “Eğri Doğru” format – named after a Turkish saying about speaking openly and honestly – brought a conversation with Mehmet Daimagüler and Elif Zehra Kandemir. Sunday was dedicated to the workshop “Constitutional Advocacy”."
+          "According to the programme, participants then explored the topic in country groups – for France with lawyer Selda Can, for Germany with Jun.-Prof. Dr. Idris Nassery (Paderborn University). The evening was scheduled for the “Eğri Doğru” format – named after a Turkish saying about speaking openly and honestly – with Mehmet Daimagüler and Elif Zehra Kandemir, and Sunday for the workshop “Constitutional Advocacy”."
         ]
       },
       "skills-workshop": {"absaetze": ["The skills workshop on 12 and 13 September 2026 focused on analytical skills, critical thinking and handling information. After the opening by Burhan Kesici and remarks by Zehra Karataş, chair of IGMG Women’s Youth, it was time to get to work.", "For two days, participants worked in workshops and small groups – with a trainer, around tables, with pen and paper. Less lecture, more hands-on: exactly what a skills module is about."]}

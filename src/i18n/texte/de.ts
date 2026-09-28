@@ -301,31 +301,11 @@ export const de: Texte = {
     "folgt": "Fotos und Bericht zu diesem Modul folgen in Kürze.",
     "laut": "Laut Programm",
     "module": {
-      "auftakt": {
-        "absaetze": [
-          "Rund 200 junge Musliminnen und Muslime aus verschiedenen europäischen Ländern kamen am 11. und 12. April 2026 in Köln zum Auftakt der SES Academy zusammen. Nach der Eröffnung durch Burhan Kesici, den Vorsitzenden des Islamrats, hielt der ehemalige schottische First Minister Humza Yousaf die erste Keynote. Es folgten ein Grußwort von Kemal Ergün, ein Vortrag von Prof. Dr. Mathias Rohe sowie Videobotschaften von Hubertus Heil und Prof. Jocelyne Cesari.",
-          "In drei Panels ging es um die Lebensrealitäten junger Muslime in Europa, um Formen politischer und gesellschaftlicher Beteiligung und um religiöse Identität und politische Teilhabe. Prof. Mahmut Hakkı Akın stellte eine Befragung von 2.091 jungen Menschen aus neun Ländern vor: 63,5 Prozent wünschen sich, dass Politikerinnen und Politiker engeren Kontakt zu Muslimen suchen – aber nur 29 Prozent können sich vorstellen, selbst in die Politik zu gehen.",
-          "Der zweite Tag gehörte Workshops und Gruppenarbeit. Das Schlusswort sprach Murat Gümüş, Generalsekretär des Islamrats."
-        ],
-        "zitate": [
-          {
-            "text": "Seid ihr selbst.",
-            "wer": "Humza Yousaf"
-          },
-          {
-            "text": "Ziel ist, junge Muslime zu befähigen, informierte, reflektierte und verantwortungsbewusste Akteure in ihren Gesellschaften zu sein.",
-            "wer": "Murat Gümüş (sinngemäß)"
-          },
-          {
-            "text": "Muslime sind keine Gemeinschaft am Rand.",
-            "wer": "Burhan Kesici (sinngemäß)"
-          }
-        ]
-      },
+      "auftakt": {"absaetze": ["Rund 200 junge Frauen und Männer aus verschiedenen europäischen Ländern kamen am 11. und 12. April 2026 in Köln zum Auftakt der SES Academy zusammen. Burhan Kesici, Vorsitzender des Islamrats, eröffnete das Programm; die erste Keynote hielt der ehemalige schottische First Minister Humza Yousaf. Außerdem sprachen Kemal Ergün, Vorsitzender der IGMG, und der Rechtswissenschaftler Prof. Dr. Mathias Rohe. Hubertus Heil und Prof. Jocelyne Cesari schickten Videobotschaften.", "Prof. Mahmut Hakkı Akın (Medeniyet Universität, Istanbul) stellte eine Studie unter IGMG-Jugendlichen in neun europäischen Ländern mit 2.091 Befragten vor. Laut der Studie meinen 63,5 Prozent, dass Politikerinnen und Politiker engeren Kontakt zu Muslimen suchen sollten – aber nur 29 Prozent können sich vorstellen, selbst in die Politik zu gehen.", "In Foren und Panels ging es um die Lebensrealitäten junger Muslime in Europa, um Wege gesellschaftlicher und politischer Teilhabe und um muslimische Identität im öffentlichen Raum. Zum Abschluss des ersten Tages berichteten Oğuzhan Yazıcı (CDU) und Hakan Gördü (SÖZ) aus dem politischen Alltag. Der zweite Tag gehörte Workshops und Gruppenarbeit; das Schlusswort sprach Murat Gümüş, Generalsekretär des Islamrats."], "zitate": [{"text": "„keine Gemeinschaft am Rand“", "wer": "Burhan Kesici über Muslime in Europa", "quelle": "Eröffnungsrede, wörtlich zitiert nach IGMG und IslamiQ (13./14.04.2026)"}]},
       "verfassungen": {
         "absaetze": [
           "Das zweite Modul am 13. und 14. Juni 2026 widmete sich den Verfassungen Europas. Eröffnet wurde es von Burhan Kesici, dem Vorsitzenden des Islamrats. Auf dem Programm stand zum Auftakt eine Keynote von Farid Hafez (William & Mary, USA) zu Geschichte und aktuellen Herausforderungen europäischer Verfassungen, gefolgt von Panels mit Hafez und Bünyamin Kalem (IGMG-Jugend) sowie mit Dr. Mustafa Cerić, dem ehemaligen Reis-ul-Ulema von Bosnien, und Büşra Çatal (IGMG-Frauenjugend).",
-          "In den Ländergruppen vertieften die Teilnehmenden das Thema für ihr eigenes Land – für Frankreich mit der Rechtsanwältin Selda Can, für Deutschland mit Jun.-Prof. Dr. Idris Nassery (Universität Paderborn). Am Abend lud das Format „Eğri Doğru“ – nach der türkischen Redewendung, offen und aufrichtig miteinander zu sprechen – zum Gespräch mit Mehmet Daimagüler und Elif Zehra Kandemir. Der Sonntag gehörte dem Workshop „Constitutional Advocacy“."
+          "Laut Programm vertieften die Teilnehmenden das Thema anschließend in Ländergruppen – für Frankreich mit der Rechtsanwältin Selda Can, für Deutschland mit Jun.-Prof. Dr. Idris Nassery (Universität Paderborn). Für den Abend war das Format „Eğri Doğru“ – nach der türkischen Redewendung, offen und aufrichtig miteinander zu sprechen – mit Mehmet Daimagüler und Elif Zehra Kandemir angesetzt, für den Sonntag der Workshop „Constitutional Advocacy“."
         ]
       },
       "skills-workshop": {"absaetze": ["Beim Skills Workshop am 12. und 13. September 2026 standen Analysefähigkeit, kritisches Denken und der Umgang mit Informationen im Mittelpunkt. Nach der Eröffnung durch Burhan Kesici und einem Grußwort von Zehra Karataş, Vorsitzende der IGMG-Frauenjugend, ging es an die Arbeit.", "Zwei Tage lang arbeiteten die Teilnehmenden in Workshops und Kleingruppen – mit einem Trainer, an Tischen, mit Stift und Papier. Weniger Vortrag, mehr selbst machen: genau das, was ein Skills-Modul ausmacht."]}

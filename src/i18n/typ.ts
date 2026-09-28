@@ -151,6 +151,7 @@ export type Texte = {
     kicker: string;
     folgt: string;
     laut: string;
-    module: Partial<Record<ModulSlug, { absaetze: string[]; zitate?: { text: string; wer: string }[] }>>;
+    /** Zitate: NUR wortwörtlich belegte Äußerungen, unübersetzt, in der veröffentlichten Originalfassung. Keine Übersetzungen, keine Paraphrasen. */
+    module: Partial<Record<ModulSlug, { absaetze: string[]; zitate?: { text: string; wer: string; quelle: string }[] }>>;
   };
 };

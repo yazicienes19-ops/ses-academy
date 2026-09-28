@@ -102,8 +102,16 @@ body::before {
   background-repeat: repeat;
 }
 
-/* Lange Wörter (z. B. „Informationsmanagement“) auf dem Handy sprachgerecht trennen */
+/* Lange Wörter (z. B. „Informationsmanagement“) nur auf schmalen Bildschirmen sprachgerecht trennen */
 h1, h2, h3 {
-  hyphens: auto;
   overflow-wrap: break-word;
+}
+@media (max-width: 640px) {
+  h1, h2, h3 {
+    hyphens: auto;
+  }
+}
+/* Slogans nie trennen */
+.ohne-trennung {
+  hyphens: manual !important;
 }

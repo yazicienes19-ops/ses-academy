@@ -37,10 +37,10 @@ export type Gast = { name: string; modul: ModulSlug; format: Format; rolle?: Par
 
 const alle = (s: string) => ({ de: s, tr: s, en: s, fr: s, nl: s });
 
-// Nur tatsächlich aufgetretene Gäste. Auftakt: [PR] + [EG]; Juni: [AG] + Instagram-Stories; September: Instagram-Stories
+// Nur tatsächlich aufgetretene Gäste. Auftakt: [PR] (IGMG/IslamiQ 13./14.04., Perspektif 13.04., Folien auf den Fotos) + [EG]; Juni: [AG] + Instagram-Stories; September: Instagram-Stories
 export const gaeste: Gast[] = [
   { name: "Burhan Kesici", modul: "auftakt", format: "eroeffnung", rolle: { de: "Vorsitzender des Islamrats", tr: "İslam Konseyi Başkanı", en: "Chairman of the Islamrat", fr: "Président de l’Islamrat", nl: "Voorzitter van de Islamrat" } },
-  { name: "Kemal Ergün", modul: "auftakt", format: "grusswort" },
+  { name: "Kemal Ergün", modul: "auftakt", format: "grusswort", rolle: { de: "Vorsitzender der IGMG", tr: "IGMG Genel Başkanı", en: "Chairman of the IGMG", fr: "Président de la CIMG (IGMG)", nl: "Voorzitter van de IGMG" } },
   { name: "Humza Yousaf", modul: "auftakt", format: "keynote", rolle: { de: "Ehemaliger First Minister von Schottland", tr: "İskoçya eski Başbakanı", en: "Former First Minister of Scotland", fr: "Ancien Premier ministre d’Écosse", nl: "Voormalig premier van Schotland" } },
   { name: "Prof. Dr. Mathias Rohe", modul: "auftakt", format: "keynote", rolle: alle("Universität Erlangen-Nürnberg") },
   { name: "Hubertus Heil", modul: "auftakt", format: "videobotschaft", rolle: { de: "Bundesminister a. D.", tr: "Eski Federal Bakan", en: "Former Federal Minister", fr: "Ancien ministre fédéral", nl: "Voormalig federaal minister" } },
@@ -51,12 +51,12 @@ export const gaeste: Gast[] = [
   { name: "Prof. Murat Erdoğan", modul: "auftakt", format: "panel", rolle: alle("Ankara University") },
   { name: "Maryam Pougetoux", modul: "auftakt", format: "panel", rolle: { de: "Ehem. Vizepräsidentin der UNEF", tr: "UNEF eski başkan yardımcısı", en: "Former Vice-President of UNEF", fr: "Ancienne vice-présidente de l’UNEF", nl: "Voormalig vicevoorzitter van UNEF" } },
   { name: "Dunia Khalil", modul: "auftakt", format: "panel", rolle: alle("Documentation Centre on Anti-Muslim Racism & Islamophobia") },
-  { name: "Emran Feroz", modul: "auftakt", format: "panel" },
-  { name: "Melina Borčak", modul: "auftakt", format: "panel" },
+  { name: "Emran Feroz", modul: "auftakt", format: "panel", rolle: { de: "Journalist und Autor", tr: "Gazeteci ve yazar", en: "Journalist and author", fr: "Journaliste et auteur", nl: "Journalist en auteur" } },
+  { name: "Melina Borčak", modul: "auftakt", format: "panel", rolle: { de: "Journalistin, Autorin und Filmemacherin", tr: "Gazeteci, yazar ve film yapımcısı", en: "Journalist, author and filmmaker", fr: "Journaliste, autrice et réalisatrice", nl: "Journalist, auteur en filmmaker" } },
   { name: "Dr. Özgür Özvatan", modul: "auftakt", format: "panel" },
   { name: "Oğuzhan Yazıcı", modul: "auftakt", format: "panel", rolle: alle("CDU") },
   { name: "Hakan Gördü", modul: "auftakt", format: "panel", rolle: alle("SÖZ") },
-  { name: "Rumeysa Yazıcı", modul: "auftakt", format: "panel" },
+  { name: "Rumeysa Yazıcı", modul: "auftakt", format: "panel", rolle: alle("IGMG Frauenjugend") },
   { name: "Hande Taner", modul: "auftakt", format: "moderation", rolle: alle("FEMYSO Board of Advisors") },
   { name: "Furkan Kökcan", modul: "auftakt", format: "moderation" },
   { name: "Murat Gümüş", modul: "auftakt", format: "schlusswort", rolle: { de: "Generalsekretär des Islamrats", tr: "İslam Konseyi Genel Sekreteri", en: "Secretary General of the Islamrat", fr: "Secrétaire général de l’Islamrat", nl: "Secretaris-generaal van de Islamrat" } },

@@ -87,7 +87,7 @@ export function Startseite({ l }: { l: Sprache }) {
               <span className="h-1.5 w-1.5 rounded-full bg-signal" aria-hidden />
               {h.kicker}
             </p>
-            <h1 className="font-display mt-7 text-[clamp(3.1rem,10vw,8rem)] leading-[0.88] font-extrabold">
+            <h1 className="ohne-trennung font-display mt-7 text-[clamp(3.1rem,6.2vw,5rem)] leading-[0.88] font-extrabold">
               <span className="sr-only">SES Academy – </span>
               {h.zeilen[0]}
               <br />
@@ -375,8 +375,11 @@ export function Seminarseite({ l, slug }: { l: Sprache; slug: ModulSlug }) {
                     <div className="space-y-4">
                       {t.berichte.module[slug]!.zitate!.map((z) => (
                         <figure key={z.text} className="rounded-3xl bg-forest p-7 text-paper">
-                          <blockquote className="font-serif text-2xl leading-snug italic">„{z.text}“</blockquote>
-                          <figcaption className="mt-3 text-sm font-semibold text-signal">{z.wer}</figcaption>
+                          <blockquote className="font-serif text-2xl leading-snug italic">{z.text}</blockquote>
+                          <figcaption className="mt-3 text-sm">
+                            <span className="font-semibold text-signal">{z.wer}</span>
+                            <span className="block text-paper/60">{z.quelle}</span>
+                          </figcaption>
                         </figure>
                       ))}
                     </div>
@@ -441,7 +444,7 @@ export function Bewerbungsseite({ l }: { l: Sprache }) {
       <section className="mx-auto grid max-w-7xl gap-10 px-4 pt-10 pb-16 sm:px-6 sm:pt-16 lg:grid-cols-[1.1fr_1fr] lg:items-end lg:px-10">
         <div>
           <Kicker>{b.kicker}</Kicker>
-          <h1 className="font-display mt-6 text-[clamp(3.4rem,11vw,9rem)] leading-[0.86] font-extrabold">
+          <h1 className="ohne-trennung font-display mt-6 text-[clamp(3.4rem,11vw,9rem)] leading-[0.86] font-extrabold">
             {b.titel[0]}
             <br />
             <span className="marker">{b.titel[1]}</span>
@@ -509,7 +512,7 @@ export function Stimmenseite({ l }: { l: Sprache }) {
     <>
       <section className="mx-auto max-w-7xl px-4 pt-10 pb-12 sm:px-6 sm:pt-16 lg:px-10">
         <Kicker>{t.kicker}</Kicker>
-        <h1 className="font-display mt-6 text-[clamp(3rem,9vw,7.5rem)] leading-[0.88] font-extrabold">
+        <h1 className="ohne-trennung font-display mt-6 text-[clamp(3rem,9vw,7.5rem)] leading-[0.88] font-extrabold">
           {t.titel[0]}
           <br />
           <span className="marker">{t.titel[1]}</span>

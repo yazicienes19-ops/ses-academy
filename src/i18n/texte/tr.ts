@@ -298,31 +298,11 @@ export const tr: Texte = {
     "folgt": "Bu modüle ait fotoğraflar ve haber yakında eklenecek.",
     "laut": "Programa göre",
     "module": {
-      "auftakt": {
-        "absaetze": [
-          "11–12 Nisan 2026’da Köln’de düzenlenen SES Academy açılışına Avrupa’nın farklı ülkelerinden yaklaşık 200 genç katıldı. İslam Konseyi Başkanı Burhan Kesici’nin açılış konuşmasının ardından İskoçya eski Başbakanı Humza Yousaf ilk ana konuşmayı yaptı. Kemal Ergün’ün selamlama konuşması, Prof. Dr. Mathias Rohe’nin sunumu ile Hubertus Heil ve Prof. Jocelyne Cesari’nin video mesajları programın diğer bölümleriydi.",
-          "Üç panelde Avrupa’daki genç Müslümanların yaşam gerçeklikleri, siyasi ve toplumsal katılım biçimleri ile dinî kimlik ve siyasi katılım ele alındı. Prof. Mahmut Hakkı Akın, dokuz ülkede 2.091 gençle yapılan bir araştırmayı sundu: Katılımcıların yüzde 63,5’i siyasetçilerin Müslümanlarla daha yakın temas kurmasını istiyor – ancak yalnızca yüzde 29’u bizzat siyasete atılmayı düşünüyor.",
-          "İkinci gün atölye çalışmaları ve grup çalışmalarına ayrıldı. Kapanış konuşmasını İslam Konseyi Genel Sekreteri Murat Gümüş yaptı."
-        ],
-        "zitate": [
-          {
-            "text": "Kendiniz olun!",
-            "wer": "Humza Yousaf"
-          },
-          {
-            "text": "Bu akademi ile Müslüman gençleri yaşadıkları toplumlarda bilgili, eleştirel düşünebilen ve sorumluluk sahibi aktörler olarak desteklemek istiyoruz.",
-            "wer": "Murat Gümüş"
-          },
-          {
-            "text": "İslam sadece söylem değil eylem dinidir. Biz nerede yaşıyorsak oraya yaptıklarımızdan ve yapmadıklarımızdan sorumluyuz.",
-            "wer": "Kemal Ergün"
-          }
-        ]
-      },
+      "auftakt": {"absaetze": ["11–12 Nisan 2026’da Köln’de düzenlenen SES Academy açılışına Avrupa’nın farklı ülkelerinden yaklaşık 200 genç katıldı. Programı İslam Konseyi Başkanı Burhan Kesici açtı; ilk ana konuşmayı İskoçya eski Başbakanı Humza Yousaf yaptı. IGMG Genel Başkanı Kemal Ergün ve hukukçu Prof. Dr. Mathias Rohe de konuştu. Hubertus Heil ve Prof. Jocelyne Cesari video mesajlarıyla katıldı.", "Prof. Mahmut Hakkı Akın (İstanbul Medeniyet Üniversitesi), dokuz Avrupa ülkesinde IGMG gençleri arasında 2.091 kişiyle yapılan bir araştırmayı sundu. Araştırmaya göre katılımcıların yüzde 63,5’i siyasetçilerin Müslümanlarla daha güçlü irtibat kurması gerektiğini düşünüyor – ancak yalnızca yüzde 29’u ileride siyasete atılabileceğini söylüyor.", "Forum ve panellerde Avrupa’daki genç Müslümanların yaşam gerçeklikleri, toplumsal ve siyasi katılım yolları ile kamusal alanda Müslüman kimliği ele alındı. İlk günün sonunda Oğuzhan Yazıcı (CDU) ve Hakan Gördü (SÖZ) siyasetin gündelik hayatından deneyimlerini paylaştı. İkinci gün atölye ve grup çalışmalarına ayrıldı; kapanış konuşmasını İslam Konseyi Genel Sekreteri Murat Gümüş yaptı."], "zitate": [{"text": "„keine Gemeinschaft am Rand“", "wer": "Burhan Kesici, Avrupa’daki Müslümanlar hakkında", "quelle": "Açılış konuşması; IGMG ve IslamiQ’dan aynen (Almanca) alıntı, 13/14.04.2026"}]},
       "verfassungen": {
         "absaetze": [
           "13–14 Haziran 2026’daki ikinci modül Avrupa anayasalarına ayrıldı. Modülün açılışını İslam Konseyi Başkanı Burhan Kesici yaptı. Program, Farid Hafez’in (William & Mary, ABD) Avrupa anayasalarının tarihi ve güncel sorunları üzerine ana konuşmasıyla başladı; ardından Hafez ile Bünyamin Kalem (IGMG Gençlik) ve Bosna eski Reisü’l-Ulemâsı Dr. Mustafa Cerić ile Büşra Çatal’ın (IGMG Kadın Gençlik) katıldığı paneller yer aldı.",
-          "Ülke gruplarında katılımcılar konuyu kendi ülkeleri açısından derinleştirdi – Fransa için Avukat Selda Can, Almanya için Jun.-Prof. Dr. Idris Nassery (Paderborn Üniversitesi) ile. Akşam “Eğri Doğru” formatında Mehmet Daimagüler ve Elif Zehra Kandemir ile söyleşi yapıldı. Pazar günü “Constitutional Advocacy” atölyesine ayrıldı."
+          "Programa göre katılımcılar ardından konuyu ülke gruplarında derinleştirdi – Fransa için Avukat Selda Can, Almanya için Jun.-Prof. Dr. Idris Nassery (Paderborn Üniversitesi) ile. Akşam için Mehmet Daimagüler ve Elif Zehra Kandemir’in katılımıyla “Eğri Doğru” söyleşisi, pazar günü için ise “Constitutional Advocacy” atölyesi planlanmıştı."
         ]
       },
       "skills-workshop": {"absaetze": ["12–13 Eylül 2026’daki beceri atölyesinde analiz yeteneği, eleştirel düşünme ve bilgiyle doğru şekilde çalışma ön plandaydı. Burhan Kesici’nin açılışının ve IGMG Kadın Gençlik Teşkilatı Başkanı Zehra Karataş’ın konuşmasının ardından çalışmalara geçildi.", "Katılımcılar iki gün boyunca bir eğitmen eşliğinde atölyelerde ve küçük gruplarda, kâğıt kalemle çalıştı. Daha az dinlemek, daha çok uygulamak: Bir beceri modülünü tam da bu tanımlar."]}

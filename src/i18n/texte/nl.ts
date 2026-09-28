@@ -298,31 +298,11 @@ export const nl: Texte = {
     "folgt": "Foto’s en een verslag van deze module volgen binnenkort.",
     "laut": "Volgens het programma",
     "module": {
-      "auftakt": {
-        "absaetze": [
-          "Ongeveer 200 jonge moslims uit verschillende Europese landen kwamen op 11 en 12 april 2026 in Keulen samen voor de aftrap van de SES Academy. Na de opening door Burhan Kesici, voorzitter van de Islamrat, hield de voormalige Schotse premier Humza Yousaf de eerste keynote. Daarna volgden een welkomstwoord van Kemal Ergün, een lezing van prof. dr. Mathias Rohe en videoboodschappen van Hubertus Heil en prof. Jocelyne Cesari.",
-          "In drie panels ging het over de leefwereld van jonge moslims in Europa, vormen van politieke en maatschappelijke betrokkenheid, en religieuze identiteit en politieke participatie. Prof. Mahmut Hakkı Akın presenteerde een onderzoek onder 2.091 jongeren in negen landen: 63,5 procent wil dat politici nauwer contact zoeken met moslims – maar slechts 29 procent kan zich voorstellen zelf de politiek in te gaan.",
-          "De tweede dag stond in het teken van workshops en groepswerk. Het slotwoord werd uitgesproken door Murat Gümüş, secretaris-generaal van de Islamrat."
-        ],
-        "zitate": [
-          {
-            "text": "Wees jezelf.",
-            "wer": "Humza Yousaf"
-          },
-          {
-            "text": "Het doel is jonge moslims in staat te stellen geïnformeerde, reflectieve en verantwoordelijke actoren in hun samenlevingen te zijn.",
-            "wer": "Murat Gümüş (strekking, vertaald)"
-          },
-          {
-            "text": "Moslims zijn geen gemeenschap aan de rand.",
-            "wer": "Burhan Kesici (strekking, vertaald)"
-          }
-        ]
-      },
+      "auftakt": {"absaetze": ["Ongeveer 200 jonge vrouwen en mannen uit verschillende Europese landen kwamen op 11 en 12 april 2026 in Keulen samen voor de aftrap van de SES Academy. Burhan Kesici, voorzitter van de Islamrat, opende het programma; de voormalige Schotse premier Humza Yousaf hield de eerste keynote. Ook Kemal Ergün, voorzitter van de IGMG, en rechtsgeleerde prof. dr. Mathias Rohe spraken. Hubertus Heil en prof. Jocelyne Cesari stuurden videoboodschappen.", "Prof. Mahmut Hakkı Akın (Medeniyet Universiteit, Istanbul) presenteerde een onderzoek onder IGMG-jongeren in negen Europese landen met 2.091 respondenten. Volgens het onderzoek vindt 63,5 procent dat politici nauwer contact met moslims zouden moeten zoeken – maar slechts 29 procent kan zich voorstellen zelf de politiek in te gaan.", "In fora en panels ging het over de leefwereld van jonge moslims in Europa, wegen naar maatschappelijke en politieke participatie en moslimidentiteit in de publieke ruimte. Ter afsluiting van de eerste dag vertelden Oğuzhan Yazıcı (CDU) en Hakan Gördü (SÖZ) over hun ervaringen in de politiek. De tweede dag stond in het teken van workshops en groepswerk; het slotwoord werd uitgesproken door Murat Gümüş, secretaris-generaal van de Islamrat."], "zitate": [{"text": "„keine Gemeinschaft am Rand“", "wer": "Burhan Kesici over moslims in Europa", "quelle": "Openingstoespraak, letterlijk (Duits) geciteerd naar IGMG en IslamiQ, 13/14 april 2026"}]},
       "verfassungen": {
         "absaetze": [
           "De tweede module op 13 en 14 juni 2026 stond in het teken van de Europese grondwetten. De module werd geopend door Burhan Kesici, voorzitter van de Islamrat. Het programma opende met een keynote van Farid Hafez (William & Mary, VS) over de geschiedenis en actuele uitdagingen van Europese grondwetten, gevolgd door panels met Hafez en Bünyamin Kalem (IGMG Jongeren) en met dr. Mustafa Cerić, voormalig Reis-ul-Ulema van Bosnië, en Büşra Çatal (IGMG Vrouwenjongeren).",
-          "In de landengroepen verdiepten de deelnemers het thema voor hun eigen land – voor Frankrijk met advocaat Selda Can, voor Duitsland met jun.-prof. dr. Idris Nassery (Universiteit Paderborn). ’s Avonds bracht het format ‘Eğri Doğru’ – naar een Turkse uitdrukking over open en eerlijk met elkaar praten – een gesprek met Mehmet Daimagüler en Elif Zehra Kandemir. De zondag stond in het teken van de workshop ‘Constitutional Advocacy’."
+          "Volgens het programma verdiepten de deelnemers het thema daarna in landengroepen – voor Frankrijk met advocaat Selda Can, voor Duitsland met jun.-prof. dr. Idris Nassery (Universiteit Paderborn). Voor de avond stond het format ‘Eğri Doğru’ – naar een Turkse uitdrukking over open en eerlijk met elkaar praten – met Mehmet Daimagüler en Elif Zehra Kandemir gepland, en voor zondag de workshop ‘Constitutional Advocacy’."
         ]
       },
       "skills-workshop": {"absaetze": ["De vaardighedenworkshop op 12 en 13 september 2026 stond in het teken van analytisch vermogen, kritisch denken en omgaan met informatie. Na de opening door Burhan Kesici en een welkomstwoord van Zehra Karataş, voorzitter van IGMG Vrouwenjongeren, ging men aan de slag.", "Twee dagen lang werkten de deelnemers in workshops en kleine groepen – met een trainer, aan tafels, met pen en papier. Minder luisteren, meer zelf doen: precies waar een vaardighedenmodule om draait."]}

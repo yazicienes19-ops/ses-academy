@@ -305,31 +305,11 @@ export const fr: Texte = {
     "folgt": "Photos et compte rendu de ce module suivront prochainement.",
     "laut": "Selon le programme",
     "module": {
-      "auftakt": {
-        "absaetze": [
-          "Environ 200 jeunes musulman·e·s venus de différents pays d’Europe se sont réunis à Cologne les 11 et 12 avril 2026 pour le lancement de la SES Academy. Après l’ouverture par Burhan Kesici, président de l’Islamrat, l’ancien Premier ministre écossais Humza Yousaf a prononcé le premier discours. Ont suivi un mot d’accueil de Kemal Ergün, une conférence du Prof. Mathias Rohe ainsi que des messages vidéo de Hubertus Heil et de la Prof. Jocelyne Cesari.",
-          "Trois tables rondes ont abordé les réalités de vie des jeunes musulman·e·s en Europe, les formes d’engagement politique et social, ainsi que l’identité religieuse et la participation politique. Le Prof. Mahmut Hakkı Akın a présenté une enquête menée auprès de 2 091 jeunes dans neuf pays : 63,5 % souhaitent que les responsables politiques recherchent un contact plus étroit avec les musulmans – mais seulement 29 % envisagent de s’engager eux-mêmes en politique.",
-          "La deuxième journée était consacrée aux ateliers et au travail en groupe. Le mot de clôture a été prononcé par Murat Gümüş, secrétaire général de l’Islamrat."
-        ],
-        "zitate": [
-          {
-            "text": "Soyez vous-mêmes.",
-            "wer": "Humza Yousaf"
-          },
-          {
-            "text": "L’objectif est de permettre aux jeunes musulmans d’être des acteurs informés, réfléchis et responsables dans leurs sociétés.",
-            "wer": "Murat Gümüş (en substance, traduit)"
-          },
-          {
-            "text": "Les musulmans ne sont pas une communauté en marge.",
-            "wer": "Burhan Kesici (en substance, traduit)"
-          }
-        ]
-      },
+      "auftakt": {"absaetze": ["Environ 200 jeunes femmes et hommes venus de différents pays d’Europe se sont réunis à Cologne les 11 et 12 avril 2026 pour le lancement de la SES Academy. Burhan Kesici, président de l’Islamrat, a ouvert le programme ; l’ancien Premier ministre écossais Humza Yousaf a prononcé le premier discours. Kemal Ergün, président de la CIMG (IGMG), et le juriste Prof. Mathias Rohe ont également pris la parole. Hubertus Heil et la Prof. Jocelyne Cesari ont envoyé des messages vidéo.", "Le Prof. Mahmut Hakkı Akın (Université Medeniyet, Istanbul) a présenté une étude menée auprès de jeunes de la CIMG dans neuf pays européens, avec 2 091 personnes interrogées. Selon l’étude, 63,5 % estiment que les responsables politiques devraient rechercher un contact plus étroit avec les musulmans – mais seulement 29 % envisagent de s’engager eux-mêmes en politique.", "Forums et tables rondes ont abordé les réalités de vie des jeunes musulman·e·s en Europe, les voies de la participation sociale et politique et l’identité musulmane dans l’espace public. Pour clore la première journée, Oğuzhan Yazıcı (CDU) et Hakan Gördü (SÖZ) ont partagé leur expérience de la politique au quotidien. La deuxième journée était consacrée aux ateliers et au travail en groupe ; le mot de clôture a été prononcé par Murat Gümüş, secrétaire général de l’Islamrat."], "zitate": [{"text": "„keine Gemeinschaft am Rand“", "wer": "Burhan Kesici à propos des musulmans en Europe", "quelle": "Discours d’ouverture, cité mot pour mot (en allemand) d’après IGMG et IslamiQ, 13/14 avril 2026"}]},
       "verfassungen": {
         "absaetze": [
           "Le deuxième module, les 13 et 14 juin 2026, était consacré aux constitutions européennes. Le module a été ouvert par Burhan Kesici, président de l’Islamrat. Le programme s’ouvrait sur un discours de Farid Hafez (William & Mary, États-Unis) sur l’histoire et les défis actuels des constitutions européennes, suivi de tables rondes avec Hafez et Bünyamin Kalem (jeunesse de la CIMG) ainsi qu’avec le Dr Mustafa Cerić, ancien Reis-ul-Ulema de Bosnie, et Büşra Çatal (jeunesse féminine de la CIMG).",
-          "Dans les groupes de pays, les participant·e·s ont approfondi le thème pour leur propre pays – pour la France avec l’avocate Selda Can, pour l’Allemagne avec le Prof. Idris Nassery (Université de Paderborn). Le soir, le format « Eğri Doğru » – d’après une expression turque invitant à parler franchement – a réuni Mehmet Daimagüler et Elif Zehra Kandemir. Le dimanche était consacré à l’atelier « Constitutional Advocacy »."
+          "Selon le programme, les participant·e·s ont ensuite approfondi le thème en groupes de pays – pour la France avec l’avocate Selda Can, pour l’Allemagne avec le Prof. Idris Nassery (Université de Paderborn). Le soir était prévu le format « Eğri Doğru » – d’après une expression turque invitant à parler franchement – avec Mehmet Daimagüler et Elif Zehra Kandemir, et le dimanche l’atelier « Constitutional Advocacy »."
         ]
       },
       "skills-workshop": {"absaetze": ["L’atelier de compétences des 12 et 13 septembre 2026 était consacré à l’analyse, à l’esprit critique et à la gestion de l’information. Après l’ouverture par Burhan Kesici et une allocution de Zehra Karataş, présidente de la jeunesse féminine de la CIMG, place au travail.", "Pendant deux jours, les participant·e·s ont travaillé en ateliers et en petits groupes – avec un formateur, autour de tables, papier et stylo en main. Moins d’exposés, plus de pratique : c’est tout l’esprit d’un module de compétences."]}
