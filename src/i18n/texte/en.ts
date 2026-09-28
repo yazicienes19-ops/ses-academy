@@ -152,4 +152,60 @@ export const en: Texte = {
       ],
     },
   },
+  bewerbungSeite: {
+    "nav": "Apply",
+    "meta": "Apply for the SES Academy – the free educational programme for young Muslims aged 18 to 30 in Europe.",
+    "kicker": "Application",
+    "titel": [
+      "Join",
+      "us."
+    ],
+    "intro": "You are between 18 and 30, want to understand how politics works – and make a difference yourself? Then the SES Academy is your place.",
+    "status": "Applications for the current cohort closed on 15 January 2026. You can still register your interest now – we will get in touch as soon as a new application phase opens.",
+    "voraussetzungenTitel": "What you bring",
+    "voraussetzungen": [
+      "You are between 18 and 30 years old.",
+      "You speak English, Turkish and the language of your country very well.",
+      "You live in a European country where the IGMG youth or women’s youth organisations are represented.",
+      "You attend the seminars regularly – roughly one weekend every two months plus winter and summer camps."
+    ],
+    "ablaufTitel": "How applying works",
+    "ablauf": [
+      {
+        "titel": "Apply online",
+        "text": "Fill in the form and tell us why you want to take part."
+      },
+      {
+        "titel": "Interview",
+        "text": "Applicants who pass the first phase are invited to an interview."
+      },
+      {
+        "titel": "Let’s go",
+        "text": "Places are limited. If it’s a match, you’ll be part of the next cohort – free of charge."
+      }
+    ],
+    "formTitel": "Your application",
+    "felder": {
+      "vorname": "First name",
+      "nachname": "Last name",
+      "email": "Email",
+      "telefon": "Phone",
+      "geburtsjahr": "Year of birth",
+      "land": "Country",
+      "stadt": "City",
+      "sprachen": "Languages you speak very well",
+      "spracheEn": "English",
+      "spracheTr": "Turkish",
+      "spracheLand": "National language",
+      "motivation": "Why do you want to join the SES Academy?",
+      "motivationHilfe": "A few sentences are enough – what interests you, what do you want to change?",
+      "quelle": "How did you hear about the SES Academy?",
+      "optional": "optional"
+    },
+    "einwilligung": "I agree that the Islamrat may process my details in order to handle my application.",
+    "senden": "Send application",
+    "hinweis": "When you submit, your email app opens with your completed application to ses@islamrat.de – you just need to send it.",
+    "danke": "Your email app should have opened now. If not, write to us directly at ses@islamrat.de.",
+    "mailBetreff": "Application SES Academy"
+  },
 };

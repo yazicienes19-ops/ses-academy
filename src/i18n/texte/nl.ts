@@ -152,4 +152,60 @@ export const nl: Texte = {
       ],
     },
   },
+  bewerbungSeite: {
+    "nav": "Aanmelden",
+    "meta": "Meld je aan voor de SES Academy – het gratis onderwijsprogramma voor jonge moslims van 18 tot 30 jaar in Europa.",
+    "kicker": "Aanmelding",
+    "titel": [
+      "Doe",
+      "mee."
+    ],
+    "intro": "Ben je tussen 18 en 30, wil je begrijpen hoe politiek werkt – en zelf iets veranderen? Dan is de SES Academy jouw plek.",
+    "status": "De aanmelding voor de huidige lichting sloot op 15 januari 2026. Je kunt je nu al opgeven – we nemen contact met je op zodra een nieuwe aanmeldingsronde start.",
+    "voraussetzungenTitel": "Wat je meebrengt",
+    "voraussetzungen": [
+      "Je bent tussen 18 en 30 jaar oud.",
+      "Je spreekt zeer goed Engels, Turks en de taal van je land.",
+      "Je woont in een Europees land waar de IGMG Jongeren- of Vrouwenjongerenorganisaties vertegenwoordigd zijn.",
+      "Je neemt regelmatig deel aan de seminars – ongeveer één weekend per twee maanden plus winter- en zomerkampen."
+    ],
+    "ablaufTitel": "Zo verloopt de aanmelding",
+    "ablauf": [
+      {
+        "titel": "Online aanmelden",
+        "text": "Vul het formulier in en vertel ons waarom je mee wilt doen."
+      },
+      {
+        "titel": "Gesprek",
+        "text": "Wie de eerste fase succesvol doorloopt, wordt uitgenodigd voor een gesprek."
+      },
+      {
+        "titel": "Aan de slag",
+        "text": "Het aantal plaatsen is beperkt. Als het past, maak je deel uit van de volgende lichting – gratis."
+      }
+    ],
+    "formTitel": "Jouw aanmelding",
+    "felder": {
+      "vorname": "Voornaam",
+      "nachname": "Achternaam",
+      "email": "E-mail",
+      "telefon": "Telefoon",
+      "geburtsjahr": "Geboortejaar",
+      "land": "Land",
+      "stadt": "Stad",
+      "sprachen": "Talen die je zeer goed beheerst",
+      "spracheEn": "Engels",
+      "spracheTr": "Turks",
+      "spracheLand": "Landstaal",
+      "motivation": "Waarom wil je meedoen aan de SES Academy?",
+      "motivationHilfe": "Een paar zinnen is genoeg – wat interesseert je, wat wil je veranderen?",
+      "quelle": "Hoe heb je over de SES Academy gehoord?",
+      "optional": "optioneel"
+    },
+    "einwilligung": "Ik ga ermee akkoord dat de Islamrat mijn gegevens verwerkt om mijn aanmelding te behandelen.",
+    "senden": "Aanmelding versturen",
+    "hinweis": "Bij het versturen opent je e-mailprogramma met je ingevulde aanmelding aan ses@islamrat.de – je hoeft alleen nog op verzenden te klikken.",
+    "danke": "Je e-mailprogramma zou nu geopend moeten zijn. Zo niet, schrijf ons dan direct op ses@islamrat.de.",
+    "mailBetreff": "Aanmelding SES Academy"
+  },
 };

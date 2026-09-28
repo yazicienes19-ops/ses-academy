@@ -10,9 +10,10 @@ type Props = {
   lang: Sprache;
   start: string;
   nav: Texte["nav"];
+  bewerben: { href: string; label: string };
 };
 
-export function Header({ lang, start, nav }: Props) {
+export function Header({ lang, start, nav, bewerben }: Props) {
   const [offen, setOffen] = useState(false);
   const [gescrollt, setGescrollt] = useState(false);
 
@@ -50,8 +51,11 @@ export function Header({ lang, start, nav }: Props) {
           ))}
         </nav>
 
-        <div className="ml-auto lg:ml-0">
+        <div className="ml-auto flex items-center gap-2 lg:ml-0">
           <SprachMenue lang={lang} />
+          <a href={bewerben.href} className="hidden rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-paper transition hover:bg-forest sm:block">
+            {bewerben.label}
+          </a>
         </div>
 
         <button
@@ -78,6 +82,11 @@ export function Header({ lang, start, nav }: Props) {
               </a>
             </li>
           ))}
+          <li>
+            <a href={bewerben.href} className="font-display mt-2 block rounded-2xl bg-signal px-4 py-3 text-3xl font-bold">
+              {bewerben.label} →
+            </a>
+          </li>
         </ul>
       </nav>
     </header>

@@ -155,4 +155,60 @@ export const de: Texte = {
       ],
     },
   },
+  bewerbungSeite: {
+    "nav": "Bewerben",
+    "meta": "Bewirb dich für die SES Academy – das kostenlose Bildungsprogramm für junge Muslime zwischen 18 und 30 in Europa.",
+    "kicker": "Bewerbung",
+    "titel": [
+      "Sei",
+      "dabei."
+    ],
+    "intro": "Du bist zwischen 18 und 30, willst verstehen, wie Politik funktioniert – und selbst etwas bewegen? Dann ist die SES Academy dein Ort.",
+    "status": "Die Bewerbungsphase für den aktuellen Jahrgang endete am 15. Januar 2026. Du kannst dich trotzdem schon jetzt eintragen – wir melden uns, sobald eine neue Bewerbungsphase startet.",
+    "voraussetzungenTitel": "Das bringst du mit",
+    "voraussetzungen": [
+      "Du bist zwischen 18 und 30 Jahre alt.",
+      "Du sprichst sehr gut Englisch, Türkisch und die Sprache deines Landes.",
+      "Du lebst in einem europäischen Land, in dem die IGMG Jugend- oder Frauenjugendorganisationen vertreten sind.",
+      "Du nimmst regelmäßig an den Seminaren teil – etwa alle zwei Monate ein Wochenende plus Winter- und Sommercamps."
+    ],
+    "ablaufTitel": "So läuft die Bewerbung",
+    "ablauf": [
+      {
+        "titel": "Online bewerben",
+        "text": "Du füllst das Formular aus und erzählst uns, warum du dabei sein willst."
+      },
+      {
+        "titel": "Gespräch",
+        "text": "Wer die erste Phase erfolgreich durchläuft, wird zu einem Vorstellungsgespräch eingeladen."
+      },
+      {
+        "titel": "Los geht’s",
+        "text": "Die Plätze sind begrenzt. Wenn es passt, bist du Teil des nächsten Jahrgangs – kostenlos."
+      }
+    ],
+    "formTitel": "Deine Bewerbung",
+    "felder": {
+      "vorname": "Vorname",
+      "nachname": "Nachname",
+      "email": "E-Mail",
+      "telefon": "Telefon",
+      "geburtsjahr": "Geburtsjahr",
+      "land": "Land",
+      "stadt": "Stadt",
+      "sprachen": "Sprachen, die du sehr gut beherrschst",
+      "spracheEn": "Englisch",
+      "spracheTr": "Türkisch",
+      "spracheLand": "Landessprache",
+      "motivation": "Warum möchtest du bei der SES Academy dabei sein?",
+      "motivationHilfe": "Ein paar Sätze reichen – was interessiert dich, was willst du bewegen?",
+      "quelle": "Wie hast du von der SES Academy erfahren?",
+      "optional": "optional"
+    },
+    "einwilligung": "Ich bin einverstanden, dass der Islamrat meine Angaben zur Bearbeitung meiner Bewerbung verarbeitet.",
+    "senden": "Bewerbung absenden",
+    "hinweis": "Beim Absenden öffnet sich dein E-Mail-Programm mit deiner fertigen Bewerbung an ses@islamrat.de – du musst sie nur noch abschicken.",
+    "danke": "Dein E-Mail-Programm sollte sich jetzt geöffnet haben. Falls nicht, schreib uns direkt an ses@islamrat.de.",
+    "mailBetreff": "Bewerbung SES Academy"
+  },
 };

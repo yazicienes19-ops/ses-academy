@@ -159,4 +159,60 @@ export const fr: Texte = {
       ],
     },
   },
+  bewerbungSeite: {
+    "nav": "Candidater",
+    "meta": "Candidate à la SES Academy – le programme de formation gratuit pour les jeunes musulmans de 18 à 30 ans en Europe.",
+    "kicker": "Candidature",
+    "titel": [
+      "Rejoins-",
+      "nous."
+    ],
+    "intro": "Tu as entre 18 et 30 ans, tu veux comprendre comment fonctionne la politique – et faire bouger les choses ? Alors la SES Academy est faite pour toi.",
+    "status": "Les candidatures pour la promotion actuelle ont été clôturées le 15 janvier 2026. Tu peux déjà t’inscrire – nous te contacterons dès qu’une nouvelle phase de candidature s’ouvrira.",
+    "voraussetzungenTitel": "Ce que tu apportes",
+    "voraussetzungen": [
+      "Tu as entre 18 et 30 ans.",
+      "Tu parles très bien l’anglais, le turc et la langue de ton pays.",
+      "Tu vis dans un pays européen où les associations de jeunesse de la CIMG (IGMG) sont présentes.",
+      "Tu participes régulièrement aux séminaires – environ un week-end tous les deux mois, plus les séjours d’hiver et d’été."
+    ],
+    "ablaufTitel": "Comment candidater",
+    "ablauf": [
+      {
+        "titel": "Candidature en ligne",
+        "text": "Remplis le formulaire et dis-nous pourquoi tu veux participer."
+      },
+      {
+        "titel": "Entretien",
+        "text": "Les candidat·e·s qui réussissent la première étape sont invité·e·s à un entretien."
+      },
+      {
+        "titel": "C’est parti",
+        "text": "Les places sont limitées. Si ça correspond, tu fais partie de la prochaine promotion – gratuitement."
+      }
+    ],
+    "formTitel": "Ta candidature",
+    "felder": {
+      "vorname": "Prénom",
+      "nachname": "Nom",
+      "email": "E-mail",
+      "telefon": "Téléphone",
+      "geburtsjahr": "Année de naissance",
+      "land": "Pays",
+      "stadt": "Ville",
+      "sprachen": "Langues que tu maîtrises très bien",
+      "spracheEn": "Anglais",
+      "spracheTr": "Turc",
+      "spracheLand": "Langue nationale",
+      "motivation": "Pourquoi veux-tu rejoindre la SES Academy ?",
+      "motivationHilfe": "Quelques phrases suffisent – qu’est-ce qui t’intéresse, que veux-tu changer ?",
+      "quelle": "Comment as-tu entendu parler de la SES Academy ?",
+      "optional": "facultatif"
+    },
+    "einwilligung": "J’accepte que l’Islamrat traite mes données pour le traitement de ma candidature.",
+    "senden": "Envoyer la candidature",
+    "hinweis": "En envoyant, ton application e-mail s’ouvre avec ta candidature complète adressée à ses@islamrat.de – il ne te reste qu’à l’envoyer.",
+    "danke": "Ton application e-mail devrait s’être ouverte. Sinon, écris-nous directement à ses@islamrat.de.",
+    "mailBetreff": "Candidature SES Academy"
+  },
 };

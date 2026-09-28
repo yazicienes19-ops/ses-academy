@@ -84,4 +84,27 @@ export type Texte = {
   seminar: { zurueck: string; datum: string; ort: string; ortOffen: string; vorher: string; nachher: string; gaeste: string; eindruecke: string };
   formate: Record<"keynote" | "panel" | "grusswort" | "eroeffnung" | "studie" | "laendergruppe" | "gespraech" | "schlusswort", string>;
   seminare: Record<ModulSlug, { titel: string; text: string[] }>;
+  bewerbungSeite: {
+    nav: string;
+    meta: string;
+    kicker: string;
+    titel: [string, string];
+    intro: string;
+    status: string;
+    voraussetzungenTitel: string;
+    voraussetzungen: string[];
+    ablaufTitel: string;
+    ablauf: { titel: string; text: string }[];
+    formTitel: string;
+    felder: {
+      vorname: string; nachname: string; email: string; telefon: string; geburtsjahr: string; land: string; stadt: string;
+      sprachen: string; spracheEn: string; spracheTr: string; spracheLand: string;
+      motivation: string; motivationHilfe: string; quelle: string; optional: string;
+    };
+    einwilligung: string;
+    senden: string;
+    hinweis: string;
+    danke: string;
+    mailBetreff: string;
+  };
 };

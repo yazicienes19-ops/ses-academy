@@ -152,4 +152,60 @@ export const tr: Texte = {
       ],
     },
   },
+  bewerbungSeite: {
+    "nav": "Başvur",
+    "meta": "SES Academy’ye başvur – Avrupa’daki 18–30 yaş arası genç Müslümanlar için ücretsiz eğitim programı.",
+    "kicker": "Başvuru",
+    "titel": [
+      "Sen de",
+      "katıl."
+    ],
+    "intro": "18 ile 30 yaş arasındaysan, siyasetin nasıl işlediğini anlamak ve bir şeyleri değiştirmek istiyorsan, SES Academy tam sana göre.",
+    "status": "Mevcut dönem için başvurular 15 Ocak 2026’da sona erdi. Yine de şimdiden kaydolabilirsin – yeni başvuru dönemi başladığında seninle iletişime geçeceğiz.",
+    "voraussetzungenTitel": "Aradığımız özellikler",
+    "voraussetzungen": [
+      "18 ile 30 yaş arasındasın.",
+      "İngilizce, Türkçe ve yaşadığın ülkenin dilini çok iyi konuşuyorsun.",
+      "IGMG Gençlik veya Kadın Gençlik teşkilatlarının bulunduğu bir Avrupa ülkesinde yaşıyorsun.",
+      "Seminerlere düzenli olarak katılıyorsun – yaklaşık iki ayda bir hafta sonu, ayrıca kış ve yaz kampları."
+    ],
+    "ablaufTitel": "Başvuru süreci",
+    "ablauf": [
+      {
+        "titel": "Online başvuru",
+        "text": "Formu doldur ve neden katılmak istediğini bize anlat."
+      },
+      {
+        "titel": "Mülakat",
+        "text": "İlk aşamayı başarıyla geçen adaylar mülakata davet edilir."
+      },
+      {
+        "titel": "Haydi başlayalım",
+        "text": "Kontenjan sınırlıdır. Uygun görülürsen bir sonraki dönemin parçası olursun – ücretsiz."
+      }
+    ],
+    "formTitel": "Başvurun",
+    "felder": {
+      "vorname": "Ad",
+      "nachname": "Soyad",
+      "email": "E-posta",
+      "telefon": "Telefon",
+      "geburtsjahr": "Doğum yılı",
+      "land": "Ülke",
+      "stadt": "Şehir",
+      "sprachen": "Çok iyi bildiğin diller",
+      "spracheEn": "İngilizce",
+      "spracheTr": "Türkçe",
+      "spracheLand": "Ülke dili",
+      "motivation": "SES Academy’ye neden katılmak istiyorsun?",
+      "motivationHilfe": "Birkaç cümle yeterli – seni ne ilgilendiriyor, neyi değiştirmek istiyorsun?",
+      "quelle": "SES Academy’yi nereden duydun?",
+      "optional": "isteğe bağlı"
+    },
+    "einwilligung": "Bilgilerimin başvurumun değerlendirilmesi amacıyla İslam Konseyi tarafından işlenmesini kabul ediyorum.",
+    "senden": "Başvuruyu gönder",
+    "hinweis": "Gönder’e bastığında e-posta programın, ses@islamrat.de adresine hazır başvurunla açılır – sadece göndermen yeterli.",
+    "danke": "E-posta programın şimdi açılmış olmalı. Açılmadıysa bize doğrudan ses@islamrat.de adresinden yaz.",
+    "mailBetreff": "SES Academy Başvurusu"
+  },
 };

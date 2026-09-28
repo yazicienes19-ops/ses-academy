@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { BewerbungsFormular } from "./BewerbungsFormular";
 import { Faq } from "./Faq";
 import { Naechstes, ProgrammListe, type Eintrag } from "./Programm";
 import { fotos, gaeste, modulplan } from "@/i18n/daten";
@@ -92,11 +93,11 @@ export function Startseite({ l }: { l: Sprache }) {
             <p className="font-serif mt-8 text-2xl italic">{h.claim}</p>
             <p className="mt-4 max-w-xl text-lg text-ink-soft">{h.intro}</p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <a href="#programm" className="rounded-full bg-ink px-7 py-4 font-semibold text-paper transition hover:bg-forest">
-                {h.ctaProgramm} →
+              <a href={pfad(l, "/bewerbung/")} className="rounded-full bg-ink px-7 py-4 font-semibold text-paper transition hover:bg-forest">
+                {t.bewerbungSeite.nav} →
               </a>
-              <a href="#faq" className="rounded-full px-7 py-4 font-semibold ring-1 ring-ink/25 transition hover:bg-paper-deep">
-                {h.ctaFaq}
+              <a href="#programm" className="rounded-full px-7 py-4 font-semibold ring-1 ring-ink/25 transition hover:bg-paper-deep">
+                {h.ctaProgramm}
               </a>
             </div>
           </div>
@@ -252,12 +253,12 @@ export function Startseite({ l }: { l: Sprache }) {
         </div>
       </section>
 
-      <Kontakt t={t} />
+      <Kontakt l={l} t={t} />
     </>
   );
 }
 
-function Kontakt({ t }: { t: Texte }) {
+function Kontakt({ l, t }: { l: Sprache; t: Texte }) {
   return (
     <section id="kontakt" className="scroll-mt-20 px-4 pb-24 sm:px-6 lg:px-10">
       <div className="mx-auto grid max-w-7xl gap-8 rounded-[2rem] bg-ink p-8 text-paper sm:p-12 lg:grid-cols-[1.3fr_1fr] lg:items-center lg:p-16">
@@ -265,8 +266,11 @@ function Kontakt({ t }: { t: Texte }) {
           <p className="font-display text-[clamp(2.2rem,5vw,4rem)] leading-[0.95] font-extrabold">{t.kontakt.titel}</p>
           <p className="mt-4 text-lg text-paper/75">{t.kontakt.text}</p>
           <p className="mt-6 max-w-xl text-paper/60">
-            <strong className="text-paper">{t.bewerbung.titel}</strong> {t.bewerbung.text}
+            <strong className="text-paper">{t.bewerbung.titel}</strong> {t.bewerbungSeite.status}
           </p>
+          <a href={pfad(l, "/bewerbung/")} className="mt-6 inline-block rounded-full px-6 py-3 font-semibold ring-1 ring-paper/30 transition hover:bg-paper hover:text-ink">
+            {t.bewerbungSeite.nav} →
+          </a>
         </div>
         <a
           href="mailto:ses@islamrat.de?subject=SES%20Academy"
@@ -362,7 +366,66 @@ export function Seminarseite({ l, slug }: { l: Sprache; slug: ModulSlug }) {
           )}
         </nav>
       </article>
-      <Kontakt t={t} />
+      <Kontakt l={l} t={t} />
+    </>
+  );
+}
+
+export function Bewerbungsseite({ l }: { l: Sprache }) {
+  const t = texte[l];
+  const b = t.bewerbungSeite;
+  return (
+    <>
+      <section className="mx-auto grid max-w-7xl gap-10 px-4 pt-10 pb-16 sm:px-6 sm:pt-16 lg:grid-cols-[1.1fr_1fr] lg:items-end lg:px-10">
+        <div>
+          <Kicker>{b.kicker}</Kicker>
+          <h1 className="font-display mt-6 text-[clamp(3.4rem,11vw,9rem)] leading-[0.86] font-extrabold">
+            {b.titel[0]}
+            <br />
+            <span className="marker">{b.titel[1]}</span>
+          </h1>
+          <p className="mt-8 max-w-xl text-xl text-ink-soft">{b.intro}</p>
+        </div>
+        <div className="rounded-[2rem] bg-signal p-7 sm:p-9">
+          <p className="font-display text-2xl leading-tight font-extrabold">{t.bewerbung.titel}</p>
+          <p className="mt-3 text-lg">{b.status}</p>
+        </div>
+      </section>
+
+      <section className="bg-forest text-paper">
+        <div className="mx-auto grid max-w-7xl gap-14 px-4 py-20 sm:px-6 lg:grid-cols-2 lg:px-10">
+          <div>
+            <p className="font-display text-3xl font-extrabold">{b.voraussetzungenTitel}</p>
+            <ul className="mt-6 space-y-4">
+              {b.voraussetzungen.map((v) => (
+                <li key={v} className="flex gap-4 text-lg text-paper/85">
+                  <span className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-signal text-sm font-bold text-ink" aria-hidden>✓</span>
+                  {v}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <p className="font-display text-3xl font-extrabold">{b.ablaufTitel}</p>
+            <ol className="mt-6 space-y-3">
+              {b.ablauf.map((a, i) => (
+                <li key={a.titel} className="rounded-3xl bg-forest-2 p-6">
+                  <p className="font-display text-sm font-bold text-signal">0{i + 1}</p>
+                  <p className="font-display mt-2 text-2xl font-bold">{a.titel}</p>
+                  <p className="mt-1 text-paper/75">{a.text}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <section id="formular" className="mx-auto max-w-4xl scroll-mt-20 px-4 py-20 sm:px-6">
+        <h2 className="font-display text-[clamp(2.2rem,5vw,3.8rem)] leading-none font-extrabold">{b.formTitel}</h2>
+        <div className="mt-10">
+          <BewerbungsFormular t={b} />
+        </div>
+      </section>
     </>
   );
 }
