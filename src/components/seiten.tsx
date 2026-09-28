@@ -5,9 +5,9 @@ import { BewerbungsFormular } from "./BewerbungsFormular";
 import { StimmenListe, YoutubeKlick, type Karte } from "./Stimmen";
 import { beitraege } from "@/i18n/stimmen";
 import { Faq } from "./Faq";
-import { Naechstes, ProgrammListe, type Eintrag } from "./Programm";
+import { Naechstes, NaechstesSticker, ProgrammListe, type Eintrag } from "./Programm";
 import { fotos, gaeste, modulplan } from "@/i18n/daten";
-import { locale, pfad, sprachen, texte, zeitraum, type ModulSlug, type Sprache, type Texte } from "@/i18n";
+import { locale, pfad, sprachen, texte, zeitraum, zeitraumKurz, type ModulSlug, type Sprache, type Texte } from "@/i18n";
 
 const SITE = "https://ses.islamrat.de";
 
@@ -113,10 +113,11 @@ export function Startseite({ l }: { l: Sprache }) {
               <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-ink/70 to-transparent" />
               <p className="absolute right-5 bottom-5 left-5 text-sm font-medium text-paper/90">{h.fotoText}</p>
             </div>
-            <div className="absolute -top-5 -left-3 rotate-[-6deg] rounded-2xl bg-signal px-5 py-3 shadow-lg sm:-left-8">
-              <p className="font-display text-3xl leading-none font-extrabold">{h.alter}</p>
-              <p className="text-xs font-semibold">{h.kosten}</p>
-            </div>
+            <NaechstesSticker
+              eintraege={e}
+              kicker={t.naechstes.kicker}
+              kurzDaten={modulplan.map((m) => zeitraumKurz(l, m.von, m.bis))}
+            />
           </div>
         </div>
 

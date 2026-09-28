@@ -92,3 +92,23 @@ export function ProgrammListe({ eintraege, t }: { eintraege: Eintrag[]; t: Texte
     </ol>
   );
 }
+
+/** Sticker im Hero: nächstes Modul mit Datum – wechselt automatisch nach jedem Modul. */
+export function NaechstesSticker({ eintraege, kicker, kurzDaten }: { eintraege: Eintrag[]; kicker: string; kurzDaten: string[] }) {
+  const status = useStatus(eintraege);
+  const i = status.indexOf("naechstes");
+  if (i < 0) return null;
+  const m = eintraege[i];
+  return (
+    <Link
+      href={m.href}
+      className="absolute -top-5 -left-3 block rotate-[-6deg] rounded-2xl bg-signal px-5 py-3 shadow-lg transition hover:rotate-[-3deg] sm:-left-8"
+    >
+      <span className="block text-xs font-semibold">
+        {kicker} · {m.artText}
+      </span>
+      <span className="font-display block text-3xl leading-none font-extrabold">{kurzDaten[i]}</span>
+      <span className="block text-xs font-semibold">{m.ort ? m.ort.split(",").pop()!.replace(/\d+/g, "").trim() : ""} →</span>
+    </Link>
+  );
+}

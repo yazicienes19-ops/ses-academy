@@ -13,4 +13,10 @@ export function zeitraum(l: Sprache, von: string, bis: string): string {
   return f.formatRange(new Date(`${von}T12:00:00Z`), new Date(`${bis}T12:00:00Z`));
 }
 
+/** Kurzform für kleine Flächen, z. B. „14.–15. Nov.“ */
+export function zeitraumKurz(l: Sprache, von: string, bis: string): string {
+  const f = new Intl.DateTimeFormat(locale[l], { day: "numeric", month: "short", timeZone: "Europe/Berlin" });
+  return f.formatRange(new Date(`${von}T12:00:00Z`), new Date(`${bis}T12:00:00Z`));
+}
+
 export * from "./typ";
