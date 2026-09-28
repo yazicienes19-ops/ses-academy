@@ -126,7 +126,7 @@ export const tr: Texte = {
     kontakt: "İletişim",
   },
   seminar: { zurueck: "Genel bakışa dön", datum: "Tarih", ort: "Yer", ortOffen: "planlanıyor", vorher: "Önceki modül", nachher: "Sonraki modül", gaeste: "Konuklar", eindruecke: "İzlenimler" },
-  formate: { keynote: "Ana konuşma", panel: "Panel", grusswort: "Selamlama", eroeffnung: "Açılış", studie: "Araştırma", laendergruppe: "Ülke grubu", gespraech: "Söyleşi", schlusswort: "Kapanış konuşması" },
+  formate: { keynote: "Ana konuşma", panel: "Panel", videobotschaft: "Video mesajı", moderation: "Moderatörlük", grusswort: "Selamlama", eroeffnung: "Açılış", studie: "Araştırma", laendergruppe: "Ülke grubu", gespraech: "Söyleşi", schlusswort: "Kapanış konuşması" },
   seminare: {
     auftakt: {
       titel: "Kimlik, Sorumluluk ve Katılım – Avrupa’daki Genç Müslümanlar",
@@ -207,5 +207,125 @@ export const tr: Texte = {
     "hinweis": "Gönder’e bastığında e-posta programın, ses@islamrat.de adresine hazır başvurunla açılır – sadece göndermen yeterli.",
     "danke": "E-posta programın şimdi açılmış olmalı. Açılmadıysa bize doğrudan ses@islamrat.de adresinden yaz.",
     "mailBetreff": "SES Academy Başvurusu"
+  },
+  stimmen: {
+    "nav": "Sesler",
+    "meta": "SES Academy katılımcılarının yorumları, videoları ve projeleri.",
+    "kicker": "Sesler",
+    "titel": [
+      "Söyleyecek",
+      "sözümüz var."
+    ],
+    "intro": "SES Academy katılımcıları modüllerde ürettiklerini burada yayımlıyor: yorumlar, videolar, grafikler ve podcast’ler – kendi dillerinde.",
+    "leer": "İlk katkılar yakında yayımlanacak.",
+    "filterModul": "Modül",
+    "filterLand": "Ülke",
+    "alle": "Tümü",
+    "typ": {
+      "kommentar": "Yorum",
+      "video": "Video",
+      "grafik": "Grafik",
+      "podcast": "Podcast"
+    },
+    "laender": {
+      "de": "Almanya",
+      "fr": "Fransa",
+      "at": "Avusturya",
+      "nl": "Hollanda",
+      "be": "Belçika",
+      "ch": "İsviçre",
+      "andere": "Diğer ülkeler"
+    },
+    "lesen": "Devamını oku",
+    "zurueck": "Tüm sesler",
+    "videoLaden": "Videoyu oynat",
+    "videoHinweis": "Video oynatıldığında YouTube’a bağlantı kurulur.",
+    "hinweis": "Katkılar yazarlarının kişisel görüşlerini yansıtır.",
+    "muster": "Örnek",
+    "startseiteTitel": "Akademiden sesler",
+    "startseiteText": "Katılımcıların düşündükleri, yazdıkları ve ürettikleri."
+  },
+  presse: {
+    "nav": "Basın ve konuşmacılar",
+    "meta": "Basın ve konuşmacılar için SES Academy hakkında bilgiler, fotoğraflar ve irtibat.",
+    "kicker": "Basın ve konuşmacılar",
+    "titel": "Her şey bir bakışta.",
+    "intro": "Konuşmacı olarak davet edildiniz ya da SES Academy hakkında haber mi yapıyorsunuz? Önemli bilgileri, fotoğrafları ve irtibat kişinizi burada bulabilirsiniz.",
+    "kurzTitel": "Üç cümlede SES Academy",
+    "kurz": [
+      "SES Academy, Almanya İslam Konseyi’nin (Islamrat für die BRD) Avrupa’daki 18–30 yaş arası genç Müslümanlar için yürüttüğü bir eğitim ve güçlendirme programıdır.",
+      "Katılımcılar ana konuşmalar, ülke grupları ve atölyelerde demokrasi, anayasa, siyasi katılım ve uluslararası siyaset konularını ele alır.",
+      "Amaç, toplumsal gelişmeleri doğru okuyabilmek – ve bunlara yön vermeye katkıda bulunmaktır."
+    ],
+    "faktenTitel": "Bilgiler",
+    "fakten": [
+      [
+        "Taşıyıcı",
+        "Almanya İslam Konseyi (Islamrat für die BRD)"
+      ],
+      [
+        "İş birliği",
+        "IGMG Gençlik ve Kadın Gençlik Teşkilatları"
+      ],
+      [
+        "Süre",
+        "Nisan 2026 – (tahminî) Haziran 2028"
+      ],
+      [
+        "Katılımcılar",
+        "18–30 yaş arası yaklaşık 150 genç; aralarında Almanya, Fransa ve Avusturya’nın da bulunduğu ülke grupları"
+      ],
+      [
+        "Format",
+        "Yaklaşık iki ayda bir hafta sonu seminerleri, ayrıca kış ve yaz kampları"
+      ],
+      [
+        "Yer",
+        "Köln (Colonia-Allee 3) ve Avrupa’nın diğer şehirleri"
+      ]
+    ],
+    "gaesteTitel": "Şimdiye kadarki konuklar (seçki)",
+    "downloadsTitel": "İndirilenler",
+    "onepager": "Tanıtım sayfası (PDF)",
+    "logo": "Logo (PNG)",
+    "fotos": "Basın fotoğrafları",
+    "fotoCredit": "Fotoğraf: Islamrat",
+    "kontaktTitel": "İrtibat kişiniz",
+    "kontaktRolle": "İslam Konseyi Genel Sekreteri ve proje koordinatörü"
+  },
+  berichte: {
+    "kicker": "Geriye bakış",
+    "folgt": "Bu modüle ait fotoğraflar ve haber yakında eklenecek.",
+    "laut": "Programa göre",
+    "module": {
+      "auftakt": {
+        "absaetze": [
+          "11–12 Nisan 2026’da Köln’de düzenlenen SES Academy açılışına Avrupa’nın farklı ülkelerinden yaklaşık 200 genç katıldı. İslam Konseyi Başkanı Burhan Kesici’nin açılış konuşmasının ardından İskoçya eski Başbakanı Humza Yousaf ilk ana konuşmayı yaptı. Kemal Ergün’ün selamlama konuşması, Prof. Dr. Mathias Rohe’nin sunumu ile Hubertus Heil ve Prof. Jocelyne Cesari’nin video mesajları programın diğer bölümleriydi.",
+          "Üç panelde Avrupa’daki genç Müslümanların yaşam gerçeklikleri, siyasi ve toplumsal katılım biçimleri ile dinî kimlik ve siyasi katılım ele alındı. Prof. Mahmut Hakkı Akın, dokuz ülkede 2.091 gençle yapılan bir araştırmayı sundu: Katılımcıların yüzde 63,5’i siyasetçilerin Müslümanlarla daha yakın temas kurmasını istiyor – ancak yalnızca yüzde 29’u bizzat siyasete atılmayı düşünüyor.",
+          "İkinci gün atölye çalışmaları ve grup çalışmalarına ayrıldı. Kapanış konuşmasını İslam Konseyi Genel Sekreteri Murat Gümüş yaptı."
+        ],
+        "zitate": [
+          {
+            "text": "Kendiniz olun!",
+            "wer": "Humza Yousaf"
+          },
+          {
+            "text": "Bu akademi ile Müslüman gençleri yaşadıkları toplumlarda bilgili, eleştirel düşünebilen ve sorumluluk sahibi aktörler olarak desteklemek istiyoruz.",
+            "wer": "Murat Gümüş"
+          },
+          {
+            "text": "İslam sadece söylem değil eylem dinidir. Biz nerede yaşıyorsak oraya yaptıklarımızdan ve yapmadıklarımızdan sorumluyuz.",
+            "wer": "Kemal Ergün"
+          }
+        ]
+      },
+      "verfassungen": {
+        "absaetze": [
+          "13–14 Haziran 2026’daki ikinci modül Avrupa anayasalarına ayrıldı. Modülün açılışını İslam Konseyi Başkanı Burhan Kesici yaptı. Program, Farid Hafez’in (William & Mary, ABD) Avrupa anayasalarının tarihi ve güncel sorunları üzerine ana konuşmasıyla başladı; ardından Hafez ile Bünyamin Kalem (IGMG Gençlik) ve Bosna eski Reisü’l-Ulemâsı Dr. Mustafa Cerić ile Büşra Çatal’ın (IGMG Kadın Gençlik) katıldığı paneller yer aldı.",
+          "Ülke gruplarında katılımcılar konuyu kendi ülkeleri açısından derinleştirdi – Fransa için Avukat Selda Can, Almanya için Jun.-Prof. Dr. Idris Nassery (Paderborn Üniversitesi) ile. Akşam “Eğri Doğru” formatında Mehmet Daimagüler ve Elif Zehra Kandemir ile söyleşi yapıldı. Pazar günü “Constitutional Advocacy” atölyesine ayrıldı."
+        ]
+      },
+      "skills-workshop": {"absaetze": ["12–13 Eylül 2026’daki beceri atölyesinde analiz yeteneği, eleştirel düşünme ve bilgiyle doğru şekilde çalışma ön plandaydı. Burhan Kesici’nin açılışının ve IGMG Kadın Gençlik Teşkilatı Başkanı Zehra Karataş’ın konuşmasının ardından çalışmalara geçildi.", "Katılımcılar iki gün boyunca bir eğitmen eşliğinde atölyelerde ve küçük gruplarda, kâğıt kalemle çalıştı. Daha az dinlemek, daha çok uygulamak: Bir beceri modülünü tam da bu tanımlar."]}
+    }
   },
 };

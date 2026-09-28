@@ -11,9 +11,10 @@ type Props = {
   start: string;
   nav: Texte["nav"];
   bewerben: { href: string; label: string };
+  stimmen: { href: string; label: string };
 };
 
-export function Header({ lang, start, nav, bewerben }: Props) {
+export function Header({ lang, start, nav, bewerben, stimmen }: Props) {
   const [offen, setOffen] = useState(false);
   const [gescrollt, setGescrollt] = useState(false);
 
@@ -28,6 +29,7 @@ export function Header({ lang, start, nav, bewerben }: Props) {
     { href: `${start}#programm`, label: nav.programm },
     { href: `${start}#kompetenzen`, label: nav.kompetenzen },
     { href: `${start}#rueckblick`, label: nav.rueckblick },
+    { href: stimmen.href, label: stimmen.label },
     { href: `${start}#faq`, label: nav.faq },
     { href: `${start}#kontakt`, label: nav.kontakt },
   ];

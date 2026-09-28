@@ -82,7 +82,7 @@ export type Texte = {
   kontakt: { titel: string; text: string; cta: string };
   footer: { claim: string; traeger: string; impressum: string; datenschutz: string; islamrat: string; kontakt: string };
   seminar: { zurueck: string; datum: string; ort: string; ortOffen: string; vorher: string; nachher: string; gaeste: string; eindruecke: string };
-  formate: Record<"keynote" | "panel" | "grusswort" | "eroeffnung" | "studie" | "laendergruppe" | "gespraech" | "schlusswort", string>;
+  formate: Record<"keynote" | "panel" | "grusswort" | "videobotschaft" | "moderation" | "eroeffnung" | "studie" | "laendergruppe" | "gespraech" | "schlusswort", string>;
   seminare: Record<ModulSlug, { titel: string; text: string[] }>;
   bewerbungSeite: {
     nav: string;
@@ -106,5 +106,51 @@ export type Texte = {
     hinweis: string;
     danke: string;
     mailBetreff: string;
+  };
+  stimmen: {
+    nav: string;
+    meta: string;
+    kicker: string;
+    titel: [string, string];
+    intro: string;
+    leer: string;
+    filterModul: string;
+    filterLand: string;
+    alle: string;
+    typ: Record<"kommentar" | "video" | "grafik" | "podcast", string>;
+    laender: Record<"de" | "fr" | "at" | "nl" | "be" | "ch" | "andere", string>;
+    lesen: string;
+    zurueck: string;
+    videoLaden: string;
+    videoHinweis: string;
+    hinweis: string;
+    muster: string;
+    startseiteTitel: string;
+    startseiteText: string;
+  };
+  presse: {
+    nav: string;
+    meta: string;
+    kicker: string;
+    titel: string;
+    intro: string;
+    kurzTitel: string;
+    kurz: string[];
+    faktenTitel: string;
+    fakten: [string, string][];
+    gaesteTitel: string;
+    downloadsTitel: string;
+    onepager: string;
+    logo: string;
+    fotos: string;
+    fotoCredit: string;
+    kontaktTitel: string;
+    kontaktRolle: string;
+  };
+  berichte: {
+    kicker: string;
+    folgt: string;
+    laut: string;
+    module: Partial<Record<ModulSlug, { absaetze: string[]; zitate?: { text: string; wer: string }[] }>>;
   };
 };

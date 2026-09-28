@@ -101,3 +101,9 @@ body::before {
   background-size: 520px auto;
   background-repeat: repeat;
 }
+
+/* Lange Wörter (z. B. „Informationsmanagement“) auf dem Handy sprachgerecht trennen */
+h1, h2, h3 {
+  hyphens: auto;
+  overflow-wrap: break-word;
+}

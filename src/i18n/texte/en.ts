@@ -126,7 +126,7 @@ export const en: Texte = {
     kontakt: "Contact",
   },
   seminar: { zurueck: "Back to overview", datum: "Date", ort: "Location", ortOffen: "in planning", vorher: "Previous module", nachher: "Next module", gaeste: "Guests", eindruecke: "Impressions" },
-  formate: { keynote: "Keynote", panel: "Panel", grusswort: "Welcome address", eroeffnung: "Opening", studie: "Study", laendergruppe: "Country group", gespraech: "Conversation", schlusswort: "Closing remarks" },
+  formate: { keynote: "Keynote", panel: "Panel", videobotschaft: "Video message", moderation: "Moderation", grusswort: "Welcome address", eroeffnung: "Opening", studie: "Study", laendergruppe: "Country group", gespraech: "Conversation", schlusswort: "Closing remarks" },
   seminare: {
     auftakt: {
       titel: "Identity, Responsibility & Participation: Young Muslims in Europe",
@@ -207,5 +207,125 @@ export const en: Texte = {
     "hinweis": "When you submit, your email app opens with your completed application to ses@islamrat.de – you just need to send it.",
     "danke": "Your email app should have opened now. If not, write to us directly at ses@islamrat.de.",
     "mailBetreff": "Application SES Academy"
+  },
+  stimmen: {
+    "nav": "Voices",
+    "meta": "Commentaries, videos and projects by SES Academy participants.",
+    "kicker": "Voices",
+    "titel": [
+      "We have",
+      "something to say."
+    ],
+    "intro": "This is where SES Academy participants publish what they develop in the modules: commentaries, videos, graphics and podcasts – in their own language.",
+    "leer": "The first contributions will be published soon.",
+    "filterModul": "Module",
+    "filterLand": "Country",
+    "alle": "All",
+    "typ": {
+      "kommentar": "Commentary",
+      "video": "Video",
+      "grafik": "Graphic",
+      "podcast": "Podcast"
+    },
+    "laender": {
+      "de": "Germany",
+      "fr": "France",
+      "at": "Austria",
+      "nl": "Netherlands",
+      "be": "Belgium",
+      "ch": "Switzerland",
+      "andere": "Other countries"
+    },
+    "lesen": "Read more",
+    "zurueck": "All voices",
+    "videoLaden": "Play video",
+    "videoHinweis": "Playing the video connects to YouTube.",
+    "hinweis": "Contributions reflect the personal views of their authors.",
+    "muster": "Sample",
+    "startseiteTitel": "Voices from the Academy",
+    "startseiteText": "What participants think, write and create."
+  },
+  presse: {
+    "nav": "Press & speakers",
+    "meta": "Information, photos and contact details about the SES Academy for press and speakers.",
+    "kicker": "Press & speakers",
+    "titel": "Everything at a glance.",
+    "intro": "Have you been invited as a speaker or are you reporting on the SES Academy? Here you will find key information, photos and your contact person.",
+    "kurzTitel": "The SES Academy in three sentences",
+    "kurz": [
+      "The SES Academy is an educational and empowerment programme by the Islamrat für die Bundesrepublik Deutschland for young Muslims aged 18 to 30 in Europe.",
+      "Through keynotes, country groups and workshops, participants engage with democracy, constitutions, political participation and international politics.",
+      "The aim is to understand social developments – and to help shape them."
+    ],
+    "faktenTitel": "Facts",
+    "fakten": [
+      [
+        "Organiser",
+        "Islamrat für die Bundesrepublik Deutschland"
+      ],
+      [
+        "In cooperation with",
+        "IGMG youth and women’s youth organisations"
+      ],
+      [
+        "Duration",
+        "April 2026 – June 2028 (est.)"
+      ],
+      [
+        "Participants",
+        "around 150 young adults aged 18–30, in country groups including Germany, France and Austria"
+      ],
+      [
+        "Format",
+        "Weekend seminars roughly every two months, plus winter and summer camps"
+      ],
+      [
+        "Location",
+        "Cologne (Colonia-Allee 3) and other cities in Europe"
+      ]
+    ],
+    "gaesteTitel": "Guests so far (selection)",
+    "downloadsTitel": "Downloads",
+    "onepager": "One-pager (PDF)",
+    "logo": "Logo (PNG)",
+    "fotos": "Press photos",
+    "fotoCredit": "Photo: Islamrat",
+    "kontaktTitel": "Your contact",
+    "kontaktRolle": "Secretary General of the Islamrat and project coordinator"
+  },
+  berichte: {
+    "kicker": "Look back",
+    "folgt": "Photos and a report on this module will follow soon.",
+    "laut": "According to the programme",
+    "module": {
+      "auftakt": {
+        "absaetze": [
+          "Around 200 young Muslims from various European countries came together in Cologne on 11 and 12 April 2026 for the launch of the SES Academy. After the opening by Burhan Kesici, chairman of the Islamrat, former Scottish First Minister Humza Yousaf gave the first keynote. This was followed by a welcome address by Kemal Ergün, a lecture by Prof. Dr. Mathias Rohe and video messages from Hubertus Heil and Prof. Jocelyne Cesari.",
+          "Three panels explored the lived realities of young Muslims in Europe, forms of political and social involvement, and religious identity and political participation. Prof. Mahmut Hakkı Akın presented a survey of 2,091 young people in nine countries: 63.5 per cent want politicians to seek closer contact with Muslims – yet only 29 per cent can imagine going into politics themselves.",
+          "The second day was dedicated to workshops and group work. Closing remarks were given by Murat Gümüş, Secretary General of the Islamrat."
+        ],
+        "zitate": [
+          {
+            "text": "Be yourselves.",
+            "wer": "Humza Yousaf"
+          },
+          {
+            "text": "The aim is to enable young Muslims to be informed, reflective and responsible actors in their societies.",
+            "wer": "Murat Gümüş (paraphrased, translated)"
+          },
+          {
+            "text": "Muslims are not a community on the margins.",
+            "wer": "Burhan Kesici (paraphrased, translated)"
+          }
+        ]
+      },
+      "verfassungen": {
+        "absaetze": [
+          "The second module on 13 and 14 June 2026 focused on Europe’s constitutions. The module was opened by Burhan Kesici, chairman of the Islamrat. The programme opened with a keynote by Farid Hafez (William & Mary, USA) on the history and current challenges of European constitutions, followed by panels with Hafez and Bünyamin Kalem (IGMG Youth) and with Dr. Mustafa Cerić, former Reis-ul-Ulema of Bosnia, and Büşra Çatal (IGMG Women’s Youth).",
+          "In the country groups, participants explored the topic for their own country – for France with lawyer Selda Can, for Germany with Jun.-Prof. Dr. Idris Nassery (Paderborn University). In the evening, the “Eğri Doğru” format – named after a Turkish saying about speaking openly and honestly – brought a conversation with Mehmet Daimagüler and Elif Zehra Kandemir. Sunday was dedicated to the workshop “Constitutional Advocacy”."
+        ]
+      },
+      "skills-workshop": {"absaetze": ["The skills workshop on 12 and 13 September 2026 focused on analytical skills, critical thinking and handling information. After the opening by Burhan Kesici and remarks by Zehra Karataş, chair of IGMG Women’s Youth, it was time to get to work.", "For two days, participants worked in workshops and small groups – with a trainer, around tables, with pen and paper. Less lecture, more hands-on: exactly what a skills module is about."]}
+    }
   },
 };

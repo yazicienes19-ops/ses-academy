@@ -1,7 +1,7 @@
 import Image from "next/image";
 import type { Texte } from "@/i18n/typ";
 
-export function Footer({ t }: { t: Texte }) {
+export function Footer({ t, presse }: { t: Texte; presse: string }) {
   return (
     <footer className="bg-forest text-paper">
       <div className="mx-auto max-w-7xl px-4 pt-20 pb-10 sm:px-6 lg:px-10">
@@ -25,6 +25,7 @@ export function Footer({ t }: { t: Texte }) {
             </p>
           </div>
           <ul className="space-y-1 text-paper/85">
+            <li><a href={presse} className="hover:text-signal">{t.presse.nav}</a></li>
             <li><a href="https://www.islamrat.de/" className="hover:text-signal">{t.footer.islamrat} ↗</a></li>
             <li><a href="https://www.islamrat.de/impressum/" className="hover:text-signal">{t.footer.impressum} ↗</a></li>
             <li><a href="https://www.islamrat.de/disclaimer/" className="hover:text-signal">{t.footer.datenschutz} ↗</a></li>

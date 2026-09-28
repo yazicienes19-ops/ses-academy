@@ -126,7 +126,7 @@ export const nl: Texte = {
     kontakt: "Contact",
   },
   seminar: { zurueck: "Terug naar het overzicht", datum: "Datum", ort: "Locatie", ortOffen: "in voorbereiding", vorher: "Vorige module", nachher: "Volgende module", gaeste: "Gasten", eindruecke: "Indrukken" },
-  formate: { keynote: "Keynote", panel: "Panel", grusswort: "Welkomstwoord", eroeffnung: "Opening", studie: "Onderzoek", laendergruppe: "Landengroep", gespraech: "Gesprek", schlusswort: "Slotwoord" },
+  formate: { keynote: "Keynote", panel: "Panel", videobotschaft: "Videoboodschap", moderation: "Moderatie", grusswort: "Welkomstwoord", eroeffnung: "Opening", studie: "Onderzoek", laendergruppe: "Landengroep", gespraech: "Gesprek", schlusswort: "Slotwoord" },
   seminare: {
     auftakt: {
       titel: "Identiteit, Verantwoordelijkheid en Participatie – Jonge Moslims in Europa",
@@ -207,5 +207,125 @@ export const nl: Texte = {
     "hinweis": "Bij het versturen opent je e-mailprogramma met je ingevulde aanmelding aan ses@islamrat.de – je hoeft alleen nog op verzenden te klikken.",
     "danke": "Je e-mailprogramma zou nu geopend moeten zijn. Zo niet, schrijf ons dan direct op ses@islamrat.de.",
     "mailBetreff": "Aanmelding SES Academy"
+  },
+  stimmen: {
+    "nav": "Stemmen",
+    "meta": "Opiniestukken, video’s en projecten van deelnemers van de SES Academy.",
+    "kicker": "Stemmen",
+    "titel": [
+      "We hebben",
+      "iets te zeggen."
+    ],
+    "intro": "Hier publiceren deelnemers van de SES Academy wat ze in de modules uitwerken: opiniestukken, video’s, infographics en podcasts – in hun eigen taal.",
+    "leer": "De eerste bijdragen verschijnen binnenkort.",
+    "filterModul": "Module",
+    "filterLand": "Land",
+    "alle": "Alle",
+    "typ": {
+      "kommentar": "Opinie",
+      "video": "Video",
+      "grafik": "Infographic",
+      "podcast": "Podcast"
+    },
+    "laender": {
+      "de": "Duitsland",
+      "fr": "Frankrijk",
+      "at": "Oostenrijk",
+      "nl": "Nederland",
+      "be": "België",
+      "ch": "Zwitserland",
+      "andere": "Andere landen"
+    },
+    "lesen": "Verder lezen",
+    "zurueck": "Alle stemmen",
+    "videoLaden": "Video afspelen",
+    "videoHinweis": "Bij het afspelen wordt verbinding gemaakt met YouTube.",
+    "hinweis": "De bijdragen geven de persoonlijke mening van de auteurs weer.",
+    "muster": "Voorbeeld",
+    "startseiteTitel": "Stemmen uit de Academy",
+    "startseiteText": "Wat deelnemers denken, schrijven en maken."
+  },
+  presse: {
+    "nav": "Pers & sprekers",
+    "meta": "Informatie, foto’s en contactpersoon van de SES Academy voor pers en sprekers.",
+    "kicker": "Pers & sprekers",
+    "titel": "Alles in één oogopslag.",
+    "intro": "Bent u uitgenodigd als spreker of bericht u over de SES Academy? Hier vindt u de belangrijkste informatie, foto’s en uw contactpersoon.",
+    "kurzTitel": "De SES Academy in drie zinnen",
+    "kurz": [
+      "De SES Academy is een onderwijs- en empowermentprogramma van de Islamrat für die Bundesrepublik Deutschland voor jonge moslims van 18 tot 30 jaar in Europa.",
+      "Via keynotes, landengroepen en workshops verdiepen de deelnemers zich in democratie, grondwetten, politieke participatie en internationale politiek.",
+      "Het doel: maatschappelijke ontwikkelingen kunnen duiden – en er mee vorm aan geven."
+    ],
+    "faktenTitel": "Feiten",
+    "fakten": [
+      [
+        "Organisator",
+        "Islamrat für die Bundesrepublik Deutschland"
+      ],
+      [
+        "In samenwerking met",
+        "IGMG Jongeren- en Vrouwenjongerenorganisaties"
+      ],
+      [
+        "Looptijd",
+        "april 2026 – juni 2028 (verwacht)"
+      ],
+      [
+        "Deelnemers",
+        "ongeveer 150 jongvolwassenen van 18–30 jaar, in landengroepen o.a. uit Duitsland, Frankrijk en Oostenrijk"
+      ],
+      [
+        "Format",
+        "Weekendseminars ongeveer om de twee maanden, plus winter- en zomerkampen"
+      ],
+      [
+        "Locatie",
+        "Keulen (Colonia-Allee 3) en andere steden in Europa"
+      ]
+    ],
+    "gaesteTitel": "Gasten tot nu toe (selectie)",
+    "downloadsTitel": "Downloads",
+    "onepager": "Factsheet (PDF)",
+    "logo": "Logo (PNG)",
+    "fotos": "Persfoto’s",
+    "fotoCredit": "Foto: Islamrat",
+    "kontaktTitel": "Uw contactpersoon",
+    "kontaktRolle": "Secretaris-generaal van de Islamrat en projectcoördinator"
+  },
+  berichte: {
+    "kicker": "Terugblik",
+    "folgt": "Foto’s en een verslag van deze module volgen binnenkort.",
+    "laut": "Volgens het programma",
+    "module": {
+      "auftakt": {
+        "absaetze": [
+          "Ongeveer 200 jonge moslims uit verschillende Europese landen kwamen op 11 en 12 april 2026 in Keulen samen voor de aftrap van de SES Academy. Na de opening door Burhan Kesici, voorzitter van de Islamrat, hield de voormalige Schotse premier Humza Yousaf de eerste keynote. Daarna volgden een welkomstwoord van Kemal Ergün, een lezing van prof. dr. Mathias Rohe en videoboodschappen van Hubertus Heil en prof. Jocelyne Cesari.",
+          "In drie panels ging het over de leefwereld van jonge moslims in Europa, vormen van politieke en maatschappelijke betrokkenheid, en religieuze identiteit en politieke participatie. Prof. Mahmut Hakkı Akın presenteerde een onderzoek onder 2.091 jongeren in negen landen: 63,5 procent wil dat politici nauwer contact zoeken met moslims – maar slechts 29 procent kan zich voorstellen zelf de politiek in te gaan.",
+          "De tweede dag stond in het teken van workshops en groepswerk. Het slotwoord werd uitgesproken door Murat Gümüş, secretaris-generaal van de Islamrat."
+        ],
+        "zitate": [
+          {
+            "text": "Wees jezelf.",
+            "wer": "Humza Yousaf"
+          },
+          {
+            "text": "Het doel is jonge moslims in staat te stellen geïnformeerde, reflectieve en verantwoordelijke actoren in hun samenlevingen te zijn.",
+            "wer": "Murat Gümüş (strekking, vertaald)"
+          },
+          {
+            "text": "Moslims zijn geen gemeenschap aan de rand.",
+            "wer": "Burhan Kesici (strekking, vertaald)"
+          }
+        ]
+      },
+      "verfassungen": {
+        "absaetze": [
+          "De tweede module op 13 en 14 juni 2026 stond in het teken van de Europese grondwetten. De module werd geopend door Burhan Kesici, voorzitter van de Islamrat. Het programma opende met een keynote van Farid Hafez (William & Mary, VS) over de geschiedenis en actuele uitdagingen van Europese grondwetten, gevolgd door panels met Hafez en Bünyamin Kalem (IGMG Jongeren) en met dr. Mustafa Cerić, voormalig Reis-ul-Ulema van Bosnië, en Büşra Çatal (IGMG Vrouwenjongeren).",
+          "In de landengroepen verdiepten de deelnemers het thema voor hun eigen land – voor Frankrijk met advocaat Selda Can, voor Duitsland met jun.-prof. dr. Idris Nassery (Universiteit Paderborn). ’s Avonds bracht het format ‘Eğri Doğru’ – naar een Turkse uitdrukking over open en eerlijk met elkaar praten – een gesprek met Mehmet Daimagüler en Elif Zehra Kandemir. De zondag stond in het teken van de workshop ‘Constitutional Advocacy’."
+        ]
+      },
+      "skills-workshop": {"absaetze": ["De vaardighedenworkshop op 12 en 13 september 2026 stond in het teken van analytisch vermogen, kritisch denken en omgaan met informatie. Na de opening door Burhan Kesici en een welkomstwoord van Zehra Karataş, voorzitter van IGMG Vrouwenjongeren, ging men aan de slag.", "Twee dagen lang werkten de deelnemers in workshops en kleine groepen – met een trainer, aan tafels, met pen en papier. Minder luisteren, meer zelf doen: precies waar een vaardighedenmodule om draait."]}
+    }
   },
 };

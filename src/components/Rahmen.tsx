@@ -17,9 +17,9 @@ export function Rahmen({ l, children }: { l: Sprache; children: React.ReactNode 
         <a href="#inhalt" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[70] focus:rounded-full focus:bg-ink focus:px-4 focus:py-2 focus:text-paper">
           Skip
         </a>
-        <Header lang={l} start={pfad(l)} nav={t.nav} bewerben={{ href: pfad(l, "/bewerbung/"), label: t.bewerbungSeite.nav }} />
+        <Header lang={l} start={pfad(l)} nav={t.nav} bewerben={{ href: pfad(l, "/bewerbung/"), label: t.bewerbungSeite.nav }} stimmen={{ href: pfad(l, "/stimmen/"), label: t.stimmen.nav }} />
         <main id="inhalt">{children}</main>
-        <Footer t={t} />
+        <Footer t={t} presse={pfad(l, "/presse/")} />
       </body>
     </html>
   );
