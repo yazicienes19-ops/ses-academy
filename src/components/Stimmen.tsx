@@ -2,18 +2,22 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import type { Beitrag, Land } from "@/i18n/stimmen";
+import type { Beitrag, BeitragTyp, Land } from "@/i18n/stimmen";
 import type { ModulSlug, Texte } from "@/i18n/typ";
 
-export type Karte = Beitrag & { href: string; modulTitel: string; datumText: string };
+export type Karte = Beitrag & { href: string; modulTitel?: string; datumText: string };
 
 export function StimmenListe({ karten, t }: { karten: Karte[]; t: Texte["stimmen"] }) {
   const [modul, setModul] = useState<ModulSlug | "alle">("alle");
   const [land, setLand] = useState<Land | "alle">("alle");
+  const [typ, setTyp] = useState<BeitragTyp | "alle">("alle");
 
-  const modulListe = [...new Map(karten.map((k) => [k.modul, k.modulTitel])).entries()];
+  const modulListe = [...new Map(karten.flatMap((k) => (k.modul && k.modulTitel ? [[k.modul, k.modulTitel] as const] : []))).entries()];
   const laender = [...new Set(karten.map((k) => k.land))];
-  const sichtbar = karten.filter((k) => (modul === "alle" || k.modul === modul) && (land === "alle" || k.land === land));
+  const typen = [...new Set(karten.map((k) => k.typ))];
+  const sichtbar = karten.filter(
+    (k) => (modul === "alle" || k.modul === modul) && (land === "alle" || k.land === land) && (typ === "alle" || k.typ === typ),
+  );
 
   if (karten.length === 0) {
     return (
@@ -28,7 +32,20 @@ export function StimmenListe({ karten, t }: { karten: Karte[]; t: Texte["stimmen
 
   return (
     <div>
-      <div className="flex flex-col gap-4 lg:flex-row lg:gap-10">
+      <div className="flex flex-col gap-4 lg:flex-row lg:flex-wrap lg:gap-x-10">
+        {typen.length > 1 && (
+          <div role="group" aria-label={t.filterTyp} className="flex flex-wrap items-center gap-2">
+            <span className="mr-1 text-sm text-ink-soft">{t.filterTyp}</span>
+            <button type="button" className={chip(typ === "alle")} onClick={() => setTyp("alle")} aria-pressed={typ === "alle"}>
+              {t.alle}
+            </button>
+            {typen.map((x) => (
+              <button key={x} type="button" className={chip(typ === x)} onClick={() => setTyp(x)} aria-pressed={typ === x}>
+                {t.typ[x]}
+              </button>
+            ))}
+          </div>
+        )}
         {modulListe.length > 1 && (
           <div role="group" aria-label={t.filterModul} className="flex flex-wrap items-center gap-2">
             <span className="mr-1 text-sm text-ink-soft">{t.filterModul}</span>
@@ -74,7 +91,9 @@ export function StimmenListe({ karten, t }: { karten: Karte[]; t: Texte["stimmen
                 {k.autor.alter ? `, ${k.autor.alter}` : ""}
                 {k.autor.stadt ? ` · ${k.autor.stadt}` : ""}
               </p>
-              <p className="text-sm text-ink-soft">{k.modulTitel.split(/[–:]/)[0].trim()} · {k.datumText}</p>
+              <p className="text-sm text-ink-soft">
+                {[k.extern?.medium ?? k.anlass ?? k.modulTitel?.split(/[–:]/)[0].trim(), k.datumText].filter(Boolean).join(" · ")}
+              </p>
             </Link>
           </li>
         ))}

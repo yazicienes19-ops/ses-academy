@@ -212,22 +212,25 @@ export const nl: Texte = {
   },
   stimmen: {
     "nav": "Stemmen",
-    "meta": "Opiniestukken, video’s en projecten van deelnemers van de SES Academy.",
+    "meta": "Opiniestukken, toespraken, artikelen, video’s en projecten van deelnemers van de SES Academy.",
     "kicker": "Stemmen",
     "titel": [
       "We hebben",
       "iets te zeggen."
     ],
-    "intro": "Hier publiceren deelnemers van de SES Academy wat ze in de modules uitwerken: opiniestukken, video’s, infographics en podcasts – in hun eigen taal.",
+    "intro": "Hier laten deelnemers van de SES Academy zien wat ze in de modules uitwerken en waar ze van zich laten horen: opiniestukken, toespraken, persartikelen, video’s, infographics en podcasts – in hun eigen taal.",
     "leer": "De eerste bijdragen verschijnen binnenkort.",
     "filterModul": "Module",
     "filterLand": "Land",
+    "filterTyp": "Vorm",
     "alle": "Alle",
     "typ": {
       "kommentar": "Opinie",
       "video": "Video",
       "grafik": "Infographic",
-      "podcast": "Podcast"
+      "podcast": "Podcast",
+      "rede": "Toespraak",
+      "artikel": "Artikel"
     },
     "laender": {
       "de": "Duitsland",
@@ -238,6 +241,9 @@ export const nl: Texte = {
       "ch": "Zwitserland",
       "andere": "Andere landen"
     },
+    "anlass": "Uitgesproken bij",
+    "erschienenIn": "Verschenen in",
+    "zumArtikel": "Naar het artikel",
     "lesen": "Verder lezen",
     "zurueck": "Alle stemmen",
     "videoLaden": "Video afspelen",
