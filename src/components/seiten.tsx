@@ -487,7 +487,7 @@ export function Bewerbungsseite({ l }: { l: Sprache }) {
       <section id="formular" className="mx-auto max-w-4xl scroll-mt-20 px-4 py-20 sm:px-6">
         <h2 className="font-display text-[clamp(2.2rem,5vw,3.8rem)] leading-none font-extrabold">{b.formTitel}</h2>
         <div className="mt-10">
-          <BewerbungsFormular t={b} />
+          <BewerbungsFormular t={b} l={l} />
         </div>
       </section>
     </>

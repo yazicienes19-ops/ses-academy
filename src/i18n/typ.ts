@@ -105,6 +105,8 @@ export type Texte = {
     senden: string;
     hinweis: string;
     danke: string;
+    fehler: string;
+    doppelt: string;
     mailBetreff: string;
   };
   stimmen: {

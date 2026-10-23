@@ -204,8 +204,10 @@ export const nl: Texte = {
     },
     "einwilligung": "Ik ga ermee akkoord dat de Islamrat mijn gegevens verwerkt om mijn aanmelding te behandelen.",
     "senden": "Aanmelding versturen",
-    "hinweis": "Bij het versturen opent je e-mailprogramma met je ingevulde aanmelding aan ses@islamrat.de – je hoeft alleen nog op verzenden te klikken.",
-    "danke": "Je e-mailprogramma zou nu geopend moeten zijn. Zo niet, schrijf ons dan direct op ses@islamrat.de.",
+    "hinweis": "Na het versturen ontvang je een ontvangstbevestiging per e-mail.",
+    "danke": "Bedankt! We hebben je aanmelding ontvangen. Er is een bevestiging onderweg naar je inbox.",
+    "fehler": "Er ging iets mis. Controleer je gegevens of schrijf ons op ses@islamrat.de.",
+    "doppelt": "Met dit e-mailadres is er al een aanmelding voor deze lichting.",
     "mailBetreff": "Aanmelding SES Academy"
   },
   stimmen: {

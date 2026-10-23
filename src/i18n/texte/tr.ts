@@ -204,8 +204,10 @@ export const tr: Texte = {
     },
     "einwilligung": "Bilgilerimin başvurumun değerlendirilmesi amacıyla İslam Konseyi tarafından işlenmesini kabul ediyorum.",
     "senden": "Başvuruyu gönder",
-    "hinweis": "Gönder’e bastığında e-posta programın, ses@islamrat.de adresine hazır başvurunla açılır – sadece göndermen yeterli.",
-    "danke": "E-posta programın şimdi açılmış olmalı. Açılmadıysa bize doğrudan ses@islamrat.de adresinden yaz.",
+    "hinweis": "Gönderdikten sonra e-posta ile bir alındı onayı alacaksın.",
+    "danke": "Teşekkürler! Başvurun bize ulaştı. Onay e-postası yolda.",
+    "fehler": "Maalesef bir sorun oluştu. Lütfen bilgilerini kontrol et veya ses@islamrat.de adresine yaz.",
+    "doppelt": "Bu e-posta adresiyle bu dönem için zaten bir başvuru var.",
     "mailBetreff": "SES Academy Başvurusu"
   },
   stimmen: {

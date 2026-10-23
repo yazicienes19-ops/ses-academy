@@ -207,8 +207,10 @@ export const de: Texte = {
     },
     "einwilligung": "Ich bin einverstanden, dass der Islamrat meine Angaben zur Bearbeitung meiner Bewerbung verarbeitet.",
     "senden": "Bewerbung absenden",
-    "hinweis": "Beim Absenden öffnet sich dein E-Mail-Programm mit deiner fertigen Bewerbung an ses@islamrat.de – du musst sie nur noch abschicken.",
-    "danke": "Dein E-Mail-Programm sollte sich jetzt geöffnet haben. Falls nicht, schreib uns direkt an ses@islamrat.de.",
+    "hinweis": "Nach dem Absenden bekommst du eine Eingangsbestätigung per E-Mail.",
+    "danke": "Danke! Deine Bewerbung ist bei uns eingegangen. Eine Bestätigung ist unterwegs in dein Postfach.",
+    "fehler": "Das hat leider nicht geklappt. Bitte prüfe deine Angaben oder schreib uns an ses@islamrat.de.",
+    "doppelt": "Mit dieser E-Mail-Adresse liegt bereits eine Bewerbung für diesen Jahrgang vor.",
     "mailBetreff": "Bewerbung SES Academy"
   },
   stimmen: {
