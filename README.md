@@ -1,3 +1,50 @@
+# SES Academy
+
+Fünfsprachige Website der SES Academy, dazu Bewerbung, Teilnahme und Einlass (Check-in).
+
+## Bereiche
+
+| Pfad | Für wen | Was |
+| --- | --- | --- |
+| `/`, `/bewerbung/`, `/seminar/…`, `/en/…` | Öffentlich | Website. Das Bewerbungsformular speichert in Supabase und schickt eine Eingangsbestätigung. |
+| `/ticket/<token>/` | Teilnehmende | Persönliches Ticket: QR-Code, Kurzcode, Module, selbst abmelden oder entschuldigen. Der Link kommt per Mail. |
+| `/team/` | Team (Login) | Übersicht je nach Rolle. |
+| `/team/einlass/` | alle Team-Rollen | Scanner und Kurzcode. Ab Orga-Team auch die Anwesenheitsliste (abhaken, zurücknehmen). |
+| `/team/bewerbungen/` | Admin, Vorstand | Bewerbungen annehmen (meldet für alle Module an und schickt das Ticket), ablehnen, Warteliste, Ticket erneut senden. |
+
+Rollen: `admin`, `vorstand` (alles), `orga_team` (Einlass mit Liste), `checkin_helper` (nur Scanner und Kurzcode, keine Kontaktdaten).
+
+## Lokal starten
+
+Voraussetzung: Docker (z. B. OrbStack) und die Supabase-CLI.
+
+```bash
+npm install
+supabase start                 # lokale Datenbank mit Migration und Testdaten
+cp .env.example .env.local     # Schlüssel aus `supabase status` eintragen
+npm run dev
+```
+
+- Team-Logins (nur lokal, Passwort `test1234`): `admin@ses.test`, `vorstand@ses.test`, `orga@ses.test`, `helfer@ses.test`
+- Verschickte Mails landen lokal in Mailpit: http://127.0.0.1:55324
+- Die Kamera im Scanner funktioniert auf dem Handy nur über https. Zum Testen: `npx next dev --experimental-https`
+
+## Tests
+
+```bash
+npm run test:db                # 37 Datenbanktests (setzt die lokale DB zurück)
+npm run build && npx next start -p 3100 &
+supabase db reset && node scripts/e2e-phase1.mjs   # Ende-zu-Ende, headless
+```
+
+## Produktion
+
+- **Migration:** mit `supabase link --project-ref <ref>` und `supabase db push` (spielt `seed.sql` NICHT ein).
+- **Umgebungsvariablen beim Hosting:** alle aus `.env.example`, mit echten Werten. Ohne sie funktionieren Bewerbung und Team-Bereich nicht.
+- **Hosting:** Die Seite braucht einen Server, zum Beispiel Vercel. Ein reiner Webspace genügt nicht mehr.
+
+---
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

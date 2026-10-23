@@ -204,8 +204,10 @@ export const en: Texte = {
     },
     "einwilligung": "I agree that the Islamrat may process my details in order to handle my application.",
     "senden": "Send application",
-    "hinweis": "When you submit, your email app opens with your completed application to ses@islamrat.de – you just need to send it.",
-    "danke": "Your email app should have opened now. If not, write to us directly at ses@islamrat.de.",
+    "hinweis": "After submitting, you will receive a confirmation by email.",
+    "danke": "Thank you! We have received your application. A confirmation is on its way to your inbox.",
+    "fehler": "Something went wrong. Please check your details or write to us at ses@islamrat.de.",
+    "doppelt": "There is already an application for this year with this email address.",
     "mailBetreff": "Application SES Academy"
   },
   stimmen: {

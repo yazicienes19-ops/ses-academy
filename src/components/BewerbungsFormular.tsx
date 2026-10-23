@@ -1,44 +1,30 @@
 "use client";
 
-import { useState } from "react";
-import type { Texte } from "@/i18n/typ";
+import { useState, useTransition } from "react";
+import type { Sprache, Texte } from "@/i18n/typ";
+import { bewerbungAbsenden, type BewerbungZustand } from "@/lib/aktionen/bewerbung";
 import { Pfeil } from "./Pfeil";
 
-const EMPFAENGER = "ses@islamrat.de";
-
-// Die Seite ist statisch (kein eigener Server). Deshalb öffnet das Absenden das E-Mail-Programm
-// mit einer fertig ausgefüllten Bewerbung. Soll später ein Formular-Backend genutzt werden,
-// genügt es, hier in `absenden` einen fetch() auf dessen Endpunkt einzubauen.
-export function BewerbungsFormular({ t }: { t: Texte["bewerbungSeite"] }) {
+// Die Bewerbung wird serverseitig gespeichert (Supabase) und per E-Mail bestätigt.
+export function BewerbungsFormular({ t, l }: { t: Texte["bewerbungSeite"]; l: Sprache }) {
   const f = t.felder;
-  const [gesendet, setGesendet] = useState(false);
-  const jahr = new Date().getFullYear();
+  const [zustand, setZustand] = useState<BewerbungZustand>({ status: "leer" });
+  const [sendet, starte] = useTransition();
 
+  // Über onSubmit statt form action, damit die Eingaben bei einem Fehler stehen bleiben.
   function absenden(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const d = new FormData(e.currentTarget);
-    const w = (k: string) => String(d.get(k) ?? "").trim();
-    const sprachen = d.getAll("sprachen").map(String).join(", ");
-    const zeilen = [
-      `${f.vorname}: ${w("vorname")}`,
-      `${f.nachname}: ${w("nachname")}`,
-      `${f.email}: ${w("email")}`,
-      `${f.telefon}: ${w("telefon") || "–"}`,
-      `${f.geburtsjahr}: ${w("geburtsjahr")}`,
-      `${f.land}: ${w("land")}`,
-      `${f.stadt}: ${w("stadt")}`,
-      `${f.sprachen}: ${sprachen || "–"}`,
-      "",
-      `${f.motivation}`,
-      w("motivation"),
-      "",
-      `${f.quelle}: ${w("quelle") || "–"}`,
-      "",
-      `✓ ${t.einwilligung}`,
-    ];
-    const betreff = `${t.mailBetreff} – ${w("vorname")} ${w("nachname")}`;
-    window.location.href = `mailto:${EMPFAENGER}?subject=${encodeURIComponent(betreff)}&body=${encodeURIComponent(zeilen.join("\n"))}`;
-    setGesendet(true);
+    const daten = new FormData(e.currentTarget);
+    starte(async () => setZustand(await bewerbungAbsenden(zustand, daten)));
+  }
+  const jahr = new Date().getFullYear();
+
+  if (zustand.status === "ok") {
+    return (
+      <p role="status" className="rounded-3xl bg-white/80 p-8 text-lg ring-1 ring-line">
+        {t.danke}
+      </p>
+    );
   }
 
   const feld = "w-full rounded-2xl bg-white/80 px-4 py-3.5 text-lg ring-1 ring-line outline-none transition focus:ring-2 focus:ring-ink";
@@ -47,6 +33,12 @@ export function BewerbungsFormular({ t }: { t: Texte["bewerbungSeite"] }) {
 
   return (
     <form onSubmit={absenden} className="grid gap-5 sm:grid-cols-2">
+      <input type="hidden" name="sprache" value={l} />
+      {/* Spam-Falle, für Menschen unsichtbar */}
+      <div aria-hidden className="absolute -left-[9999px] h-px w-px overflow-hidden">
+        <label htmlFor="webseite">Webseite</label>
+        <input id="webseite" name="webseite" tabIndex={-1} autoComplete="off" />
+      </div>
       <div>
         <label htmlFor="vorname" className={label}>{f.vorname}</label>
         <input id="vorname" name="vorname" required autoComplete="given-name" className={feld} />
@@ -101,16 +93,16 @@ export function BewerbungsFormular({ t }: { t: Texte["bewerbungSeite"] }) {
       </div>
 
       <label className="flex cursor-pointer gap-3 sm:col-span-2">
-        <input type="checkbox" required className="mt-1 h-5 w-5 shrink-0 accent-[var(--ink)]" />
+        <input type="checkbox" name="einwilligung" value="ja" required className="mt-1 h-5 w-5 shrink-0 accent-[var(--ink)]" />
         <span className="text-ink-soft">{t.einwilligung}</span>
       </label>
 
       <div className="sm:col-span-2">
-        <button type="submit" className="w-full rounded-full bg-ink px-8 py-4 text-lg font-semibold text-paper transition hover:bg-forest sm:w-auto">
+        <button type="submit" disabled={sendet} className="w-full rounded-full bg-ink px-8 py-4 text-lg font-semibold text-paper transition hover:bg-forest disabled:opacity-60 sm:w-auto">
           {t.senden} <Pfeil className="ml-2" />
         </button>
         <p className="mt-3 text-sm text-ink-soft" role="status">
-          {gesendet ? t.danke : t.hinweis}
+          {zustand.status === "fehler" ? t.fehler : zustand.status === "doppelt" ? t.doppelt : t.hinweis}
         </p>
       </div>
     </form>
