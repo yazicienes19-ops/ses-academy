@@ -18,7 +18,6 @@ const schema = z.object({
   country: z.enum(["DE", "AT", "FR", "CH", "NL", "BE", "other"]).nullable(),
   branch: z.enum(["GT", "KGT"]).nullable(),
   mentor_id: z.uuid().nullable(),
-  notes: z.string(),
   active: z.boolean(),
 });
 
@@ -36,7 +35,6 @@ export async function personSpeichern(formData: FormData) {
     country: leer(formData.get("country")),
     branch: leer(formData.get("branch")),
     mentor_id: leer(formData.get("mentor_id")),
-    notes: String(formData.get("notes") ?? ""),
     active: formData.get("active") === "on",
   });
   if (!daten.success) redirect(`${ziel}?fehler=${encodeURIComponent(daten.error.issues[0].message)}`);
@@ -46,6 +44,8 @@ export async function personSpeichern(formData: FormData) {
     daten.data.country = (r?.country ?? null) as z.infer<typeof schema>["country"];
   }
   const { error } = await supabase.from("participants").update(daten.data).eq("id", id);
+  // Interne Notiz getrennt speichern (Teilnehmende dürfen ihre participants-Zeile lesen)
+  if (!error) await supabase.from("participant_notes").upsert({ participant_id: id, body: String(formData.get("notes") ?? "") });
   if (error) redirect(`${ziel}?fehler=${encodeURIComponent(error.code === "23505" ? "Diese E-Mail-Adresse gehört schon zu einer anderen Person." : error.message)}`);
   revalidatePath("/team/", "layout");
   redirect(`${ziel}?hinweis=gespeichert`);

@@ -229,6 +229,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"participant_notes": {
+                  Row: {
+                    "body": string,"participant_id": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "body"?: string,"participant_id": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "body"?: string,"participant_id"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "participant_notes_participant_id_fkey"
+      columns: ["participant_id"]
+isOneToOne: true
+      referencedRelation: "participants"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"participants": {
                   Row: {
                     "active": boolean,"affiliation_status": Database["public"]['Enums']["affiliation_status"],"branch": string | null,"checkin_token": string,"cohort_id": string | null,"country": string | null,"created_at": string,"email": string | null,"first_name": string,"id": string,"last_name": string,"mentor_id": string | null,"notes": string,"phone": string | null,"preferred_language": string,"privacy_consent_at": string | null,"region_id": number | null,"short_code": string | null,"updated_at": string,"user_id": string | null,"display_name": string | null

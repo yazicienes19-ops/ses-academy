@@ -100,6 +100,17 @@ CREATE UNIQUE INDEX reviews_one_per_reviewer ON public.reviews (submission_id, r
 CREATE TRIGGER reviews_touch BEFORE UPDATE ON public.reviews FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
 
 -- ---------------------------------------------------------------------------
+-- Interne Notizen zu Teilnehmenden – eigene Tabelle, weil Teilnehmende ihre participants-Zeile
+-- komplett lesen dürfen (participants_self) und dort nichts Internes stehen soll.
+-- ---------------------------------------------------------------------------
+CREATE TABLE public.participant_notes (
+  participant_id uuid PRIMARY KEY REFERENCES public.participants(id) ON DELETE CASCADE,
+  body           text NOT NULL DEFAULT '',
+  updated_at     timestamptz NOT NULL DEFAULT now()
+);
+CREATE TRIGGER participant_notes_touch BEFORE UPDATE ON public.participant_notes FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
+
+-- ---------------------------------------------------------------------------
 -- Stimmen-Beiträge
 -- ---------------------------------------------------------------------------
 CREATE TABLE public.contributions (
@@ -125,13 +136,21 @@ RETURNS uuid LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
 $$;
 
 -- Nach dem Login per E-Mail-Code: Konto mit Teilnehmer- bzw. Verantwortlichen-Datensatz verknüpfen.
+-- Nur, wenn die Sitzung über Code/Link aus der E-Mail entstanden ist (Besitz des Postfachs bewiesen) und die
+-- Adresse bestätigt ist. Sonst könnte sich jemand per Passwort-Registrierung mit fremder Adresse ein Profil holen.
 CREATE FUNCTION public.link_my_account()
 RETURNS text LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 DECLARE
-  mail text := public.normalize_email(auth.jwt() ->> 'email');
+  mail text;
+  via_mail boolean := EXISTS (
+    SELECT 1 FROM jsonb_array_elements(coalesce(auth.jwt() -> 'amr', '[]'::jsonb)) a
+     WHERE a ->> 'method' IN ('otp', 'magiclink'));
   found_as text := 'none';
 BEGIN
-  IF auth.uid() IS NULL OR mail IS NULL THEN RETURN found_as; END IF;
+  IF auth.uid() IS NULL OR NOT via_mail THEN RETURN found_as; END IF;
+  SELECT public.normalize_email(u.email) INTO mail FROM auth.users u
+   WHERE u.id = auth.uid() AND u.email_confirmed_at IS NOT NULL;
+  IF mail IS NULL THEN RETURN found_as; END IF;
   UPDATE public.participants SET user_id = auth.uid() WHERE email = mail AND user_id IS NULL AND active;
   IF EXISTS (SELECT 1 FROM public.participants WHERE user_id = auth.uid()) THEN found_as := 'participant'; END IF;
   UPDATE public.mentors SET user_id = auth.uid() WHERE email = mail AND user_id IS NULL;
@@ -190,6 +209,7 @@ ALTER TABLE public.submissions             ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.submission_participants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reviews                 ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.contributions           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.participant_notes       ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY regions_read        ON public.regions FOR SELECT TO authenticated USING (true);
 CREATE POLICY regions_full_write  ON public.regions FOR ALL TO authenticated USING (public.has_full_access()) WITH CHECK (public.has_full_access());
@@ -215,6 +235,7 @@ CREATE POLICY reviews_self        ON public.reviews FOR SELECT TO authenticated
 CREATE POLICY contributions_full  ON public.contributions FOR ALL TO authenticated USING (public.has_full_access()) WITH CHECK (public.has_full_access());
 CREATE POLICY contributions_orga  ON public.contributions FOR SELECT TO authenticated USING (public.has_orga_access());
 CREATE POLICY contributions_self  ON public.contributions FOR SELECT TO authenticated USING (participant_id = public.my_participant_id());
+CREATE POLICY notes_full         ON public.participant_notes FOR ALL TO authenticated USING (public.has_full_access()) WITH CHECK (public.has_full_access());
 
 -- Funktionen wie im Grundmodell: erst allen entziehen, dann gezielt freigeben
 REVOKE ALL ON FUNCTION public.my_participant_id(), public.link_my_account(), public.get_participant_directory(),
@@ -222,7 +243,7 @@ REVOKE ALL ON FUNCTION public.my_participant_id(), public.link_my_account(), pub
 GRANT EXECUTE ON FUNCTION public.my_participant_id(), public.link_my_account(), public.get_participant_directory(),
   public.register_cohort_for_module(uuid) TO authenticated;
 REVOKE INSERT, UPDATE, DELETE ON public.regions, public.mentors, public.assignments, public.submissions,
-  public.submission_participants, public.reviews, public.contributions FROM anon;
+  public.submission_participants, public.reviews, public.contributions, public.participant_notes FROM anon;
 
 -- ---------------------------------------------------------------------------
 -- Regionen (vereinheitlichte Schreibweise der bisherigen Listen)

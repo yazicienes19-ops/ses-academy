@@ -23,8 +23,9 @@ export default async function Person({ params, searchParams }: PageProps<"/team/
   const { id } = await params;
   const sp = await searchParams;
   const supabase = await createClient();
-  const [{ data: p }, { data: regionen }, { data: mentoren }, { data: regs }, { data: abg }, { data: beitraege }] = await Promise.all([
+  const [{ data: p }, { data: notiz }, { data: regionen }, { data: mentoren }, { data: regs }, { data: abg }, { data: beitraege }] = await Promise.all([
     supabase.from("participants").select("*").eq("id", id).maybeSingle(),
+    supabase.from("participant_notes").select("body").eq("participant_id", id).maybeSingle(),
     supabase.from("regions").select("id,name").order("name"),
     supabase.from("mentors").select("id,name").order("name"),
     supabase.from("registrations").select("id,status,modules(id,title,module_days(id,starts_at)),attendances(id,module_day_id,method)").eq("participant_id", id),
@@ -90,7 +91,7 @@ export default async function Person({ params, searchParams }: PageProps<"/team/
                   {mentoren?.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
                 </select>
               </div>
-              <div className="sm:col-span-2"><label className="etikett" htmlFor="notes">Notiz (nur Team)</label><textarea id="notes" name="notes" rows={2} defaultValue={p.notes} className="feld" /></div>
+              <div className="sm:col-span-2"><label className="etikett" htmlFor="notes">Notiz (nur Team)</label><textarea id="notes" name="notes" rows={2} defaultValue={notiz?.body ?? ""} className="feld" /></div>
               <label className="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" name="active" defaultChecked={p.active} className="h-4 w-4 accent-ink" /> Nimmt aktiv teil</label>
               <div className="sm:col-span-2"><button className="knopf">Speichern</button></div>
             </form>
