@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { BewerbungsFormular } from "./BewerbungsFormular";
+import { ModulAnmeldung } from "./ModulAnmeldung";
 import { StimmenListe, YoutubeKlick, type Karte } from "./Stimmen";
 import { beitraege } from "@/i18n/stimmen";
 import { Faq } from "./Faq";
@@ -358,6 +359,8 @@ export function Seminarseite({ l, slug }: { l: Sprache; slug: ModulSlug }) {
             ))}
           </div>
         </div>
+
+        <ModulAnmeldung l={l} slug={slug} felder={t.bewerbungSeite.felder} />
 
         {(t.berichte.module[slug] || m.bis < heute()) && (
           <section className="bg-paper-deep/50">

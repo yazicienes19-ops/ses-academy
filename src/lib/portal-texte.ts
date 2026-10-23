@@ -29,6 +29,21 @@ export type PortalTexte = {
   mailBewerbungBetreff: string;
   mailBewerbungText: string;
   mailGruss: string;
+  anmeldungTitel: string;
+  anmeldungIntro: string;
+  anmeldungFrei: (n: number) => string;
+  anmeldungVoll: string;
+  anmeldungEinwilligung: string;
+  anmeldungSenden: string;
+  anmeldungOk: string;
+  anmeldungWarteliste: string;
+  anmeldungSchon: string;
+  anmeldungFehler: string;
+  verlorenTitel: string;
+  verlorenText: string;
+  verlorenSenden: string;
+  verlorenOk: string;
+  verlorenLink: string;
 };
 
 export const portalTexte: Record<Sprache, PortalTexte> = {
@@ -57,6 +72,21 @@ export const portalTexte: Record<Sprache, PortalTexte> = {
     mailBewerbungBetreff: "Deine Bewerbung ist eingegangen",
     mailBewerbungText: "vielen Dank für deine Bewerbung für die SES Academy. Wir melden uns, sobald wir sie geprüft haben.",
     mailGruss: "Viele Grüße\nDein Team der SES Academy",
+    anmeldungTitel: "Jetzt anmelden",
+    anmeldungIntro: "Für diese Veranstaltung kannst du dich auch ohne Bewerbung anmelden. Dein Ticket kommt per E-Mail.",
+    anmeldungFrei: (n) => (n === 1 ? "Noch 1 Platz frei" : `Noch ${n} Plätze frei`),
+    anmeldungVoll: "Ausgebucht. Du kommst auf die Warteliste und wir schreiben dir, sobald ein Platz frei wird.",
+    anmeldungEinwilligung: "Ich bin einverstanden, dass der Islamrat meine Angaben zur Organisation der Veranstaltung verarbeitet.",
+    anmeldungSenden: "Anmelden",
+    anmeldungOk: "Du bist angemeldet. Dein Ticket ist per E-Mail unterwegs.",
+    anmeldungWarteliste: "Du stehst auf der Warteliste. Wir schreiben dir, sobald ein Platz frei wird.",
+    anmeldungSchon: "Du bist schon angemeldet. Wir haben dir dein Ticket noch einmal geschickt.",
+    anmeldungFehler: "Das hat leider nicht geklappt. Bitte prüfe deine Angaben oder schreib uns an ses@islamrat.de.",
+    verlorenTitel: "Ticket verloren?",
+    verlorenText: "Gib die E-Mail-Adresse ein, mit der du angemeldet bist. Wir schicken dir dein Ticket erneut.",
+    verlorenSenden: "Ticket senden",
+    verlorenOk: "Wenn es zu dieser Adresse eine Anmeldung gibt, ist dein Ticket jetzt unterwegs.",
+    verlorenLink: "Ticket verloren? Hier erneut anfordern",
   },
   tr: {
     ticketTitel: "Biletin",
@@ -83,6 +113,21 @@ export const portalTexte: Record<Sprache, PortalTexte> = {
     mailBewerbungBetreff: "Başvurun bize ulaştı",
     mailBewerbungText: "SES Academy'ye başvurduğun için çok teşekkürler. İnceledikten sonra sana dönüş yapacağız.",
     mailGruss: "Selamlar\nSES Academy ekibi",
+    anmeldungTitel: "Hemen kaydol",
+    anmeldungIntro: "Bu etkinliğe başvuru yapmadan da kaydolabilirsin. Biletin e-posta ile gelir.",
+    anmeldungFrei: (n) => `${n} yer kaldı`,
+    anmeldungVoll: "Yer kalmadı. Bekleme listesine alınırsın, yer açılınca sana yazarız.",
+    anmeldungEinwilligung: "Bilgilerimin etkinliğin organizasyonu için İslam Konseyi tarafından işlenmesini kabul ediyorum.",
+    anmeldungSenden: "Kaydol",
+    anmeldungOk: "Kaydın tamam. Biletin e-posta ile yolda.",
+    anmeldungWarteliste: "Bekleme listesindesin. Yer açılınca sana yazacağız.",
+    anmeldungSchon: "Zaten kayıtlısın. Biletini sana tekrar gönderdik.",
+    anmeldungFehler: "Maalesef bir sorun oluştu. Lütfen bilgilerini kontrol et veya ses@islamrat.de adresine yaz.",
+    verlorenTitel: "Biletini mi kaybettin?",
+    verlorenText: "Kayıt olduğun e-posta adresini gir. Biletini sana tekrar gönderelim.",
+    verlorenSenden: "Bileti gönder",
+    verlorenOk: "Bu adrese ait bir kayıt varsa biletin şimdi yolda.",
+    verlorenLink: "Biletini mi kaybettin? Buradan tekrar iste",
   },
   en: {
     ticketTitel: "Your ticket",
@@ -109,6 +154,21 @@ export const portalTexte: Record<Sprache, PortalTexte> = {
     mailBewerbungBetreff: "We have received your application",
     mailBewerbungText: "thank you for applying to the SES Academy. We will get back to you once we have reviewed it.",
     mailGruss: "Best regards\nYour SES Academy team",
+    anmeldungTitel: "Register now",
+    anmeldungIntro: "You can register for this event without applying. Your ticket will arrive by email.",
+    anmeldungFrei: (n) => (n === 1 ? "1 place left" : `${n} places left`),
+    anmeldungVoll: "Fully booked. You will be put on the waiting list and we will write to you as soon as a place becomes free.",
+    anmeldungEinwilligung: "I agree that the Islamrat processes my details to organise the event.",
+    anmeldungSenden: "Register",
+    anmeldungOk: "You are registered. Your ticket is on its way by email.",
+    anmeldungWarteliste: "You are on the waiting list. We will write to you as soon as a place becomes free.",
+    anmeldungSchon: "You are already registered. We have sent you your ticket again.",
+    anmeldungFehler: "Something went wrong. Please check your details or write to us at ses@islamrat.de.",
+    verlorenTitel: "Lost your ticket?",
+    verlorenText: "Enter the email address you registered with. We will send you your ticket again.",
+    verlorenSenden: "Send ticket",
+    verlorenOk: "If there is a registration for this address, your ticket is on its way.",
+    verlorenLink: "Lost your ticket? Request it again here",
   },
   fr: {
     ticketTitel: "Ton billet",
@@ -135,6 +195,21 @@ export const portalTexte: Record<Sprache, PortalTexte> = {
     mailBewerbungBetreff: "Nous avons bien reçu ta candidature",
     mailBewerbungText: "merci pour ta candidature à la SES Academy. Nous reviendrons vers toi après l’avoir examinée.",
     mailGruss: "Bien à toi\nL’équipe de la SES Academy",
+    anmeldungTitel: "S’inscrire",
+    anmeldungIntro: "Tu peux t’inscrire à cet événement sans candidature. Ton billet arrive par e-mail.",
+    anmeldungFrei: (n) => (n === 1 ? "Plus qu’1 place" : `Plus que ${n} places`),
+    anmeldungVoll: "Complet. Tu seras sur la liste d’attente et nous t’écrirons dès qu’une place se libère.",
+    anmeldungEinwilligung: "J’accepte que l’Islamrat traite mes données pour l’organisation de l’événement.",
+    anmeldungSenden: "S’inscrire",
+    anmeldungOk: "Tu es inscrit·e. Ton billet arrive par e-mail.",
+    anmeldungWarteliste: "Tu es sur la liste d’attente. Nous t’écrirons dès qu’une place se libère.",
+    anmeldungSchon: "Tu es déjà inscrit·e. Nous t’avons renvoyé ton billet.",
+    anmeldungFehler: "Une erreur s’est produite. Vérifie tes informations ou écris-nous à ses@islamrat.de.",
+    verlorenTitel: "Billet perdu ?",
+    verlorenText: "Indique l’adresse e-mail utilisée pour ton inscription. Nous te renverrons ton billet.",
+    verlorenSenden: "Envoyer le billet",
+    verlorenOk: "S’il existe une inscription pour cette adresse, ton billet est en route.",
+    verlorenLink: "Billet perdu ? Le redemander ici",
   },
   nl: {
     ticketTitel: "Je ticket",
@@ -161,6 +236,21 @@ export const portalTexte: Record<Sprache, PortalTexte> = {
     mailBewerbungBetreff: "We hebben je aanmelding ontvangen",
     mailBewerbungText: "bedankt voor je aanmelding bij de SES Academy. We nemen contact met je op zodra we die hebben bekeken.",
     mailGruss: "Hartelijke groet\nJe team van de SES Academy",
+    anmeldungTitel: "Nu aanmelden",
+    anmeldungIntro: "Voor dit evenement kun je je ook zonder sollicitatie aanmelden. Je ticket komt per e-mail.",
+    anmeldungFrei: (n) => (n === 1 ? "Nog 1 plek vrij" : `Nog ${n} plekken vrij`),
+    anmeldungVoll: "Volgeboekt. Je komt op de wachtlijst en we schrijven je zodra er een plek vrijkomt.",
+    anmeldungEinwilligung: "Ik ga ermee akkoord dat de Islamrat mijn gegevens verwerkt voor de organisatie van het evenement.",
+    anmeldungSenden: "Aanmelden",
+    anmeldungOk: "Je bent aangemeld. Je ticket is per e-mail onderweg.",
+    anmeldungWarteliste: "Je staat op de wachtlijst. We schrijven je zodra er een plek vrijkomt.",
+    anmeldungSchon: "Je bent al aangemeld. We hebben je ticket nog een keer gestuurd.",
+    anmeldungFehler: "Er ging iets mis. Controleer je gegevens of schrijf ons op ses@islamrat.de.",
+    verlorenTitel: "Ticket kwijt?",
+    verlorenText: "Vul het e-mailadres in waarmee je bent aangemeld. We sturen je ticket opnieuw.",
+    verlorenSenden: "Ticket sturen",
+    verlorenOk: "Als er een aanmelding voor dit adres is, is je ticket nu onderweg.",
+    verlorenLink: "Ticket kwijt? Vraag het hier opnieuw aan",
   },
 };
 
