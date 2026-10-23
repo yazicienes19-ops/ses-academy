@@ -116,8 +116,12 @@ export type Texte = {
     leer: string;
     filterModul: string;
     filterLand: string;
+    filterTyp: string;
     alle: string;
-    typ: Record<"kommentar" | "video" | "grafik" | "podcast", string>;
+    typ: Record<"kommentar" | "video" | "grafik" | "podcast" | "rede" | "artikel", string>;
+    anlass: string;
+    erschienenIn: string;
+    zumArtikel: string;
     laender: Record<"de" | "fr" | "at" | "nl" | "be" | "ch" | "andere", string>;
     lesen: string;
     zurueck: string;

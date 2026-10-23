@@ -217,22 +217,25 @@ export const fr: Texte = {
   },
   stimmen: {
     "nav": "Voix",
-    "meta": "Tribunes, vidéos et projets des participant·e·s de la SES Academy.",
+    "meta": "Tribunes, discours, articles, vidéos et projets des participant·e·s de la SES Academy.",
     "kicker": "Voix",
     "titel": [
       "Nous avons",
       "des choses à dire."
     ],
-    "intro": "Ici, les participant·e·s de la SES Academy publient ce qu’ils élaborent pendant les modules : tribunes, vidéos, infographies et podcasts – dans leur propre langue.",
+    "intro": "Ici, les participant·e·s de la SES Academy montrent ce qu’ils élaborent pendant les modules et où ils prennent la parole : tribunes, discours, articles de presse, vidéos, infographies et podcasts – dans leur propre langue.",
     "leer": "Les premières contributions seront bientôt publiées.",
     "filterModul": "Module",
     "filterLand": "Pays",
+    "filterTyp": "Format",
     "alle": "Tous",
     "typ": {
       "kommentar": "Tribune",
       "video": "Vidéo",
       "grafik": "Infographie",
-      "podcast": "Podcast"
+      "podcast": "Podcast",
+      "rede": "Discours",
+      "artikel": "Article"
     },
     "laender": {
       "de": "Allemagne",
@@ -243,6 +246,9 @@ export const fr: Texte = {
       "ch": "Suisse",
       "andere": "Autres pays"
     },
+    "anlass": "Prononcé lors de",
+    "erschienenIn": "Paru dans",
+    "zumArtikel": "Lire l’article",
     "lesen": "Lire la suite",
     "zurueck": "Toutes les voix",
     "videoLaden": "Lire la vidéo",

@@ -213,22 +213,25 @@ export const de: Texte = {
   },
   stimmen: {
     "nav": "Stimmen",
-    "meta": "Kommentare, Videos und Projekte der Teilnehmenden der SES Academy.",
+    "meta": "Kommentare, Reden, Artikel, Videos und Projekte der Teilnehmenden der SES Academy.",
     "kicker": "Stimmen",
     "titel": [
       "Wir haben",
       "was zu sagen."
     ],
-    "intro": "Hier veröffentlichen Teilnehmende der SES Academy, was sie in den Modulen erarbeiten: Kommentare, Videos, Grafiken und Podcasts – in ihrer eigenen Sprache.",
+    "intro": "Hier zeigen Teilnehmende der SES Academy, was sie in den Modulen erarbeiten und wo sie sich zu Wort melden: Kommentare, Reden, Presseartikel, Videos, Grafiken und Podcasts – in ihrer eigenen Sprache.",
     "leer": "Die ersten Beiträge erscheinen in Kürze.",
     "filterModul": "Modul",
     "filterLand": "Land",
+    "filterTyp": "Format",
     "alle": "Alle",
     "typ": {
       "kommentar": "Kommentar",
       "video": "Video",
       "grafik": "Grafik",
-      "podcast": "Podcast"
+      "podcast": "Podcast",
+      "rede": "Rede",
+      "artikel": "Artikel"
     },
     "laender": {
       "de": "Deutschland",
@@ -239,6 +242,9 @@ export const de: Texte = {
       "ch": "Schweiz",
       "andere": "Weitere Länder"
     },
+    "anlass": "Gehalten bei",
+    "erschienenIn": "Erschienen in",
+    "zumArtikel": "Zum Artikel",
     "lesen": "Weiterlesen",
     "zurueck": "Alle Stimmen",
     "videoLaden": "Video abspielen",

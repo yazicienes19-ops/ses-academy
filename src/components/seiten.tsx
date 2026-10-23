@@ -500,7 +500,7 @@ export function stimmenKarten(l: Sprache): Karte[] {
   return beitraege.map((b) => ({
     ...b,
     href: pfad(l, `/stimmen/${b.slug}/`),
-    modulTitel: t.seminare[b.modul].titel,
+    modulTitel: b.modul ? t.seminare[b.modul].titel : undefined,
     datumText: df.format(new Date(`${b.datum}T12:00:00Z`)),
   }));
 }
@@ -544,8 +544,24 @@ export function Beitragsseite({ l, slug }: { l: Sprache; slug: string }) {
         <span className="font-semibold text-ink">{k.autor.name}</span>
         {k.autor.alter ? `, ${k.autor.alter}` : ""}
         {k.autor.stadt ? ` · ${k.autor.stadt}` : ""} · {k.datumText}
-        <br />
-        <Link href={pfad(l, `/seminar/${k.modul}/`)} className="underline underline-offset-4">{k.modulTitel}</Link>
+        {k.anlass && (
+          <>
+            <br />
+            {t.anlass}: <span lang={k.sprache}>{k.anlass}</span>
+          </>
+        )}
+        {k.extern && (
+          <>
+            <br />
+            {t.erschienenIn}: <span className="font-semibold text-ink">{k.extern.medium}</span>
+          </>
+        )}
+        {k.modul && (
+          <>
+            <br />
+            <Link href={pfad(l, `/seminar/${k.modul}/`)} className="underline underline-offset-4">{k.modulTitel}</Link>
+          </>
+        )}
       </p>
       {k.youtube && (
         <div className="mt-10">
@@ -562,6 +578,17 @@ export function Beitragsseite({ l, slug }: { l: Sprache; slug: string }) {
           <p key={p}>{p}</p>
         ))}
       </div>
+      {k.extern && (
+        <a
+          href={k.extern.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-10 inline-flex rounded-full bg-ink px-7 py-4 font-semibold text-paper transition hover:bg-forest"
+        >
+          {t.zumArtikel} · {k.extern.medium}
+          <Pfeil richtung="extern" className="ml-2" />
+        </a>
+      )}
       <p className="mt-12 border-t border-line pt-6 text-sm text-ink-soft">{t.hinweis}</p>
     </article>
   );

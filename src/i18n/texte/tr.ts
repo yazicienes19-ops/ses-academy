@@ -210,22 +210,25 @@ export const tr: Texte = {
   },
   stimmen: {
     "nav": "Sesler",
-    "meta": "SES Academy katılımcılarının yorumları, videoları ve projeleri.",
+    "meta": "SES Academy katılımcılarının yorumları, konuşmaları, makaleleri, videoları ve projeleri.",
     "kicker": "Sesler",
     "titel": [
       "Söyleyecek",
       "sözümüz var."
     ],
-    "intro": "SES Academy katılımcıları modüllerde ürettiklerini burada yayımlıyor: yorumlar, videolar, grafikler ve podcast’ler – kendi dillerinde.",
+    "intro": "SES Academy katılımcıları modüllerde ürettiklerini ve söz aldıkları yerleri burada paylaşıyor: yorumlar, konuşmalar, basın makaleleri, videolar, grafikler ve podcast’ler – kendi dillerinde.",
     "leer": "İlk katkılar yakında yayımlanacak.",
     "filterModul": "Modül",
     "filterLand": "Ülke",
+    "filterTyp": "Tür",
     "alle": "Tümü",
     "typ": {
       "kommentar": "Yorum",
       "video": "Video",
       "grafik": "Grafik",
-      "podcast": "Podcast"
+      "podcast": "Podcast",
+      "rede": "Konuşma",
+      "artikel": "Makale"
     },
     "laender": {
       "de": "Almanya",
@@ -236,6 +239,9 @@ export const tr: Texte = {
       "ch": "İsviçre",
       "andere": "Diğer ülkeler"
     },
+    "anlass": "Konuşmanın yapıldığı yer",
+    "erschienenIn": "Yayımlandığı yer",
+    "zumArtikel": "Makaleyi oku",
     "lesen": "Devamını oku",
     "zurueck": "Tüm sesler",
     "videoLaden": "Videoyu oynat",
