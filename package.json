@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "onepager": "node scripts/onepager.mjs",
-    "test:db": "supabase db reset && for t in checkin_test portal_test; do docker exec -i supabase_db_ses-academy psql -U postgres -d postgres -q -t < supabase/tests/$t.sql || exit 1; done"
+    "test:db": "supabase db reset && for t in checkin_test portal_test kennzahlen_test; do docker exec -i supabase_db_ses-academy psql -U postgres -d postgres -q -t < supabase/tests/$t.sql || exit 1; done"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",

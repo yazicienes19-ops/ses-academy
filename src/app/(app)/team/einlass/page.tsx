@@ -4,6 +4,7 @@ import { Einlass, type ListenEintrag } from "@/components/team/Einlass";
 import { TeamKopf } from "@/components/team/TeamKopf";
 import { darf, requireStaff } from "@/lib/auth";
 import type { Zaehler } from "@/lib/einlass";
+import type { OfflineEintrag } from "@/lib/offline-einlass";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Einlass | SES Academy" };
@@ -40,15 +41,17 @@ export default async function EinlassSeite({ searchParams }: PageProps<"/team/ei
   const tag = tage.find((t) => t.id === gewaehlt) ?? vorschlag;
 
   let zaehler: Zaehler | null = null;
-  let liste: ListenEintrag[] | null = null;
+  let alle: ListenEintrag[] = [];
   if (tag) {
-    const [{ data: z }, listeAntwort] = await Promise.all([
+    const [{ data: z }, { data: l }] = await Promise.all([
       supabase.rpc("get_day_counts", { p_module_day_id: tag.id }),
-      darf.orga(staff.role) ? supabase.rpc("get_checkin_list", { p_module_day_id: tag.id }) : Promise.resolve(null),
+      // Für alle Rollen: die schlanke Liste für den Offline-Modus (ohne Kontaktdaten)
+      supabase.rpc("get_checkin_list", { p_module_day_id: tag.id }),
     ]);
     zaehler = z as Zaehler | null;
-    liste = listeAntwort ? ((listeAntwort.data ?? []) as ListenEintrag[]) : null;
+    alle = (l ?? []) as ListenEintrag[];
   }
+  const offlineListe: OfflineEintrag[] = alle.map(({ attendance_id: _, ...e }) => e);
 
   return (
     <>
@@ -76,10 +79,13 @@ export default async function EinlassSeite({ searchParams }: PageProps<"/team/ei
               <Einlass
                 key={tag.id}
                 tagId={tag.id}
+                modulTitel={tag.module.title}
                 ticketNoetig={tag.module.ticket_required}
                 zaehler={zaehler}
-                liste={liste}
+                offlineListe={offlineListe}
+                liste={darf.orga(staff.role) ? alle : null}
                 darfZeitfensterIgnorieren={darf.alles(staff.role)}
+                darfWalkIn={darf.orga(staff.role)}
               />
             </div>
           </>
