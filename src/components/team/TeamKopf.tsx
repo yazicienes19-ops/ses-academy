@@ -3,12 +3,12 @@ import { abmelden } from "@/lib/aktionen/team";
 import { darf, rollenName, type Staff } from "@/lib/auth";
 
 /** Kopfzeile im Team-Bereich. Zeigt nur die Bereiche, die die Rolle nutzen darf. */
-export function TeamKopf({ staff, aktiv }: { staff: Staff; aktiv?: "einlass" | "bewerbungen" }) {
+export function TeamKopf({ staff, aktiv, breit }: { staff: Staff; aktiv?: "einlass" | "bewerbungen" | "teilnehmende" | "hausaufgaben" | "import"; breit?: boolean }) {
   const link = (name: typeof aktiv) =>
     `rounded-full px-4 py-2 text-sm font-semibold transition ${aktiv === name ? "bg-ink text-paper" : "hover:bg-paper-deep"}`;
   return (
     <header className="border-b border-line bg-paper/90 backdrop-blur">
-      <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-3 px-4 py-3">
+      <div className={`mx-auto flex ${breit ? "max-w-7xl" : "max-w-5xl"} flex-wrap items-center gap-3 px-4 py-3`}>
         <Link href="/team/" className="mr-auto flex items-center gap-3">
           <img src="/brand/ses-logo.png" alt="SES Academy" className="h-8 w-auto" />
           <span className="text-sm text-ink-soft">{staff.name} · {rollenName[staff.role]}</span>
@@ -16,6 +16,9 @@ export function TeamKopf({ staff, aktiv }: { staff: Staff; aktiv?: "einlass" | "
         <nav className="flex flex-wrap items-center gap-1">
           <Link href="/team/einlass/" className={link("einlass")}>Einlass</Link>
           {darf.alles(staff.role) && <Link href="/team/bewerbungen/" className={link("bewerbungen")}>Bewerbungen</Link>}
+          {darf.alles(staff.role) && <Link href="/team/teilnehmende/" className={link("teilnehmende")}>Teilnehmende</Link>}
+          {darf.orga(staff.role) && <Link href="/team/hausaufgaben/" className={link("hausaufgaben")}>Hausaufgaben</Link>}
+          {darf.alles(staff.role) && <Link href="/team/import/" className={link("import")}>Import</Link>}
           <form action={abmelden}>
             <button type="submit" className="rounded-full px-4 py-2 text-sm font-semibold text-ink-soft hover:bg-paper-deep">Abmelden</button>
           </form>

@@ -11,6 +11,10 @@ Fünfsprachige Website der SES Academy, dazu Bewerbung, Teilnahme und Einlass (C
 | `/team/` | Team (Login) | Übersicht je nach Rolle. |
 | `/team/einlass/` | alle Team-Rollen | Scanner und Kurzcode. Ab Orga-Team auch die Anwesenheitsliste (abhaken, zurücknehmen). |
 | `/team/bewerbungen/` | Admin, Vorstand | Bewerbungen annehmen (meldet für alle Module an und schickt das Ticket), ablehnen, Warteliste, Ticket erneut senden. |
+| `/team/teilnehmende/` | Admin, Vorstand | Teilnehmende mit Region, GT/KGT, Verantwortlichen; Anwesenheit je Modul und Tag (nachtragen/zurücknehmen), QR-Code per Mail, Stimmen-Beiträge verknüpfen. Ansicht „Verantwortliche“ (Sorumlu) mit E-Mail. |
+| `/team/hausaufgaben/` | ab Orga-Team | Hausaufgaben, wer abgegeben hat und wer nicht, Bewertung nach dem Rhetorik-Bogen (9 Kriterien × 1–5 Punkte, Feedback), Gruppenvideos. Namen ohne Kontaktdaten. |
+| `/team/import/` | Admin, Vorstand | Excel/CSV einlesen: Teilnehmerliste, Hausaufgabenliste, Bewertungsbogen, E-Mail-Adressen (z. B. Google-Formular). Immer erst Vorschau, dann übernehmen. |
+| `/mein-bereich/` | Teilnehmende (Login per E-Mail-Code) | Eigener QR-Code, kommende Module, Anwesenheit, Hausaufgaben mit Bewertung und Feedback, eigene Beiträge. |
 
 Rollen: `admin`, `vorstand` (alles), `orga_team` (Einlass mit Liste), `checkin_helper` (nur Scanner und Kurzcode, keine Kontaktdaten).
 
@@ -32,16 +36,26 @@ npm run dev
 ## Tests
 
 ```bash
-npm run test:db                # 37 Datenbanktests (setzt die lokale DB zurück)
+npm run test:db                # 37 + 24 Datenbanktests (Check-in; Hausaufgaben/Portal), setzt die lokale DB zurück
 npm run build && npx next start -p 3100 &
 supabase db reset && node scripts/e2e-phase1.mjs   # Ende-zu-Ende, headless
 ```
+
+## Importe
+
+Team → Import, oder ohne Oberfläche:
+`npx tsx --conditions=react-server --env-file=.env.local scripts/import-test.mts <teilnehmerliste|hausaufgaben|bewertungsbogen|emails> <datei> [anwenden] [vorschlaege] [anlegen]`
+
+- Namen werden tolerant abgeglichen (türkische Zeichen, Tippfehler, nur Vorname, abgeschnittene Dateinamen, Zweitnamen). Unklares zeigt die Vorschau; „Ähnliche Namen zuordnen“ übernimmt die Vorschläge.
+- Teilnehmerliste: Modul 1/2/3 = die ersten Module aus `src/i18n/daten.ts` (Auftakt, Verfassungen, Skills-Workshop); „+“ wird als Anwesenheit an allen Tagen des Moduls eingetragen. Alle Personen werden außerdem für die kommenden Module des Jahrgangs angemeldet.
+- Echte Excel-Dateien gehören nie ins Repository.
 
 ## Produktion
 
 - **Migration:** mit `supabase link --project-ref <ref>` und `supabase db push` (spielt `seed.sql` NICHT ein).
 - **Umgebungsvariablen beim Hosting:** alle aus `.env.example`, mit echten Werten. Ohne sie funktionieren Bewerbung und Team-Bereich nicht.
 - **Hosting:** Die Seite braucht einen Server, zum Beispiel Vercel. Ein reiner Webspace genügt nicht mehr.
+- **Login „Mein Bereich“:** In Supabase unter Authentication → Email Templates „Magic Link“ und „Confirm signup“ mit `supabase/templates/anmeldung.html` füllen; Site-URL = Adresse der Seite.
 
 ---
 

@@ -5,5 +5,5 @@ export function proxy(request: NextRequest) {
   return sitzungAuffrischen(request);
 }
 
-// Nur der Team-Bereich braucht eine Sitzung; die öffentlichen Seiten bleiben unberührt.
-export const config = { matcher: ["/team/:path*"] };
+// Nur Team-Bereich und „Mein Bereich“ brauchen eine Sitzung; die öffentlichen Seiten bleiben unberührt.
+export const config = { matcher: ["/team/:path*", "/mein-bereich/:path*", "/auth/:path*"] };
