@@ -15,7 +15,10 @@ export function Verlauf({ punkte }: { punkte: VerlaufPunkt[] }) {
   const [aktiv, setAktiv] = useState<string | null>(null);
   if (!punkte.length) return <p className="text-ink-soft">Noch keine vergangenen Modultage im Zeitraum.</p>;
   const quote = (p: VerlaufPunkt) => (p.erwartet ? Math.min(100, Math.round((p.da / p.erwartet) * 100)) : 0);
-  const gewaehlt = punkte.find((p) => p.id === aktiv);
+  const index = punkte.findIndex((p) => p.id === aktiv);
+  const gewaehlt = punkte[index];
+  // Tooltip auf die andere Seite, damit er den gewählten Balken nicht verdeckt
+  const tooltipLinks = index >= punkte.length / 2;
 
   return (
     <figure>
@@ -44,7 +47,7 @@ export function Verlauf({ punkte }: { punkte: VerlaufPunkt[] }) {
           })}
         </div>
         {gewaehlt && (
-          <div role="tooltip" className="pointer-events-none absolute top-0 right-0 rounded-2xl bg-ink px-4 py-3 text-sm text-paper shadow-lg">
+          <div role="tooltip" className={`pointer-events-none absolute top-0 ${tooltipLinks ? "left-12" : "right-0"} rounded-2xl bg-ink px-4 py-3 text-sm text-paper shadow-lg`}>
             <p className="font-semibold">{gewaehlt.modul}</p>
             <p className="text-paper/80">{gewaehlt.datum}</p>
             <p className="mt-1 tabular-nums">{gewaehlt.da} von {gewaehlt.erwartet} da · {quote(gewaehlt)} %</p>

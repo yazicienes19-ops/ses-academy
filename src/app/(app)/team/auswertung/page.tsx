@@ -101,7 +101,7 @@ export default async function Auswertung({ searchParams }: PageProps<"/team/ausw
                 {module.map((m) => (
                   <tr key={m.module_id}>
                     <td className="font-semibold"><Link href={`/team/module/${m.module_id}/`} className="hover:underline">{m.title}</Link></td>
-                    <td>{datum.format(new Date(m.first_day))}{m.days_past < m.days_total ? (m.days_past ? " (läuft)" : " (kommt)") : ""}</td>
+                    <td>{datum.format(new Date(m.first_day))}{m.days_past < m.days_total ? (Date.parse(m.first_day) <= jetzt ? " (läuft)" : " (kommt)") : ""}</td>
                     <td className="text-right tabular-nums">{m.registered}</td>
                     <td className="text-right tabular-nums">{m.days_past ? m.attended_people : "–"}</td>
                     <td className="text-right tabular-nums">{m.days_past === m.days_total ? m.no_shows : "–"}</td>
