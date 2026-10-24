@@ -48,15 +48,40 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"assignments": {
+                },"assignment_excusals": {
                   Row: {
-                    "cohort_id": string,"created_at": string,"description": string,"due_date": string | null,"id": string,"module_id": string | null,"number": number,"title": string
+                    "assignment_id": string,"created_at": string,"created_by": string | null,"id": string,"note": string,"participant_id": string
                   }
                   Insert: {
-                    "cohort_id": string,"created_at"?: string,"description"?: string,"due_date"?: string | null,"id"?: string,"module_id"?: string | null,"number": number,"title": string
+                    "assignment_id": string,"created_at"?: string,"created_by"?: string | null,"id"?: string,"note"?: string,"participant_id": string
                   }
                   Update: {
-                    "cohort_id"?: string,"created_at"?: string,"description"?: string,"due_date"?: string | null,"id"?: string,"module_id"?: string | null,"number"?: number,"title"?: string
+                    "assignment_id"?: string,"created_at"?: string,"created_by"?: string | null,"id"?: string,"note"?: string,"participant_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "assignment_excusals_assignment_id_fkey"
+      columns: ["assignment_id"]
+isOneToOne: false
+      referencedRelation: "assignments"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "assignment_excusals_participant_id_fkey"
+      columns: ["participant_id"]
+isOneToOne: false
+      referencedRelation: "participants"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"assignments": {
+                  Row: {
+                    "cohort_id": string,"created_at": string,"description": string,"due_at": string | null,"due_date": string | null,"id": string,"module_id": string | null,"number": number,"title": string
+                  }
+                  Insert: {
+                    "cohort_id": string,"created_at"?: string,"description"?: string,"due_at"?: string | null,"due_date"?: string | null,"id"?: string,"module_id"?: string | null,"number": number,"title": string
+                  }
+                  Update: {
+                    "cohort_id"?: string,"created_at"?: string,"description"?: string,"due_at"?: string | null,"due_date"?: string | null,"id"?: string,"module_id"?: string | null,"number"?: number,"title"?: string
                   }
                   Relationships: [
                     {
@@ -168,6 +193,25 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"engagements": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"ended_on": string | null,"id": string,"kind": Database["public"]['Enums']["engagement_kind"],"note": string,"organization": string,"participant_id": string,"role": string,"started_on": string | null,"updated_at": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"ended_on"?: string | null,"id"?: string,"kind": Database["public"]['Enums']["engagement_kind"],"note"?: string,"organization"?: string,"participant_id": string,"role"?: string,"started_on"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"ended_on"?: string | null,"id"?: string,"kind"?: Database["public"]['Enums']["engagement_kind"],"note"?: string,"organization"?: string,"participant_id"?: string,"role"?: string,"started_on"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "engagements_participant_id_fkey"
+      columns: ["participant_id"]
+isOneToOne: false
+      referencedRelation: "participants"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"mentors": {
                   Row: {
                     "created_at": string,"email": string | null,"id": string,"name": string,"user_id": string | null
@@ -180,6 +224,31 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"module_day_speakers": {
+                  Row: {
+                    "affiliation": string,"created_at": string,"created_by": string | null,"display_name": string,"id": string,"kind": string,"module_day_id": string,"participant_id": string | null,"topic": string
+                  }
+                  Insert: {
+                    "affiliation"?: string,"created_at"?: string,"created_by"?: string | null,"display_name": string,"id"?: string,"kind"?: string,"module_day_id": string,"participant_id"?: string | null,"topic"?: string
+                  }
+                  Update: {
+                    "affiliation"?: string,"created_at"?: string,"created_by"?: string | null,"display_name"?: string,"id"?: string,"kind"?: string,"module_day_id"?: string,"participant_id"?: string | null,"topic"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "module_day_speakers_module_day_id_fkey"
+      columns: ["module_day_id"]
+isOneToOne: false
+      referencedRelation: "module_days"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "module_day_speakers_participant_id_fkey"
+      columns: ["participant_id"]
+isOneToOne: false
+      referencedRelation: "participants"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"module_days": {
                   Row: {
@@ -410,6 +479,11 @@ isOneToOne: false
 "display_name":
 { Args: { "p": Database["public"]['Tables']["participants"]['Row'] }; Returns: string
                            },
+"get_assignment_status":
+{ Args: { "p_assignment_id": string }; Returns: {
+              "display_name": string,"participant_id": string,"review_count": number,"status": string,"submitted_on": string
+            }[]
+                           },
 "get_checkin_list":
 { Args: { "p_module_day_id": string }; Returns: {
               "affiliation_status": Database["public"]['Enums']["affiliation_status"],"attendance_id": string,"checked_in_at": string,"display_name": string,"participant_id": string,"registration_status": Database["public"]['Enums']["registration_status"],"short_code": string,"token_hash": string
@@ -436,6 +510,11 @@ isOneToOne: false
 "get_participant_directory":
 { Args: Record<PropertyKey, never>; Returns: {
               "active": boolean,"branch": string,"country": string,"display_name": string,"id": string,"mentor": string,"region": string
+            }[]
+                           },
+"get_participant_homework_analytics":
+{ Args: { "p_participant_id": string }; Returns: {
+              "engagement_count": number,"grade_avg": number,"homework_rate": number,"hw_excused": number,"hw_expected": number,"hw_late": number,"hw_missing": number,"hw_on_time": number,"hw_open": number
             }[]
                            },
 "has_checkin_access":
@@ -476,7 +555,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "affiliation_status": "member"|"academy_student"|"guest"|"alumni","application_status": "eingegangen"|"in_pruefung"|"angenommen"|"warteliste"|"abgelehnt"|"zurueckgezogen","checkin_method": "qr"|"short_code"|"manual"|"walk_in"|"offline_sync","module_kind": "auftakt"|"seminar"|"workshop"|"winterschool"|"sonstiges","module_status": "draft"|"published"|"archived","registration_source": "cohort"|"public"|"staff"|"walk_in","registration_status": "pending"|"confirmed"|"waitlist"|"cancelled"|"excused"|"rejected","staff_role": "admin"|"vorstand"|"orga_team"|"checkin_helper"
+            "affiliation_status": "member"|"academy_student"|"guest"|"alumni","application_status": "eingegangen"|"in_pruefung"|"angenommen"|"warteliste"|"abgelehnt"|"zurueckgezogen","checkin_method": "qr"|"short_code"|"manual"|"walk_in"|"offline_sync","engagement_kind": "kommunalpolitik"|"partei"|"jugendrat"|"verein"|"projekt"|"sonstiges","module_kind": "auftakt"|"seminar"|"workshop"|"winterschool"|"sonstiges","module_status": "draft"|"published"|"archived","registration_source": "cohort"|"public"|"staff"|"walk_in","registration_status": "pending"|"confirmed"|"waitlist"|"cancelled"|"excused"|"rejected","staff_role": "admin"|"vorstand"|"orga_team"|"checkin_helper"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -596,7 +675,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "affiliation_status": ["member", "academy_student", "guest", "alumni"],"application_status": ["eingegangen", "in_pruefung", "angenommen", "warteliste", "abgelehnt", "zurueckgezogen"],"checkin_method": ["qr", "short_code", "manual", "walk_in", "offline_sync"],"module_kind": ["auftakt", "seminar", "workshop", "winterschool", "sonstiges"],"module_status": ["draft", "published", "archived"],"registration_source": ["cohort", "public", "staff", "walk_in"],"registration_status": ["pending", "confirmed", "waitlist", "cancelled", "excused", "rejected"],"staff_role": ["admin", "vorstand", "orga_team", "checkin_helper"]
+            "affiliation_status": ["member", "academy_student", "guest", "alumni"],"application_status": ["eingegangen", "in_pruefung", "angenommen", "warteliste", "abgelehnt", "zurueckgezogen"],"checkin_method": ["qr", "short_code", "manual", "walk_in", "offline_sync"],"engagement_kind": ["kommunalpolitik", "partei", "jugendrat", "verein", "projekt", "sonstiges"],"module_kind": ["auftakt", "seminar", "workshop", "winterschool", "sonstiges"],"module_status": ["draft", "published", "archived"],"registration_source": ["cohort", "public", "staff", "walk_in"],"registration_status": ["pending", "confirmed", "waitlist", "cancelled", "excused", "rejected"],"staff_role": ["admin", "vorstand", "orga_team", "checkin_helper"]
           }
         }
 } as const
