@@ -1,6 +1,3 @@
 {
-  "trailingSlash": true,
-  "headers": [
-    { "source": "/(.*)", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] }
-  ]
+  "trailingSlash": true
 }
