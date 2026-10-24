@@ -7,7 +7,9 @@ export type EinlassErgebnis = {
   result:
     | "checked_in" | "already_checked_in" | "invalid_code" | "not_found" | "not_registered" | "not_eligible"
     | "module_cancelled" | "module_not_available" | "ticket_not_required" | "outside_checkin_window"
-    | "day_not_found" | "invalid_scan_time" | "consent_required" | "fehler";
+    | "day_not_found" | "invalid_scan_time" | "consent_required" | "fehler"
+    // nur im Offline-Modus (Browser, siehe offline-einlass.ts)
+    | "offline_vorgemerkt" | "offline_bereits" | "offline_ohne_liste";
   participant_id?: string;
   display_name?: string;
   affiliation_status?: Enums["affiliation_status"];
@@ -68,6 +70,12 @@ export function deute(e: EinlassErgebnis): { ton: Ton; titel: string; text?: str
       return { ton: "gelb", titel: "Für dieses Modul gibt es kein Ticket", text: "Bitte die Person in der Anwesenheitsliste abhaken." };
     case "outside_checkin_window":
       return { ton: "rot", titel: "Außerhalb des Einlasszeitraums", text: e.window_start ? `Einlass ist ab ${uhrzeit(e.window_start, false)} Uhr möglich (4 Stunden vor Beginn bis 6 Stunden nach Ende).` : undefined };
+    case "offline_vorgemerkt":
+      return { ton: "gruen", titel: `Offline vorgemerkt um ${uhrzeit(e.checked_in_at!)} Uhr`, text: "Kein Internet: Der Check-in wird übertragen, sobald die Verbindung wieder steht." };
+    case "offline_bereits":
+      return { ton: "gelb", titel: `Warnung: Bereits erfasst um ${uhrzeit(e.checked_in_at!)} Uhr`, text: "Offline geprüft. Die Person ist schon eingecheckt oder vorgemerkt." };
+    case "offline_ohne_liste":
+      return { ton: "rot", titel: "Kein Internet und keine Offline-Liste", text: "Die Einlassliste für diesen Tag wurde auf diesem Gerät noch nicht geladen. Bitte Internet herstellen." };
     case "consent_required":
       return { ton: "rot", titel: "Einwilligung fehlt", text: "Ohne Datenschutz-Einwilligung kann niemand erfasst werden." };
     default:

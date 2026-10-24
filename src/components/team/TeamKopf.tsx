@@ -3,7 +3,7 @@ import { abmelden } from "@/lib/aktionen/team";
 import { darf, rollenName, type Staff } from "@/lib/auth";
 
 /** Kopfzeile im Team-Bereich. Zeigt nur die Bereiche, die die Rolle nutzen darf. */
-export function TeamKopf({ staff, aktiv, breit }: { staff: Staff; aktiv?: "einlass" | "bewerbungen" | "teilnehmende" | "hausaufgaben" | "import" | "module" | "team"; breit?: boolean }) {
+export function TeamKopf({ staff, aktiv, breit }: { staff: Staff; aktiv?: "einlass" | "bewerbungen" | "teilnehmende" | "hausaufgaben" | "import" | "module" | "team" | "auswertung"; breit?: boolean }) {
   const link = (name: typeof aktiv) =>
     `rounded-full px-4 py-2 text-sm font-semibold transition ${aktiv === name ? "bg-ink text-paper" : "hover:bg-paper-deep"}`;
   return (
@@ -21,6 +21,7 @@ export function TeamKopf({ staff, aktiv, breit }: { staff: Staff; aktiv?: "einla
           {darf.orga(staff.role) && <Link href="/team/hausaufgaben/" className={link("hausaufgaben")}>Hausaufgaben</Link>}
           {darf.alles(staff.role) && <Link href="/team/import/" className={link("import")}>Import</Link>}
           {darf.alles(staff.role) && <Link href="/team/module/" className={link("module")}>Module</Link>}
+          {darf.alles(staff.role) && <Link href="/team/auswertung/" className={link("auswertung")}>Auswertung</Link>}
           {darf.admin(staff.role) && <Link href="/team/team/" className={link("team")}>Team</Link>}
           <form action={abmelden}>
             <button type="submit" className="rounded-full px-4 py-2 text-sm font-semibold text-ink-soft hover:bg-paper-deep">Abmelden</button>

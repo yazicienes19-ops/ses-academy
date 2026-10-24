@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { PersonKennzahlen } from "@/components/team/PersonKennzahlen";
 import { TeamKopf } from "@/components/team/TeamKopf";
 import { Rueckmeldung, Titel, laender } from "@/components/team/Ui";
 import { requireStaff } from "@/lib/auth";
@@ -54,6 +55,8 @@ export default async function Person({ params, searchParams }: PageProps<"/team/
         </Titel>
         <Rueckmeldung hinweis={sp.hinweis} fehler={sp.fehler} />
         {!p.email && <p className="mb-6 rounded-2xl bg-gelb-hell p-4 text-sm font-semibold">Keine E-Mail-Adresse – diese Person bekommt keinen QR-Code per Mail und kann sich nicht anmelden.</p>}
+
+        <PersonKennzahlen participantId={p.id} />
 
         <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
           <section className="karte">
