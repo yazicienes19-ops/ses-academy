@@ -11,6 +11,7 @@ export type Staff = { userId: string; email: string; role: StaffRole; name: stri
 
 /** Wer darf was. Spiegelt has_full_access / has_orga_access / has_checkin_access in der Datenbank. */
 export const darf = {
+  admin: (r: StaffRole) => r === "admin",
   alles: (r: StaffRole) => r === "admin" || r === "vorstand",
   orga: (r: StaffRole) => r === "admin" || r === "vorstand" || r === "orga_team",
   einlass: () => true,

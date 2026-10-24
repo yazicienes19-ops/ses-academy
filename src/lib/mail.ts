@@ -111,3 +111,16 @@ export async function sendeBewerbungEingang(an: { email: string; vorname: string
   await protokolliere({ participantId: null, art: "application_received", an: an.email, ergebnis });
   return ergebnis;
 }
+
+/** Schutz vor Mail-Flut: Wurde dieser Person in den letzten Minuten schon ein Ticket geschickt? */
+export async function ticketKuerzlichGesendet(participantId: string, minuten = 10): Promise<boolean> {
+  const seit = new Date(Date.now() - minuten * 60_000).toISOString();
+  const { count } = await createAdminClient()
+    .from("email_log")
+    .select("id", { count: "exact", head: true })
+    .eq("participant_id", participantId)
+    .eq("kind", "ticket")
+    .eq("status", "sent")
+    .gte("created_at", seit);
+  return (count ?? 0) > 0;
+}
