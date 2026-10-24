@@ -27,6 +27,7 @@ export type Database = {
                   Row: {
                     "birth_year": number | null,"city": string | null,"cohort_id": string,"consent_at": string,"country": string | null,"created_at": string,"email": string,"first_name": string,"id": string,"language": string,"languages": (string)[],"last_name": string,"motivation": string,"participant_id": string | null,"phone": string | null,"review_note": string,"reviewed_at": string | null,"reviewed_by": string | null,"source": string | null,"status": Database["public"]['Enums']["application_status"]
                   }
+                  ComputedFields: never
                   Insert: {
                     "birth_year"?: number | null,"city"?: string | null,"cohort_id": string,"consent_at": string,"country"?: string | null,"created_at"?: string,"email": string,"first_name": string,"id"?: string,"language"?: string,"languages"?: (string)[],"last_name": string,"motivation"?: string,"participant_id"?: string | null,"phone"?: string | null,"review_note"?: string,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"source"?: string | null,"status"?: Database["public"]['Enums']["application_status"]
                   }
@@ -48,10 +49,37 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"assignments": {
+                  Row: {
+                    "cohort_id": string,"created_at": string,"description": string,"due_date": string | null,"id": string,"module_id": string | null,"number": number,"title": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "cohort_id": string,"created_at"?: string,"description"?: string,"due_date"?: string | null,"id"?: string,"module_id"?: string | null,"number": number,"title": string
+                  }
+                  Update: {
+                    "cohort_id"?: string,"created_at"?: string,"description"?: string,"due_date"?: string | null,"id"?: string,"module_id"?: string | null,"number"?: number,"title"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "assignments_cohort_id_fkey"
+      columns: ["cohort_id"]
+isOneToOne: false
+      referencedRelation: "cohorts"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "assignments_module_id_fkey"
+      columns: ["module_id"]
+isOneToOne: false
+      referencedRelation: "modules"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"attendances": {
                   Row: {
                     "checked_in_at": string,"checked_in_by": string | null,"id": string,"method": Database["public"]['Enums']["checkin_method"],"module_day_id": string,"registration_id": string
                   }
+                  ComputedFields: never
                   Insert: {
                     "checked_in_at": string,"checked_in_by"?: string | null,"id"?: string,"method": Database["public"]['Enums']["checkin_method"],"module_day_id": string,"registration_id": string
                   }
@@ -77,6 +105,7 @@ isOneToOne: false
                   Row: {
                     "action": string,"actor_id": string | null,"created_at": string,"entity_id": string | null,"entity_type": string,"id": number,"metadata": NonNullable<Json>,"target_participant_id": string | null
                   }
+                  ComputedFields: never
                   Insert: {
                     "action": string,"actor_id"?: string | null,"created_at"?: string,"entity_id"?: string | null,"entity_type": string,"id"?: never,"metadata"?: NonNullable<Json>,"target_participant_id"?: string | null
                   }
@@ -96,6 +125,7 @@ isOneToOne: false
                   Row: {
                     "created_at": string,"id": string,"is_current": boolean,"name": string,"year": number
                   }
+                  ComputedFields: never
                   Insert: {
                     "created_at"?: string,"id"?: string,"is_current"?: boolean,"name": string,"year": number
                   }
@@ -105,10 +135,31 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"contributions": {
+                  Row: {
+                    "created_at": string,"id": string,"kind": string,"outlet": string | null,"participant_id": string,"published_on": string | null,"title": string,"url": string | null,"website_slug": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"kind": string,"outlet"?: string | null,"participant_id": string,"published_on"?: string | null,"title": string,"url"?: string | null,"website_slug"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"kind"?: string,"outlet"?: string | null,"participant_id"?: string,"published_on"?: string | null,"title"?: string,"url"?: string | null,"website_slug"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "contributions_participant_id_fkey"
+      columns: ["participant_id"]
+isOneToOne: false
+      referencedRelation: "participants"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"email_log": {
                   Row: {
                     "created_at": string,"error": string | null,"id": number,"kind": string,"participant_id": string | null,"recipient": string,"status": string,"triggered_by": string | null
                   }
+                  ComputedFields: never
                   Insert: {
                     "created_at"?: string,"error"?: string | null,"id"?: never,"kind": string,"participant_id"?: string | null,"recipient": string,"status": string,"triggered_by"?: string | null
                   }
@@ -124,10 +175,25 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"mentors": {
+                  Row: {
+                    "created_at": string,"email": string | null,"id": string,"name": string,"user_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"email"?: string | null,"id"?: string,"name": string,"user_id"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"email"?: string | null,"id"?: string,"name"?: string,"user_id"?: string | null
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"module_days": {
                   Row: {
                     "day": string,"ends_at": string,"id": string,"label": string | null,"module_id": string,"starts_at": string
                   }
+                  ComputedFields: never
                   Insert: {
                     "day": string,"ends_at": string,"id"?: string,"label"?: string | null,"module_id": string,"starts_at": string
                   }
@@ -147,6 +213,7 @@ isOneToOne: false
                   Row: {
                     "cancellation_reason": string | null,"cancelled_at": string | null,"capacity": number | null,"cohort_id": string | null,"counts_for_streak": boolean,"created_at": string,"description": string,"id": string,"kind": Database["public"]['Enums']["module_kind"],"location": string | null,"open_registration": boolean,"slug": string,"status": Database["public"]['Enums']["module_status"],"ticket_required": boolean,"title": string,"updated_at": string
                   }
+                  ComputedFields: never
                   Insert: {
                     "cancellation_reason"?: string | null,"cancelled_at"?: string | null,"capacity"?: number | null,"cohort_id"?: string | null,"counts_for_streak"?: boolean,"created_at"?: string,"description"?: string,"id"?: string,"kind"?: Database["public"]['Enums']["module_kind"],"location"?: string | null,"open_registration"?: boolean,"slug": string,"status"?: Database["public"]['Enums']["module_status"],"ticket_required"?: boolean,"title": string,"updated_at"?: string
                   }
@@ -162,15 +229,36 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"participants": {
+                },"participant_notes": {
                   Row: {
-                    "affiliation_status": Database["public"]['Enums']["affiliation_status"],"checkin_token": string,"cohort_id": string | null,"created_at": string,"email": string | null,"first_name": string,"id": string,"last_name": string,"notes": string,"phone": string | null,"preferred_language": string,"privacy_consent_at": string | null,"short_code": string | null,"updated_at": string,"user_id": string | null,"display_name": string | null
+                    "body": string,"participant_id": string,"updated_at": string
                   }
+                  ComputedFields: never
                   Insert: {
-                    "affiliation_status"?: Database["public"]['Enums']["affiliation_status"],"checkin_token"?: string,"cohort_id"?: string | null,"created_at"?: string,"email"?: string | null,"first_name": string,"id"?: string,"last_name"?: string,"notes"?: string,"phone"?: string | null,"preferred_language"?: string,"privacy_consent_at"?: string | null,"short_code"?: never,"updated_at"?: string,"user_id"?: string | null
+                    "body"?: string,"participant_id": string,"updated_at"?: string
                   }
                   Update: {
-                    "affiliation_status"?: Database["public"]['Enums']["affiliation_status"],"checkin_token"?: string,"cohort_id"?: string | null,"created_at"?: string,"email"?: string | null,"first_name"?: string,"id"?: string,"last_name"?: string,"notes"?: string,"phone"?: string | null,"preferred_language"?: string,"privacy_consent_at"?: string | null,"short_code"?: never,"updated_at"?: string,"user_id"?: string | null
+                    "body"?: string,"participant_id"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "participant_notes_participant_id_fkey"
+      columns: ["participant_id"]
+isOneToOne: true
+      referencedRelation: "participants"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"participants": {
+                  Row: {
+                    "active": boolean,"affiliation_status": Database["public"]['Enums']["affiliation_status"],"branch": string | null,"checkin_token": string,"cohort_id": string | null,"country": string | null,"created_at": string,"email": string | null,"first_name": string,"id": string,"last_name": string,"mentor_id": string | null,"notes": string,"phone": string | null,"preferred_language": string,"privacy_consent_at": string | null,"region_id": number | null,"short_code": string | null,"updated_at": string,"user_id": string | null,"display_name": string | null
+                  }
+                  ComputedFields: "display_name"
+                  Insert: {
+                    "active"?: boolean,"affiliation_status"?: Database["public"]['Enums']["affiliation_status"],"branch"?: string | null,"checkin_token"?: string,"cohort_id"?: string | null,"country"?: string | null,"created_at"?: string,"email"?: string | null,"first_name": string,"id"?: string,"last_name"?: string,"mentor_id"?: string | null,"notes"?: string,"phone"?: string | null,"preferred_language"?: string,"privacy_consent_at"?: string | null,"region_id"?: number | null,"short_code"?: never,"updated_at"?: string,"user_id"?: string | null
+                  }
+                  Update: {
+                    "active"?: boolean,"affiliation_status"?: Database["public"]['Enums']["affiliation_status"],"branch"?: string | null,"checkin_token"?: string,"cohort_id"?: string | null,"country"?: string | null,"created_at"?: string,"email"?: string | null,"first_name"?: string,"id"?: string,"last_name"?: string,"mentor_id"?: string | null,"notes"?: string,"phone"?: string | null,"preferred_language"?: string,"privacy_consent_at"?: string | null,"region_id"?: number | null,"short_code"?: never,"updated_at"?: string,"user_id"?: string | null
                   }
                   Relationships: [
                     {
@@ -179,12 +267,39 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "cohorts"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "participants_mentor_id_fkey"
+      columns: ["mentor_id"]
+isOneToOne: false
+      referencedRelation: "mentors"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "participants_region_id_fkey"
+      columns: ["region_id"]
+isOneToOne: false
+      referencedRelation: "regions"
+      referencedColumns: ["id"]
     }
+                  ]
+                },"regions": {
+                  Row: {
+                    "country": string,"id": number,"name": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "country": string,"id"?: number,"name": string
+                  }
+                  Update: {
+                    "country"?: string,"id"?: number,"name"?: string
+                  }
+                  Relationships: [
+                    
                   ]
                 },"registrations": {
                   Row: {
                     "created_at": string,"excuse_note": string | null,"id": string,"module_id": string,"participant_id": string,"source": Database["public"]['Enums']["registration_source"],"status": Database["public"]['Enums']["registration_status"],"status_changed_at": string
                   }
+                  ComputedFields: never
                   Insert: {
                     "created_at"?: string,"excuse_note"?: string | null,"id"?: string,"module_id": string,"participant_id": string,"source": Database["public"]['Enums']["registration_source"],"status"?: Database["public"]['Enums']["registration_status"],"status_changed_at"?: string
                   }
@@ -206,10 +321,31 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"reviews": {
+                  Row: {
+                    "body_language": number | null,"content": number | null,"created_at": string,"facial_expression": number | null,"id": string,"impact": number | null,"improvements": string | null,"language": number | null,"overall": number | null,"presence": number | null,"reviewed_on": string | null,"reviewer_id": string | null,"reviewer_name": string | null,"strengths": string | null,"structure": number | null,"submission_id": string,"tip": string | null,"updated_at": string,"voice": number | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "body_language"?: number | null,"content"?: number | null,"created_at"?: string,"facial_expression"?: number | null,"id"?: string,"impact"?: number | null,"improvements"?: string | null,"language"?: number | null,"overall"?: number | null,"presence"?: number | null,"reviewed_on"?: string | null,"reviewer_id"?: string | null,"reviewer_name"?: string | null,"strengths"?: string | null,"structure"?: number | null,"submission_id": string,"tip"?: string | null,"updated_at"?: string,"voice"?: number | null
+                  }
+                  Update: {
+                    "body_language"?: number | null,"content"?: number | null,"created_at"?: string,"facial_expression"?: number | null,"id"?: string,"impact"?: number | null,"improvements"?: string | null,"language"?: number | null,"overall"?: number | null,"presence"?: number | null,"reviewed_on"?: string | null,"reviewer_id"?: string | null,"reviewer_name"?: string | null,"strengths"?: string | null,"structure"?: number | null,"submission_id"?: string,"tip"?: string | null,"updated_at"?: string,"voice"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "reviews_submission_id_fkey"
+      columns: ["submission_id"]
+isOneToOne: false
+      referencedRelation: "submissions"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"staff_members": {
                   Row: {
                     "created_at": string,"display_name": string,"role": Database["public"]['Enums']["staff_role"],"user_id": string
                   }
+                  ComputedFields: never
                   Insert: {
                     "created_at"?: string,"display_name": string,"role": Database["public"]['Enums']["staff_role"],"user_id": string
                   }
@@ -218,6 +354,52 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"submission_participants": {
+                  Row: {
+                    "participant_id": string,"submission_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "participant_id": string,"submission_id": string
+                  }
+                  Update: {
+                    "participant_id"?: string,"submission_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "submission_participants_participant_id_fkey"
+      columns: ["participant_id"]
+isOneToOne: false
+      referencedRelation: "participants"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "submission_participants_submission_id_fkey"
+      columns: ["submission_id"]
+isOneToOne: false
+      referencedRelation: "submissions"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"submissions": {
+                  Row: {
+                    "assignment_id": string,"created_at": string,"file_name": string | null,"id": string,"label": string,"link": string | null,"note": string | null,"source": string,"submitted_on": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "assignment_id": string,"created_at"?: string,"file_name"?: string | null,"id"?: string,"label": string,"link"?: string | null,"note"?: string | null,"source"?: string,"submitted_on"?: string | null
+                  }
+                  Update: {
+                    "assignment_id"?: string,"created_at"?: string,"file_name"?: string | null,"id"?: string,"label"?: string,"link"?: string | null,"note"?: string | null,"source"?: string,"submitted_on"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "submissions_assignment_id_fkey"
+      columns: ["assignment_id"]
+isOneToOne: false
+      referencedRelation: "assignments"
+      referencedColumns: ["id"]
+    }
                   ]
                 }
           }
@@ -235,7 +417,7 @@ isOneToOne: false
 { Args: { "p_allow_off_window"?: boolean,"p_module_day_id": string,"p_participant_id": string }; Returns: Json
                            },
 "checkin_core":
-{ Args: { "p_allow_off_window": boolean,"p_day": Database["public"]['Tables']["module_days"]['Row'],"p_method": Database["public"]['Enums']["checkin_method"],"p_participant": Database["public"]['Tables']["participants"]['Row'],"p_scanned_at": string }; Returns: Json
+{ Args: { "p_allow_off_window": boolean,"p_day": Omit<Database["public"]['Tables']["module_days"]['Row'], Database["public"]['Tables']["module_days"]['ComputedFields']>,"p_method": Database["public"]['Enums']["checkin_method"],"p_participant": Omit<Database["public"]['Tables']["participants"]['Row'], Database["public"]['Tables']["participants"]['ComputedFields']>,"p_scanned_at": string }; Returns: Json
                            },
 "create_walk_in":
 { Args: { "p_affiliation"?: Database["public"]['Enums']["affiliation_status"],"p_email"?: string,"p_first_name": string,"p_last_name": string,"p_module_day_id": string,"p_privacy_consent"?: boolean }; Returns: Json
@@ -244,7 +426,7 @@ isOneToOne: false
 { Args: Record<PropertyKey, never>; Returns: Database["public"]['Enums']["staff_role"]
                            },
 "display_name":
-{ Args: { "p": Database["public"]['Tables']["participants"]['Row'] }; Returns: string
+{ Args: { "p": Omit<Database["public"]['Tables']["participants"]['Row'], Database["public"]['Tables']["participants"]['ComputedFields']> }; Returns: string
                            },
 "get_checkin_list":
 { Args: { "p_module_day_id": string }; Returns: {
@@ -259,6 +441,11 @@ isOneToOne: false
               "attendance_rate": number,"current_streak": number,"last_attended_at": string,"last_attended_title": string,"longest_streak": number,"participant_id": string,"total_attended": number,"total_cancelled_or_excused": number,"total_no_shows": number,"total_registered": number
             }[]
                            },
+"get_participant_directory":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "active": boolean,"branch": string,"country": string,"display_name": string,"id": string,"mentor": string,"region": string
+            }[]
+                           },
 "has_checkin_access":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
@@ -267,6 +454,12 @@ isOneToOne: false
                            },
 "has_orga_access":
 { Args: Record<PropertyKey, never>; Returns: boolean
+                           },
+"link_my_account":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
+"my_participant_id":
+{ Args: Record<PropertyKey, never>; Returns: string
                            },
 "normalize_checkin_code":
 { Args: { "value": string }; Returns: string
@@ -415,4 +608,3 @@ export const Constants = {
           }
         }
 } as const
-

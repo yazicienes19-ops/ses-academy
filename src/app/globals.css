@@ -123,3 +123,26 @@ a:hover .pfeil-links, button:hover .pfeil-links { transform: translateX(-3px); }
 a:hover .pfeil-runter, button:hover .pfeil-runter { transform: translateY(3px); }
 a:hover .pfeil-extern, button:hover .pfeil-extern { transform: translate(2px, -2px); }
 @media (prefers-reduced-motion: reduce) { .pfeil { transition: none; } }
+
+/* ── Team-Bereich und Portal (Hausaufgaben, Teilnehmende, Mein Bereich) ── */
+@theme inline {
+  --color-weiss: #fffdf8;
+  --color-rot: #b3261e;
+  --color-rot-hell: #fbe4e1;
+  --color-gelb-hell: #fdf3c8;
+  --color-gruen-hell: #e2f4ea;
+}
+
+@layer components {
+  .karte { @apply rounded-3xl bg-weiss p-6 ring-1 ring-line; }
+  .knopf { @apply inline-flex items-center justify-center gap-2 rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-paper transition hover:bg-forest disabled:opacity-50; }
+  .knopf-hell { @apply inline-flex items-center justify-center gap-2 rounded-full bg-weiss px-5 py-2.5 text-sm font-semibold ring-1 ring-line transition hover:bg-paper-deep disabled:opacity-50; }
+  .feld { @apply w-full rounded-xl border border-line bg-weiss px-3.5 py-2.5 text-[15px] outline-none focus:border-ink focus:ring-2 focus:ring-signal; }
+  .etikett { @apply mb-1.5 block text-sm font-semibold; }
+  .tabelle { @apply w-full border-collapse text-sm; }
+  .tabelle th { @apply border-b border-line px-3 py-2.5 text-left text-xs font-semibold tracking-wide text-ink-soft uppercase; }
+  .tabelle td { @apply border-b border-line px-3 py-2.5 align-top; }
+  .tabelle tbody tr:hover { @apply bg-paper/60; }
+  .chip { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold; }
+  .link { @apply font-semibold underline decoration-line underline-offset-4 hover:decoration-ink; }
+}
