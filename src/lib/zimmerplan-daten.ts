@@ -10,7 +10,7 @@ import { planen, wunschAufloesen, wuenschtEinzelzimmer, type PlanPerson, type Te
 export async function ladeZimmerplan(modulId: string) {
   const supabase = await createClient();
   const [{ data: modul }, { data: hotels }, { data: zeilen }, { data: verlauf }, { data: korrekturen }] = await Promise.all([
-    supabase.from("modules").select("id, title").eq("id", modulId).maybeSingle(),
+    supabase.from("modules").select("id, title, location").eq("id", modulId).maybeSingle(),
     supabase.from("hotels").select("id, name, rooms_visible, rooms(id, label, capacity, section)").eq("module_id", modulId).order("created_at"),
     supabase.rpc("get_room_planning", { p_module_id: modulId }),
     supabase.rpc("get_room_history", { p_module_id: modulId }),

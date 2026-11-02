@@ -129,7 +129,8 @@ export default async function ZimmerplanSeite({ params, searchParams }: PageProp
               })}
             </div>
             <div className="mt-4 flex flex-wrap items-center gap-2">
-              <a href={`/team/module/${id}/zimmerplan/liste/?groesse=${groesse}`} className="knopf">Liste fürs Hotel herunterladen (Excel)</a>
+              <a href={`/team/module/${id}/zimmerliste/?groesse=${groesse}`} target="_blank" className="knopf">Zimmerliste als PDF (fürs Hotel)</a>
+              <a href={`/team/module/${id}/zimmerplan/liste/?groesse=${groesse}`} className="knopf-hell">Excel-Liste herunterladen</a>
               <form action={probeUebernehmen}>
                 <input type="hidden" name="module_id" value={id} /><input type="hidden" name="groesse" value={groesse} />
                 <button className="knopf-hell">So übernehmen und von Hand anpassen</button>
@@ -195,7 +196,7 @@ export default async function ZimmerplanSeite({ params, searchParams }: PageProp
               <div className="flex flex-wrap items-center gap-3">
                 <h2 className="font-display mr-auto text-2xl font-bold">Aktueller Zimmerplan</h2>
                 <Link href={`/team/module/${id}/hotel/`} className="knopf-hell">Einzeln umsetzen (Logistik)</Link>
-                <Link href={`/team/module/${id}/hotel/zimmerliste/`} className="knopf-hell">Zimmerliste fürs Hotel</Link>
+                <Link href={`/team/module/${id}/zimmerliste/`} target="_blank" className="knopf-hell">Zimmerliste als PDF (fürs Hotel)</Link>
                 {eingeteilt.some((p) => p.source === "auto") && (
                   <form action={vorschlagZuruecksetzen}>
                     <input type="hidden" name="module_id" value={id} /><input type="hidden" name="hotel_id" value={d.hotel.id} />
