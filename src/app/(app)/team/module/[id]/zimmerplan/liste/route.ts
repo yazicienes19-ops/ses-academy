@@ -15,7 +15,8 @@ function feld(wert: string | number): string {
 
 /**
  * Zimmerliste fürs Hotel aus der automatischen Einteilung (ab Orga-Team), als CSV für Excel (Semikolon, UTF-8 mit BOM).
- * Nur Namen, Zimmer und Nächte, keine Kontaktdaten. ?groesse=2 oder 3.
+ * Nur Namen und Zimmer, keine Kontaktdaten. Jedes Zimmer wird einmal für den ganzen Aufenthalt gebucht: Anreise
+ * und Abreise sind für alle gleich (erste bis letzte Nacht, in der jemand übernachtet). ?groesse=2 oder 3.
  */
 export async function GET(request: Request, { params }: RouteContext<"/team/module/[id]/zimmerplan/liste">) {
   await requireStaff("orga");
@@ -27,13 +28,12 @@ export async function GET(request: Request, { params }: RouteContext<"/team/modu
   const probe = probeplan(d, groesse);
   const personen = new Map(d.personen.map((p) => [p.participant_id, p]));
 
+  const alleNaechte = [...new Set(d.personen.flatMap((p) => p.nights))].sort();
+  const anreise = alleNaechte[0] ? tag(alleNaechte[0]) : "";
+  const abreise = alleNaechte.length ? tag(alleNaechte.at(-1)!, 1) : "";
   const zeilen = [["Zimmer", "Zimmerart", "Bereich", "Name", "Anreise", "Abreise", "Nächte"]];
   for (const z of probe.zimmer) {
-    for (const b of z.belegung) {
-      const p = personen.get(b.id);
-      const n = [...(p?.nights ?? [])].sort();
-      zeilen.push([z.label, zimmerArt[groesse], z.bereich, p?.name ?? "", n[0] ? tag(n[0]) : "", n.length ? tag(n.at(-1)!, 1) : "", String(n.length)]);
-    }
+    for (const b of z.belegung) zeilen.push([z.label, zimmerArt[groesse], z.bereich, personen.get(b.id)?.name ?? "", anreise, abreise, String(alleNaechte.length)]);
   }
   const csv = "﻿" + zeilen.map((z) => z.map(feld).join(";")).join("\r\n") + "\r\n";
   const datei = `Zimmerliste ${d.modul.title} ${groesse}er-Zimmer.csv`;

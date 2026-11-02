@@ -11,8 +11,8 @@ const datum = new Intl.DateTimeFormat("de-DE", { weekday: "short", day: "numeric
 const plusEinTag = (tag: string) => new Date(Date.parse(`${tag}T12:00:00Z`) + 86_400_000);
 
 /**
- * Zimmerliste fürs Hotel (ab Orga-Team): je Zimmer die Gäste mit Anreise- und Abreisetag aus den angegebenen Nächten.
- * Nur Namen und Nächte, keine Kontaktdaten oder Hinweise der Teilnehmenden.
+ * Zimmerliste fürs Hotel (ab Orga-Team): je Zimmer die Gäste. Jedes Zimmer ist einmal für den ganzen Aufenthalt
+ * gebucht, Anreise und Abreise stehen deshalb einmal oben. Nur Namen, keine Kontaktdaten oder Hinweise.
  */
 export async function GET(_: Request, { params }: RouteContext<"/team/module/[id]/hotel/zimmerliste">) {
   await requireStaff("orga");
@@ -27,15 +27,14 @@ export async function GET(_: Request, { params }: RouteContext<"/team/module/[id
   const hotel = hotels?.[0];
   if (!modul || !hotel) notFound();
   const zimmer = [...hotel.rooms].sort((a, b) => a.label.localeCompare(b.label, "de", { numeric: true }));
+  const alleNaechte = [...new Set((personen ?? []).flatMap((p) => p.nights))].sort();
+  const zeitraum = alleNaechte.length
+    ? `Anreise ${datum.format(new Date(`${alleNaechte[0]}T12:00:00Z`))} · Abreise ${datum.format(plusEinTag(alleNaechte.at(-1)!))} · ${alleNaechte.length} ${alleNaechte.length === 1 ? "Nacht" : "Nächte"} für alle Zimmer`
+    : "";
   const zeilen = zimmer.flatMap((z) => {
     const gaeste = (personen ?? []).filter((p) => p.room_id === z.id);
     if (gaeste.length === 0) return [];
-    return gaeste.map((g, i) => {
-      const n = [...g.nights].sort();
-      const an = n[0] ? datum.format(new Date(`${n[0]}T12:00:00Z`)) : "–";
-      const ab = n.length ? datum.format(plusEinTag(n.at(-1)!)) : "–";
-      return `<tr${i === 0 ? ' class="neu"' : ""}><td>${i === 0 ? esc(z.label) : ""}</td><td>${i === 0 ? z.capacity : ""}</td><td>${esc(g.name)}</td><td>${an}</td><td>${ab}</td><td>${n.length}</td></tr>`;
-    });
+    return gaeste.map((g, i) => `<tr${i === 0 ? ' class="neu"' : ""}><td>${i === 0 ? esc(z.label) : ""}</td><td>${i === 0 ? z.capacity : ""}</td><td>${i === 0 && z.section ? esc(z.section) : ""}</td><td>${esc(g.name)}</td></tr>`);
   });
   const ohne = (personen ?? []).filter((p) => p.answered && p.nights.length > 0 && !p.room_id).length;
   const html = `<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="robots" content="noindex"><title>Zimmerliste ${esc(modul.title)}</title>
@@ -51,9 +50,9 @@ export async function GET(_: Request, { params }: RouteContext<"/team/module/[id
 </style></head><body>
 <button class="druck" onclick="window.print()">Drucken / als PDF sichern</button>
 <h1>Zimmerliste · ${esc(hotel.name)}</h1>
-<p>${esc(modul.title)}${hotel.address ? ` · ${esc(hotel.address)}` : ""} · Stand ${new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Berlin" }).format(new Date())}</p>
+<p>${esc(modul.title)}${hotel.address ? ` · ${esc(hotel.address)}` : ""}${zeitraum ? `<br><strong>${zeitraum}</strong>` : ""}<br>Stand ${new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Berlin" }).format(new Date())}</p>
 ${ohne ? `<p><strong>${ohne} Personen mit Übernachtung haben noch kein Zimmer.</strong></p>` : ""}
-<table><thead><tr><th>Zimmer</th><th>Betten</th><th>Name</th><th>Anreise</th><th>Abreise</th><th>Nächte</th></tr></thead><tbody>${zeilen.join("")}</tbody></table>
+<table><thead><tr><th>Zimmer</th><th>Betten</th><th>Bereich</th><th>Name</th></tr></thead><tbody>${zeilen.join("")}</tbody></table>
 </body></html>`;
   return new Response(html, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex" } });
 }

@@ -323,7 +323,6 @@ function ZimmerRaster({ zimmer, personen, schonZusammen, zusammenfassung = true 
       {zusammenfassung && <p className="mt-4 text-sm text-ink-soft">{belegt.length} von {zimmer.length} Zimmern belegt, {zimmer.length - belegt.length} bleiben frei.</p>}
       <ul className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {belegt.map((z) => {
-          const nachte = new Set(z.leute.map((l) => personen.get(l.pid)?.nights.join() ?? ""));
           return (
             <li key={z.id} className="rounded-2xl bg-white p-4 ring-1 ring-line">
               <p className="flex items-center gap-2 font-semibold">{z.label}<span className="chip ml-auto bg-paper-deep">{z.leute.length}/{z.capacity}</span></p>
@@ -339,7 +338,6 @@ function ZimmerRaster({ zimmer, personen, schonZusammen, zusammenfassung = true 
                   );
                 })}
               </ul>
-              {nachte.size > 1 && <p className="mt-2 rounded-xl bg-paper-deep px-2 py-1 text-xs">unterschiedliche Nächte</p>}
               {z.leute.flatMap((a, i) => z.leute.slice(i + 1).filter((b) => schonZusammen(a.pid, b.pid)).map((b) => (
                 <p key={a.pid + b.pid} className="mt-2 rounded-xl bg-gelb-hell px-2 py-1 text-xs">{personen.get(a.pid)?.name} und {personen.get(b.pid)?.name} waren schon zusammen</p>
               )))}

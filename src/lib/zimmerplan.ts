@@ -4,8 +4,8 @@
 //   1. Zimmer nie gemischt (nur Frauen oder nur Männer).
 //   2. Von Hand Zugeteiltes bleibt, wo es ist.
 //   3. Gegenseitige Wünsche zuerst zusammen; einseitige auch, solange die gewünschte Person sich niemand anderen wünscht.
-//   4. Alle anderen durchmischen: möglichst niemand, mit dem man schon im Zimmer war, verschiedene Regionen,
-//      dieselben Nächte (damit für das Hotel keine Betten halb leer bleiben).
+//   4. Alle anderen durchmischen: möglichst niemand, mit dem man schon im Zimmer war, verschiedene Regionen.
+//      Nächte spielen keine Rolle: jedes Zimmer wird einmal für den ganzen Aufenthalt gebucht.
 // Alles ist deterministisch: gleiche Angaben ergeben denselben Vorschlag (wichtig, weil „Übernehmen“ neu rechnet).
 
 import { faltName, finde, type Person as NamensPerson } from "@/lib/import/namen";
@@ -126,7 +126,6 @@ export function planen(personen: PlanPerson[], zimmerListe: PlanZimmer[], verlau
         hinweise.push({ personId: p.id, text: `wünscht sich ${q.name}, die/der sich aber jemand anderen wünscht` });
         continue;
       }
-      if (p.nights.join() !== q.nights.join()) hinweise.push({ personId: p.id, text: `wünscht sich ${q.name}, die/der andere Nächte gebucht hat` });
       kanten.push({ a: p.id, b: w, gegenseitig });
     }
   }
@@ -157,8 +156,6 @@ export function planen(personen: PlanPerson[], zimmerListe: PlanZimmer[], verlau
 
   const konflikte = (ids: string[], z: (typeof zimmer)[number]) =>
     z.belegung.reduce((s, b) => s + ids.filter((i) => verlauf.has(`${i}|${b.id}`)).length, 0);
-  const naechteAnders = (ids: string[], z: (typeof zimmer)[number]) =>
-    z.belegung.filter((b) => ids.some((i) => byId.get(i)!.nights.join() !== byId.get(b.id)!.nights.join())).length;
   const passtGeschlecht = (gender: string | null, z: (typeof zimmer)[number]) =>
     z.belegung.length === 0 || (z.gender ?? null) === (gender ?? null);
 
@@ -172,7 +169,7 @@ export function planen(personen: PlanPerson[], zimmerListe: PlanZimmer[], verlau
     if (anker && frei(anker) >= offen.length) { offen.forEach((id) => legeAb(anker, id, grundVon(id))); continue; }
     const kandidaten = zimmer.filter((z) => frei(z) >= offen.length && passtGeschlecht(gender, z))
       .sort((a, b) => konflikte(offen, a) - konflikte(offen, b) || (frei(a) - offen.length) - (frei(b) - offen.length)
-        || naechteAnders(offen, a) - naechteAnders(offen, b) || b.belegung.length - a.belegung.length);
+        || b.belegung.length - a.belegung.length);
     if (kandidaten[0]) offen.forEach((id) => legeAb(kandidaten[0], id, grundVon(id)));
     else hinweise.push({ personId: g[0], text: `kein Zimmer frei für ${offen.map(name).join(", ")} zusammen` });
   }
@@ -184,17 +181,16 @@ export function planen(personen: PlanPerson[], zimmerListe: PlanZimmer[], verlau
     else hinweise.push({ personId: p.id, text: "wünscht sich ein Einzelzimmer, es ist aber keins frei" });
   }
 
-  // 4. Alle übrigen durchmischen: nach Nächten gebündelt (wer gleich lange bleibt, teilt sich eher ein Zimmer),
-  //    innerhalb davon stabil gestreut (sonst landen Nachbarn aus der Liste zusammen)
+  // 4. Alle übrigen durchmischen (Nächte zählen nicht, ein Zimmer ist für den ganzen Aufenthalt gebucht),
+  //    stabil gestreut (sonst landen Nachbarn aus der Liste zusammen)
   const rest = brauchen.filter((p) => !zimmerVon.has(p.id))
-    .sort((a, b) => b.nights.length - a.nights.length || a.nights.join().localeCompare(b.nights.join()) || streuwert(a.id) - streuwert(b.id));
+    .sort((a, b) => streuwert(a.id) - streuwert(b.id));
   const ohneZimmer: string[] = [];
   for (const p of rest) {
     if (!p.gender) hinweise.push({ personId: p.id, text: "Geschlecht fehlt, bitte von Hand einteilen oder eintragen" });
     const punkte = (z: (typeof zimmer)[number]) =>
       100 * konflikte([p.id], z)
-      + 10 * z.belegung.filter((b) => p.region && byId.get(b.id)!.region === p.region).length
-      + 5 * naechteAnders([p.id], z);
+      + 10 * z.belegung.filter((b) => p.region && byId.get(b.id)!.region === p.region).length;
     const teilweise = zimmer.filter((z) => z.belegung.length > 0 && frei(z) > 0 && passtGeschlecht(p.gender, z) && p.gender)
       .sort((a, b) => punkte(a) - punkte(b) || frei(a) - frei(b));
     const leer = zimmer.filter((z) => z.belegung.length === 0 && z.capacity > 1).sort((a, b) => b.capacity - a.capacity)[0]
