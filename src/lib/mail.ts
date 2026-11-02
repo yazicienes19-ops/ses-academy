@@ -4,6 +4,7 @@ import nodemailer, { type SendMailOptions } from "nodemailer";
 import { locale } from "@/i18n/typ";
 import { portalTexte, sprachOder } from "@/lib/portal-texte";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { infoMailInhalt, ladeInfoMail } from "@/lib/infomail";
 import { ladeTicket, modulZeitraum } from "@/lib/teilnahme";
 import { kurzcodeAnzeige, qrPng } from "@/lib/tickets";
 
@@ -33,7 +34,7 @@ function html(text: string): string {
 
 type Ergebnis = { ok: true } | { ok: false; fehler: string };
 
-async function protokolliere(eintrag: { participantId: string | null; art: string; an: string; ergebnis: Ergebnis; von?: string }) {
+async function protokolliere(eintrag: { participantId: string | null; art: string; an: string; ergebnis: Ergebnis; von?: string; moduleId?: string }) {
   await createAdminClient().from("email_log").insert({
     participant_id: eintrag.participantId,
     kind: eintrag.art,
@@ -41,6 +42,7 @@ async function protokolliere(eintrag: { participantId: string | null; art: strin
     status: eintrag.ergebnis.ok ? "sent" : "failed",
     error: eintrag.ergebnis.ok ? null : eintrag.ergebnis.fehler,
     triggered_by: eintrag.von ?? null,
+    module_id: eintrag.moduleId ?? null,
   });
 }
 
@@ -234,5 +236,30 @@ export async function sendeNachricht(an: { participant_id: string; email: string
     html: `<div style="font-family:Arial,Helvetica,sans-serif;color:#13201a;max-width:560px;line-height:1.6;white-space:pre-line">${html(voll)}</div>`,
   });
   await protokolliere({ participantId: an.participant_id, art: `nachricht:${antragId}`, an: an.email, ergebnis, von });
+  return ergebnis;
+}
+
+/**
+ * Info-Mail zu einem Modul: Ticket, Termin und Ort, Übernachtung mit Hotel und Zimmer, Tagesordnung in EINER Mail.
+ * test = an diese Adresse statt an die Person (Vorschau im eigenen Postfach); zählt dann nicht als versendet.
+ */
+export async function sendeInfoMail(participantId: string, moduleId: string, ausgeloestVon?: string, test?: string): Promise<Ergebnis> {
+  const d = await ladeInfoMail(participantId, moduleId);
+  if (!d) return { ok: false, fehler: "Nicht für dieses Modul angemeldet." };
+  const an = test ?? d.p.email;
+  if (!an) return { ok: false, fehler: "Keine E-Mail-Adresse hinterlegt." };
+  const { betreff, text, html } = infoMailInhalt(d, seitenUrl(`/ticket/${d.p.checkin_token}/`));
+  const ergebnis = await senden({
+    to: an,
+    subject: test ? `[Test] ${betreff}` : betreff,
+    text,
+    html,
+    attachments: [{ filename: "ticket-qr.png", content: await qrPng(d.p.checkin_token), cid: "ticket-qr" }],
+  });
+  if (!test) {
+    // Enthält das Ticket: zählt auch als Ticket-Versand
+    await protokolliere({ participantId: d.p.id, art: "info", an, ergebnis, von: ausgeloestVon, moduleId });
+    await protokolliere({ participantId: d.p.id, art: "ticket", an, ergebnis, von: ausgeloestVon, moduleId });
+  }
   return ergebnis;
 }

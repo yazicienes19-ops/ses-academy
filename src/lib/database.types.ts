@@ -317,17 +317,23 @@ isOneToOne: false
                   ]
                 },"email_log": {
                   Row: {
-                    "created_at": string,"error": string | null,"id": number,"kind": string,"participant_id": string | null,"recipient": string,"status": string,"triggered_by": string | null
+                    "created_at": string,"error": string | null,"id": number,"kind": string,"module_id": string | null,"participant_id": string | null,"recipient": string,"status": string,"triggered_by": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"error"?: string | null,"id"?: never,"kind": string,"participant_id"?: string | null,"recipient": string,"status": string,"triggered_by"?: string | null
+                    "created_at"?: string,"error"?: string | null,"id"?: never,"kind": string,"module_id"?: string | null,"participant_id"?: string | null,"recipient": string,"status": string,"triggered_by"?: string | null
                   }
                   Update: {
-                    "created_at"?: string,"error"?: string | null,"id"?: never,"kind"?: string,"participant_id"?: string | null,"recipient"?: string,"status"?: string,"triggered_by"?: string | null
+                    "created_at"?: string,"error"?: string | null,"id"?: never,"kind"?: string,"module_id"?: string | null,"participant_id"?: string | null,"recipient"?: string,"status"?: string,"triggered_by"?: string | null
                   }
                   Relationships: [
                     {
+      foreignKeyName: "email_log_module_id_fkey"
+      columns: ["module_id"]
+isOneToOne: false
+      referencedRelation: "modules"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "email_log_participant_id_fkey"
       columns: ["participant_id"]
 isOneToOne: false
@@ -1210,6 +1216,11 @@ isOneToOne: false
                            },
 "get_guest_sheet":
 { Args: { "p_token": string }; Returns: Json
+                           },
+"get_info_status":
+{ Args: { "p_module_id": string }; Returns: {
+              "email": string,"info_status": string,"last_attempt_at": string,"last_error": string,"name": string,"participant_id": string,"rsvp": string
+            }[]
                            },
 "get_member_directory":
 { Args: Record<PropertyKey, never>; Returns: {

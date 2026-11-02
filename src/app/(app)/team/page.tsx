@@ -78,12 +78,12 @@ export default async function TeamStart({ searchParams }: PageProps<"/team">) {
       alles
         ? supabase.from("registrations").select("id", { count: "exact", head: true }).eq("module_id", m).eq("status", "confirmed")
         : supabase.rpc("get_day_counts", { p_module_day_id: naechstes.id }).then(({ data }) => ({ count: (data as { expected?: number } | null)?.expected ?? 0 })),
-      alles ? supabase.rpc("get_ticket_status", { p_module_id: m, p_since: new Date(Date.parse(`${naechstes.day}T00:00:00Z`) - 30 * 86_400_000).toISOString() }) : Promise.resolve({ data: [] }),
+      alles ? supabase.rpc("get_info_status", { p_module_id: m }) : Promise.resolve({ data: [] }),
       supabase.from("tasks").select("done_at").eq("module_id", m),
       supabase.from("program_items").select("id, module_days!inner(module_id)", { count: "exact", head: true }).eq("module_days.module_id", m),
     ]);
     angemeldet = a ?? 0;
-    tickets = (t ?? []).filter((z) => z.ticket_status === "gesendet").length;
+    tickets = (t ?? []).filter((z) => z.info_status === "gesendet").length;
     aufgabenGesamt = (auf ?? []).length;
     aufgabenOffen = (auf ?? []).filter((z) => !z.done_at).length;
     programm = p ?? 0;
@@ -128,7 +128,7 @@ export default async function TeamStart({ searchParams }: PageProps<"/team">) {
               </div>
               <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
                 <Kennzahl icon={Users} wert={String(angemeldet)} text="angemeldet" href={alles ? `/team/module/${naechstes.module.id}/` : "/team/einlass/"} />
-                {alles && <Kennzahl icon={Ticket} wert={`${tickets}/${angemeldet}`} text="Tickets verschickt" href={`/team/module/${naechstes.module.id}/#tickets`} />}
+                {alles && <Kennzahl icon={Ticket} wert={`${tickets}/${angemeldet}`} text="Info-Mails verschickt" href={`/team/module/${naechstes.module.id}/infomail/`} />}
                 <Kennzahl icon={ClipboardList} wert={aufgabenGesamt ? `${aufgabenGesamt - aufgabenOffen}/${aufgabenGesamt}` : "–"} text={aufgabenGesamt ? "Aufgaben erledigt" : "Checkliste anlegen"} href={`/team/module/${naechstes.module.id}/checkliste/`} />
                 <Kennzahl icon={CalendarClock} wert={String(programm)} text="Programmpunkte" href={`/team/module/${naechstes.module.id}/programm/`} />
               </div>

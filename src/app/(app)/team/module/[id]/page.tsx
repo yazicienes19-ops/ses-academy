@@ -5,12 +5,10 @@ import { Hinweis } from "@/components/team/Hinweis";
 import { ModulFormular } from "@/components/team/ModulFormular";
 import { ModulReiter } from "@/components/team/ModulReiter";
 import { TeamKopf } from "@/components/team/TeamKopf";
-import { ticketsAnAlle } from "@/lib/aktionen/eventtag";
 import { feedbackEinladen, frageEntfernen, frageHinzufuegen, umfrageAnlegen } from "@/lib/aktionen/feedback";
 import { absageZuruecknehmen, modulAbsagen, modulSpeichern, tagEntfernen, tagHinzufuegen } from "@/lib/aktionen/module";
 import { requireStaff } from "@/lib/auth";
 import { anmeldestatus } from "@/lib/einlass";
-import { versandrundeSeit } from "@/lib/eventtag";
 import { createClient } from "@/lib/supabase/server";
 import { istToken } from "@/lib/codes";
 
@@ -52,11 +50,9 @@ export default async function ModulDetail({ params, searchParams }: PageProps<"/
     .maybeSingle();
   if (!m) notFound();
 
-  const { data: ticketRoh } = await supabase.rpc("get_ticket_status", { p_module_id: m.id, p_since: await versandrundeSeit(m.id) });
-  const tickets = ticketRoh ?? [];
-  const ticketAnzahl = (s: string) => tickets.filter((t) => t.ticket_status === s).length;
-  const ohneTicket = tickets.filter((t) => t.ticket_status !== "gesendet");
-  const versand = typeof hinweis === "string" && hinweis.startsWith("tickets-") ? hinweis.split("-").slice(1).map(Number) : null;
+  const { data: infoRoh } = await supabase.rpc("get_info_status", { p_module_id: m.id });
+  const info = infoRoh ?? [];
+  const infoAnzahl = (s: string) => info.filter((t) => t.info_status === s).length;
 
   const { data: umfrage } = await supabase.from("feedback_surveys").select("id, opens_at, closes_at, sent_at, feedback_questions(id, position, kind, prompt)").eq("module_id", m.id).maybeSingle();
   const { data: ergebnisse } = umfrage ? await supabase.rpc("get_feedback_results", { p_survey_id: umfrage.id }) : { data: null };
@@ -123,48 +119,22 @@ export default async function ModulDetail({ params, searchParams }: PageProps<"/
 
 
         <section id="tickets" className="mt-8 rounded-3xl bg-white/60 p-6 ring-1 ring-line">
-          <h2 className="font-display text-xl font-bold">Tickets</h2>
+          <h2 className="font-display text-xl font-bold">Info-Mail und Unterlagen</h2>
           <p className="mt-1 text-sm text-ink-soft">
-            Gezählt werden Ticket-Mails ab 30 Tagen vor dem ersten Termin. Ein zweiter Klick schickt nur an die, die noch keines haben.
+            Eine Mail an alle mit Ticket (QR-Code), Ort, Übernachtung mit Hotel und Zimmer und der Tagesordnung. Vorher in der Vorschau prüfen.
           </p>
-          {versand && (
-            <p role="status" className={`mt-3 rounded-2xl p-4 ${versand[1] ? "bg-amber-100 text-amber-950" : "bg-emerald-100 text-emerald-950"}`}>
-              {versand[0]} Tickets verschickt{versand[1] ? `, ${versand[1]} fehlgeschlagen. Bitte unten prüfen und erneut senden.` : "."}
-            </p>
-          )}
           <p className="mt-3">
-            {ticketAnzahl("gesendet")} von {tickets.length} haben ihr Ticket
-            {ticketAnzahl("fehlgeschlagen") > 0 && ` · ${ticketAnzahl("fehlgeschlagen")} fehlgeschlagen`}
-            {ticketAnzahl("keine_mail") > 0 && ` · ${ticketAnzahl("keine_mail")} ohne E-Mail-Adresse`}
+            {infoAnzahl("gesendet")} von {info.length} haben die Info-Mail
+            {infoAnzahl("fehlgeschlagen") > 0 && ` · ${infoAnzahl("fehlgeschlagen")} fehlgeschlagen`}
+            {infoAnzahl("keine_mail") > 0 && ` · ${infoAnzahl("keine_mail")} ohne E-Mail-Adresse`}
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
-            {ticketAnzahl("offen") + ticketAnzahl("fehlgeschlagen") > 0 && (
-              <form action={ticketsAnAlle}>
-                <input type="hidden" name="module_id" value={m.id} />
-                <button type="submit" className="rounded-full bg-ink px-5 py-3 font-semibold text-paper">
-                  {ticketAnzahl("offen") + ticketAnzahl("fehlgeschlagen")} Tickets jetzt senden
-                </button>
-              </form>
-            )}
+            <Link href={`/team/module/${m.id}/infomail/`} className="rounded-full bg-ink px-5 py-3 font-semibold text-paper">Info-Mail: Vorschau und Versand</Link>
+            <Link href={`/team/module/${m.id}/tagesordnung/`} target="_blank" className="rounded-full bg-white px-5 py-3 font-semibold ring-1 ring-line">Tagesordnung drucken</Link>
             <Link href={`/team/module/${m.id}/notfall/`} className="rounded-full bg-white px-5 py-3 font-semibold ring-1 ring-line">Notfall-Liste drucken</Link>
             <Link href={`/team/module/${m.id}/namensschilder/`} className="rounded-full bg-white px-5 py-3 font-semibold ring-1 ring-line">Namensschilder drucken</Link>
             <Link href={`/team/module/${m.id}/hotel/`} className="rounded-full bg-white px-5 py-3 font-semibold ring-1 ring-line">Übernachtung und Hotel{m.stay_form_open ? " (Abfrage offen)" : ""}</Link>
           </div>
-          {ohneTicket.length > 0 && (
-            <details className="mt-4">
-              <summary className="cursor-pointer font-semibold">Wer noch kein Ticket hat ({ohneTicket.length})</summary>
-              <ul className="mt-2 divide-y divide-line text-sm">
-                {ohneTicket.map((t) => (
-                  <li key={t.participant_id} className="flex flex-wrap gap-x-3 py-2">
-                    <Link href={`/team/teilnehmende/${t.participant_id}/`} className="mr-auto font-semibold underline">{t.name}</Link>
-                    <span className="text-ink-soft">
-                      {t.ticket_status === "keine_mail" ? "keine E-Mail-Adresse" : t.ticket_status === "fehlgeschlagen" ? `fehlgeschlagen: ${t.last_error ?? ""}` : "noch nicht verschickt"}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </details>
-          )}
         </section>
 
 
