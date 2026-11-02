@@ -10,7 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 /** Zurück auf die Seite, von der das Formular kam (nur Team-Bereich), mit Hinweis und Sprung zur Person. */
 function zurueck(formData: FormData, hinweis: string, anker?: string): never {
   const pfad = String(formData.get("zurueck") ?? "");
-  const ziel = /^\/team\/[\w\-/?=&%.]*$/.test(pfad) && !pfad.includes("//") ? pfad : "/team/anrufe/";
+  const ziel = /^\/team\/[\w\-/?=&%.+]*$/.test(pfad) && !pfad.includes("//") ? pfad : "/team/anrufe/";
   const ohne = ziel.replace(/([?&])hinweis=[^&]*&?/, "$1").replace(/[?&]$/, "");
   revalidatePath(ohne.split("?")[0]);
   redirect(`${ohne}${ohne.includes("?") ? "&" : "?"}hinweis=${hinweis}${anker ? `#${anker}` : ""}`);
