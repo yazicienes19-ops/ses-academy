@@ -42,7 +42,9 @@ export default async function TicketSeite({ params, searchParams }: PageProps<"/
 
       <h2 className="mt-10 font-display text-2xl font-bold">{t.moduleTitel}</h2>
       <ul className="mt-4 grid gap-3">
-        {daten.module.filter((m) => !m.abgesagt).map((m) => {
+        {daten.module.filter((m) => !m.abgesagt)
+          .sort((a, b) => Number(a.tage.every((t) => Date.parse(t.ende) < Date.now())) - Number(b.tage.every((t) => Date.parse(t.ende) < Date.now())))
+          .map((m) => {
           const kommt = m.beginn !== null && Date.parse(m.beginn) > jetzt;
           const kannAbmelden = kommt && (m.status === "confirmed" || m.status === "waitlist" || m.status === "pending");
           const besuchteTage = m.tage.filter((d) => d.besucht).length;

@@ -15,7 +15,7 @@ type Sprache = "de" | "tr";
 const texte = {
   de: {
     betreff: (modul: string) => `${modul}: Ticket, Programm und Übernachtung`,
-    anrede: (vorname: string) => `Liebe:r ${vorname},`,
+    anrede: (vorname: string) => `Hallo ${vorname},`,
     einleitung: (modul: string) => `wir freuen uns auf dich bei „${modul}“! Hier ist alles, was du dafür brauchst, in einer Mail.`,
     termin: "Termin und Ort",
     karte: "Ort auf der Karte",
@@ -28,17 +28,17 @@ const texte = {
     naechte: "Deine Nächte",
     zimmer: "Dein Zimmer",
     zimmerFolgt: "Die Zimmereinteilung bekommst du vor Ort.",
-    keineUebernachtung: "Du hast keine Übernachtung angegeben. Falls du doch eine brauchst, melde dich bitte bei uns.",
+    keineUebernachtung: "Du hast keine Übernachtung angegeben. Falls du doch eine brauchst, antworte einfach auf diese Mail.",
     keineAngabe: "Du hast noch nicht angegeben, ob du übernachtest. Bitte trag es in „Mein Bereich“ ein.",
-    keineAngabeZu: "Du hast keine Übernachtung angegeben. Falls du doch eine brauchst, melde dich bitte bei uns.",
+    keineAngabeZu: "Du hast keine Übernachtung angegeben. Falls du doch eine brauchst, antworte einfach auf diese Mail.",
     programm: "Tagesordnung",
     programmFolgt: "Das Programm für diesen Tag folgt.",
-    abmelden: "Falls du nicht teilnehmen kannst, melde dich bitte vorher über dein Ticket ab.",
+    abmelden: "Falls du nicht teilnehmen kannst, melde dich bitte vorher über dein Ticket ab. Bei Fragen antworte einfach auf diese Mail.",
     gruss: "Viele Grüße\nDein Team der SES Academy",
   },
   tr: {
     betreff: (modul: string) => `${modul}: bilet, program ve konaklama`,
-    anrede: (vorname: string) => `Sevgili ${vorname},`,
+    anrede: (vorname: string) => `Merhaba ${vorname},`,
     einleitung: (modul: string) => `„${modul}“ programında seni görmeyi dört gözle bekliyoruz! İhtiyacın olan her şey bu e-postada.`,
     termin: "Tarih ve yer",
     karte: "Haritada göster",
@@ -51,12 +51,12 @@ const texte = {
     naechte: "Konaklayacağın geceler",
     zimmer: "Odan",
     zimmerFolgt: "Oda dağılımını yerinde öğreneceksin.",
-    keineUebernachtung: "Konaklama ihtiyacı belirtmedin. Yine de ihtiyacın olursa lütfen bize yaz.",
+    keineUebernachtung: "Konaklama ihtiyacı belirtmedin. Yine de ihtiyacın olursa bu e-postayı yanıtlaman yeterli.",
     keineAngabe: "Konaklayıp konaklamayacağını henüz belirtmedin. Lütfen „Mein Bereich“ sayfasında bildir.",
-    keineAngabeZu: "Konaklama ihtiyacı belirtmedin. Yine de ihtiyacın olursa lütfen bize yaz.",
+    keineAngabeZu: "Konaklama ihtiyacı belirtmedin. Yine de ihtiyacın olursa bu e-postayı yanıtlaman yeterli.",
     programm: "Program",
     programmFolgt: "Bu günün programı daha sonra bildirilecek.",
-    abmelden: "Katılamayacaksan lütfen önceden biletin üzerinden bildir.",
+    abmelden: "Katılamayacaksan lütfen önceden biletin üzerinden bildir. Sorun olursa bu e-postayı yanıtlaman yeterli.",
     gruss: "Selamlarımızla\nSES Academy ekibi",
   },
 } as const;
@@ -133,7 +133,7 @@ export function infoMailInhalt(d: InfoDaten, ticketLink: string) {
   const text = [
     t.anrede(d.p.first_name), "", t.einleitung(d.modul.title), "",
     `${t.termin}:`, ...termine, d.modul.location ?? "", ...(karte ? [`${t.karte}: ${karte}`] : []), "",
-    `${t.ticket}:`, t.ticketText, `${t.kurzcode}: ${code}`, `${t.ticketLink}: ${ticketLink}`, "",
+    ...(d.modul.ticket_required ? [`${t.ticket}:`, t.ticketText, `${t.kurzcode}: ${code}`, `${t.ticketLink}: ${ticketLink}`, ""] : []),
     `${t.uebernachtung}:`, ...uebernachtung.text, "",
     `${t.programm}:`, ...programmText, "",
     t.abmelden, "", t.gruss,
@@ -148,7 +148,7 @@ export function infoMailInhalt(d: InfoDaten, ticketLink: string) {
   </div>
   <p style="font-size:16px;line-height:1.6;margin:0 0 16px">${esc(t.anrede(d.p.first_name))}<br>${esc(t.einleitung(d.modul.title))}</p>
   ${abschnitt(t.termin, `${termine.map((z) => `<p style="margin:0 0 4px;font-weight:bold">${esc(z)}</p>`).join("")}${d.modul.location ? `<p style="margin:8px 0 0">${esc(d.modul.location)}${karte ? ` · <a href="${esc(karte)}" style="color:#3d7a61;font-weight:bold">${esc(t.karte)}</a>` : ""}</p>` : ""}`)}
-  ${abschnitt(t.ticket, `<p style="margin:0 0 12px;font-size:14px;line-height:1.5">${esc(t.ticketText)}</p>
+  ${!d.modul.ticket_required ? "" : abschnitt(t.ticket, `<p style="margin:0 0 12px;font-size:14px;line-height:1.5">${esc(t.ticketText)}</p>
     <div style="text-align:center">
       <img src="cid:ticket-qr" width="220" height="220" alt="QR-Code" style="display:block;margin:0 auto">
       <p style="margin:12px 0 2px;font-size:13px;color:#3c4a42">${esc(t.kurzcode)}</p>

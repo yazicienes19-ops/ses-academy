@@ -32,7 +32,7 @@ export function BewerbungsFormular({ t, l }: { t: Texte["bewerbungSeite"]; l: Sp
   const opt = <span className="font-normal text-ink-soft"> ({f.optional})</span>;
 
   return (
-    <form onSubmit={absenden} className="grid gap-5 sm:grid-cols-2">
+    <form onSubmit={absenden} method="post" className="grid gap-5 sm:grid-cols-2">
       <input type="hidden" name="sprache" value={l} />
       {/* Spam-Falle, für Menschen unsichtbar */}
       <div aria-hidden className="absolute -left-[9999px] h-px w-px overflow-hidden">
