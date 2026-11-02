@@ -4,12 +4,14 @@ import { istToken } from "@/lib/codes";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
-/** Datei einer Dokumentversion (Standard: aktuelle). Nur Medien und PDF im Browser, sonst Download; CSP-Sandbox. */
+/** Datei einer Dokumentversion (Standard: aktuelle). Nur Medien und PDF im Browser, sonst Download (mit ?laden=1 immer); CSP-Sandbox. */
 export async function GET(request: Request, { params }: RouteContext<"/team/dokumente/[id]/datei">) {
   await requireStaff("orga");
   const { id } = await params;
   if (!istToken(id)) notFound();
-  const v = Number(new URL(request.url).searchParams.get("v") ?? 0);
+  const sp = new URL(request.url).searchParams;
+  const v = Number(sp.get("v") ?? 0);
+  const laden = sp.get("laden") === "1";
   const supabase = await createClient();
   let abfrage = supabase.from("document_versions").select("storage_path, file_name, mime_type").eq("document_id", id);
   abfrage = v > 0 ? abfrage.eq("version", v) : abfrage.order("version", { ascending: false }).limit(1);
@@ -23,7 +25,7 @@ export async function GET(request: Request, { params }: RouteContext<"/team/doku
   return new Response(datei, {
     headers: {
       "content-type": sicher ? typ : "application/octet-stream",
-      "content-disposition": `${sicher ? "inline" : "attachment"}; filename="${name}"`,
+      "content-disposition": `${sicher && !laden ? "inline" : "attachment"}; filename="${name}"; filename*=UTF-8''${encodeURIComponent(version.file_name)}`,
       "content-security-policy": "sandbox; default-src 'none'; img-src 'self'; media-src 'self'; object-src 'self'",
       "cache-control": "private, no-store", "x-content-type-options": "nosniff",
     },

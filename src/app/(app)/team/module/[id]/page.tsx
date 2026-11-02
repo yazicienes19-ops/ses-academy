@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { TagesordnungKnoepfe } from "@/components/team/Dokumente";
 import { Hinweis } from "@/components/team/Hinweis";
 import { ModulFormular } from "@/components/team/ModulFormular";
 import { ModulReiter } from "@/components/team/ModulReiter";
@@ -54,6 +55,10 @@ export default async function ModulDetail({ params, searchParams }: PageProps<"/
   const { data: infoRoh } = await supabase.rpc("get_info_status", { p_module_id: m.id });
   const info = infoRoh ?? [];
   const infoAnzahl = (s: string) => info.filter((t) => t.info_status === s).length;
+
+  // Fertige Tagesordnungen (PDF) aus „Material“ mit dem Schlagwort „Tagesordnung“, zum direkten Herunterladen
+  const { data: tagesordnungen } = await supabase.from("documents").select("id, title").eq("module_id", m.id)
+    .contains("tags", ["Tagesordnung"]).gt("current_version", 0).neq("status", "archiv");
 
   const { data: umfrage } = await supabase.from("feedback_surveys").select("id, opens_at, closes_at, sent_at, feedback_questions(id, position, kind, prompt)").eq("module_id", m.id).maybeSingle();
   const { data: ergebnisse } = umfrage ? await supabase.rpc("get_feedback_results", { p_survey_id: umfrage.id }) : { data: null };
@@ -138,6 +143,7 @@ export default async function ModulDetail({ params, searchParams }: PageProps<"/
             <Link href={`/team/module/${m.id}/namensschilder/`} className="rounded-full bg-white px-5 py-3 font-semibold ring-1 ring-line">Namensschilder drucken</Link>
             <Link href={`/team/module/${m.id}/hotel/`} className="rounded-full bg-white px-5 py-3 font-semibold ring-1 ring-line">Übernachtung und Hotel{m.stay_form_open ? " (Abfrage offen)" : ""}</Link>
           </div>
+          <TagesordnungKnoepfe dokumente={tagesordnungen ?? []} />
         </section>
 
 

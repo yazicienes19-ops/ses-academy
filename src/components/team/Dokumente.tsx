@@ -12,6 +12,28 @@ type Dok = { id: string; title: string; kind: string; status: string; commission
 const artIcon: Record<string, LucideIcon> = { dokument: FileText, material: Presentation, medien: Film, vorlage: Files, protokoll: ScrollText };
 
 /**
+ * Fertige Tagesordnungen eines Moduls (Schlagwort „Tagesordnung“, mit Datei) als Knöpfe zum direkten Herunterladen;
+ * die für Teilnehmende zuerst. Auf der Modulseite und im Reiter „Material“.
+ */
+export function TagesordnungKnoepfe({ dokumente }: { dokumente: { id: string; title: string; tags?: string[]; current_version?: number; status?: string }[] }) {
+  const liste = dokumente
+    .filter((d) => (d.tags ?? ["Tagesordnung"]).includes("Tagesordnung") && (d.current_version ?? 1) > 0 && d.status !== "archiv")
+    .sort((a, b) => Number(/referent/i.test(a.title)) - Number(/referent/i.test(b.title)) || a.title.localeCompare(b.title, "de"));
+  if (liste.length === 0) return null;
+  return (
+    <div className="mt-5 mb-8">
+      <h3 className="font-semibold">Tagesordnungen herunterladen</h3>
+      <ul className="mt-2 flex flex-wrap gap-2">
+        {liste.map((d) => (
+          <li key={d.id}><a href={`/team/dokumente/${d.id}/datei/?laden=1`} className="inline-block rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-950 ring-1 ring-emerald-200">↓ {d.title}</a></li>
+        ))}
+      </ul>
+      <p className="mt-2 text-xs text-ink-soft">Neue Fassungen unter „Material“ als neue Version ablegen (Schlagwort „Tagesordnung“).</p>
+    </div>
+  );
+}
+
+/**
  * Liste der Dokumente: ein Klick öffnet die Datei bzw. den Link, „Details“ führt zu Versionen und Bearbeiten.
  * Gezeigt wird nur, was beim Suchen hilft: Art (als Symbol), Modul bzw. Kommission und ein Status, wenn er nicht „final“ ist.
  */

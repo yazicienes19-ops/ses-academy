@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { DokumentFormular, DokumentListe } from "@/components/team/Dokumente";
+import { DokumentFormular, DokumentListe, TagesordnungKnoepfe } from "@/components/team/Dokumente";
 import { Hinweis } from "@/components/team/Hinweis";
 import { ModulReiter } from "@/components/team/ModulReiter";
 import { TeamKopf } from "@/components/team/TeamKopf";
@@ -38,6 +38,7 @@ export default async function Material({ params, searchParams }: PageProps<"/tea
       <main className="mx-auto max-w-6xl px-4 py-8">
         <ModulReiter id={id} titel={modul.title} aktiv="material/" />
         <Hinweis code={hinweis} texte={hinweise} />
+        <TagesordnungKnoepfe dokumente={material} />
         <h2 className="font-display mt-2 mb-3 text-xl font-bold">Material</h2>
         <DokumentListe dokumente={material} ohneModul />
         <h2 className="font-display mt-8 mb-3 text-xl font-bold">Medien</h2>
