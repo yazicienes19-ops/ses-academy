@@ -53,7 +53,7 @@ export default async function Namensschilder({ params, searchParams }: PageProps
       <style>{`
         @page { size: A4; margin: 0; }
         @media print { .nur-bildschirm { display: none !important; } html, body { margin: 0; padding: 0; background: #fff; }
-          .seite { margin: 0 !important; box-shadow: none !important; height: 296.5mm; overflow: hidden; } }
+          .seite { margin: 0 !important; box-shadow: none !important; height: 296.5mm !important; overflow: hidden; } }
         * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         .seite { width: 210mm; height: 297mm; box-sizing: border-box; padding: ${fm.rand[1]}mm ${fm.rand[0]}mm; display: grid; background: #fff;
           grid-template-columns: repeat(${fm.spalten}, ${fm.b}mm); grid-template-rows: repeat(${fm.zeilen}, ${fm.h}mm);

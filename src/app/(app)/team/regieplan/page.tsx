@@ -88,6 +88,8 @@ export default async function Regieplan({ searchParams }: PageProps<"/team/regie
             <div className="flex flex-wrap gap-2">
               <Link href={`/team/regieplan/druck/?tag=${tag.id}`} target="_blank" className="knopf-hell"><Printer aria-hidden className="h-4 w-4" />Regieplan fürs Team drucken</Link>
               {darfPflegen && <Link href={`/team/module/${tag.module_id}/tagesordnung/`} target="_blank" className="knopf"><Printer aria-hidden className="h-4 w-4" />Tagesordnung für Teilnehmende</Link>}
+              {darfPflegen && <Link href={`/team/module/${tag.module_id}/namensschilder/`} target="_blank" className="knopf-hell">Namensschilder</Link>}
+              {darfPflegen && <Link href={`/team/module/${tag.module_id}/notfall/`} target="_blank" className="knopf-hell">Notfall-Liste</Link>}
             </div>
           )}
         </div>
@@ -236,7 +238,7 @@ export default async function Regieplan({ searchParams }: PageProps<"/team/regie
                       <div className="sm:col-span-2"><label htmlFor="title" className="etikett">Titel</label><input id="title" name="title" required maxLength={200} className="feld" placeholder="z. B. Vortrag Ruprecht Polenz" /></div>
                       <div><label htmlFor="room" className="etikett">Raum</label><input id="room" name="room" maxLength={100} className="feld" /></div>
                       <div><label htmlFor="responsible" className="etikett">Verantwortlich</label><input id="responsible" name="responsible" maxLength={200} className="feld" /></div>
-                      <div className="sm:col-span-2"><label htmlFor="note" className="etikett">Hinweis</label><input id="note" name="note" maxLength={1000} className="feld" placeholder="z. B. Mikro 2, Folien auf Laptop" /></div>
+                      <div className="sm:col-span-2"><label htmlFor="note" className="etikett">Untertitel <span className="font-normal text-ink-soft">(steht in der Tagesordnung; interne Zeilen mit „intern:“ beginnen)</span></label><input id="note" name="note" maxLength={1000} className="feld" placeholder="z. B. Referent · Funktion; intern: Mikro 2" /></div>
                       <div className="sm:col-span-4"><button type="submit" className="knopf">Eintragen</button></div>
                     </form>
                   </details>

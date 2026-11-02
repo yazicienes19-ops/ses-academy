@@ -43,7 +43,8 @@ const titel = (t: string) => t.replace(/^([^:·]{2,40}):\s+/, "$1 · ");
 
 /** Hinweiszeilen: getrennt durch Zeilenumbruch oder „;“; „Deutschland: Name“ mit fettem Etikett. */
 function Hinweis({ text }: { text: string }) {
-  const zeilen = text.split(/\n|;\s*/).map((z) => z.trim()).filter(Boolean);
+  // Zeilen, die mit „intern:“ beginnen, sind nur fürs Team (Regieplan) und fehlen hier
+  const zeilen = text.split(/\n|;\s*/).map((z) => z.trim()).filter((z) => z && !/^intern\s*:/i.test(z));
   return (
     <>
       {zeilen.map((z, i) => (

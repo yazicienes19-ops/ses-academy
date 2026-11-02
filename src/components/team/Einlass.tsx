@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { abhaken, scannen, walkIn, zuruecknehmen } from "@/lib/aktionen/einlass";
 import { istGueltigesFormat, kurzcodeAnzeige, normalisiereCode } from "@/lib/codes";
 import { anmeldestatus, deute, uhrzeit, zugehoerigkeit, type EinlassAntwort, type EinlassErgebnis, type Zaehler } from "@/lib/einlass";
@@ -62,7 +62,14 @@ export function Einlass({ tagId, modulTitel, ticketNoetig, zaehler: start, offli
   /** false, sobald eine Anfrage scheitert (auch bei „WLAN verbunden, aber kein Internet“); die Probe setzt es zurück. */
   const [online, setOnline] = useState(true);
   const onlineRef = useRef(true);
-  const [laeuft, starte] = useTransition();
+  // Eigener Zähler statt useTransition: die Knöpfe sind nach der Zeitgrenze wieder frei, auch wenn die hängende
+  // Anfrage im Hintergrund noch läuft (eine Transition bliebe so lange „pending“)
+  const [offeneArbeiten, setOffeneArbeiten] = useState(0);
+  const laeuft = offeneArbeiten > 0;
+  const starte = useCallback((arbeit: () => Promise<unknown>) => {
+    setOffeneArbeiten((n) => n + 1);
+    void arbeit().finally(() => setOffeneArbeiten((n) => n - 1));
+  }, []);
   const synchronisiertRef = useRef(false);
   const karteRef = useRef<HTMLDivElement>(null);
   const [ergebnisZeit, setErgebnisZeit] = useState<string | null>(null);
@@ -176,7 +183,7 @@ export function Einlass({ tagId, modulTitel, ticketNoetig, zaehler: start, offli
   useEffect(() => {
     if (!blickRef.current) return;
     blickRef.current = false;
-    karteRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    karteRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
   }, [ergebnisZeit]);
 
   /** Erst online versuchen (mit Zeitgrenze); ohne Verbindung gegen die gespeicherte Liste prüfen. */
@@ -331,11 +338,11 @@ export function Einlass({ tagId, modulTitel, ticketNoetig, zaehler: start, offli
               : "Die Anwesenheit hakt das Orga-Team in der Liste ab. Als Einlass-Helfer:in ist hier nichts einzutragen."}
           </p>
           {zeitfensterHaken}
-          {ergebnis && <div ref={karteRef} className="mt-4 scroll-mt-4"><Ergebniskarte ergebnis={ergebnis} zeit={ergebnisZeit} /></div>}
+          {ergebnis && <div ref={karteRef} className="mt-4 scroll-mt-20"><Ergebniskarte ergebnis={ergebnis} zeit={ergebnisZeit} /></div>}
         </section>
       ) : (
       <section className="rounded-3xl bg-white/60 p-5 ring-1 ring-line">
-        {ergebnis && <div ref={karteRef} className="mb-5 scroll-mt-4"><Ergebniskarte ergebnis={ergebnis} zeit={ergebnisZeit} /></div>}
+        {ergebnis && <div ref={karteRef} className="mb-5 scroll-mt-20"><Ergebniskarte ergebnis={ergebnis} zeit={ergebnisZeit} /></div>}
 
         <form onSubmit={codeAbsenden}>
           <label htmlFor="kurzcode" className="mb-1.5 block font-semibold">Kurzcode eingeben</label>
@@ -440,8 +447,8 @@ function ZeilenHinweis({ ergebnis }: { ergebnis: EinlassErgebnis }) {
   const { ton, titel, text } = deute(ergebnis);
   return (
     <p role="status" className={`w-full rounded-2xl px-3 py-2 text-sm ring-1 ${tonKlassen[ton]}`}>
-      <span className="font-semibold">{ergebnis.result === "fehler" ? "Nicht gespeichert: keine Verbindung." : titel}</span>
-      {ergebnis.result === "fehler" ? " Bitte gleich noch einmal tippen." : text ? ` ${text}` : ""}
+      <span className="font-semibold">{ergebnis.result === "fehler" ? "Keine Antwort vom Server." : titel}</span>
+      {ergebnis.result === "fehler" ? " Springt die Zeile nicht gleich auf „da“, bitte noch einmal tippen." : text ? ` ${text}` : ""}
     </p>
   );
 }
@@ -454,7 +461,7 @@ function Ergebniskarte({ ergebnis, zeit }: { ergebnis: EinlassErgebnis; zeit: st
       <p className={`${ergebnis.display_name ? "mt-2 text-lg" : "font-display text-3xl"} font-bold`}>{titel}</p>
       {text && <p className="mt-1">{text}</p>}
       {ergebnis.display_name && (
-        <dl className="mt-4 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-3">
+        <dl className="mt-4 hidden gap-x-6 gap-y-1 text-sm sm:grid sm:grid-cols-3">
           {ergebnis.affiliation_status && <div><dt className="opacity-70">Zugehörigkeit</dt><dd className="font-semibold">{zugehoerigkeit[ergebnis.affiliation_status]}</dd></div>}
           {ergebnis.module_title && <div><dt className="opacity-70">Veranstaltung</dt><dd className="font-semibold">{ergebnis.module_title}</dd></div>}
           {ergebnis.registration_status && <div><dt className="opacity-70">Anmeldung</dt><dd className="font-semibold">{anmeldestatus[ergebnis.registration_status]}</dd></div>}
