@@ -17,8 +17,8 @@ const formate = {
 type Format = keyof typeof formate;
 
 const stile = {
-  deckblatt: "Deckblatt: grünes Band mit Megafon-Muster",
   klassisch: "Klassisch: weiß, zentriert, Serifenschrift",
+  deckblatt: "Deckblatt: grünes Band mit Megafon-Muster",
   dunkel: "Dunkel: ganz in Grün (braucht viel Farbe)",
 } as const;
 type Stil = keyof typeof stile;
@@ -39,7 +39,7 @@ export default async function Namensschilder({ params, searchParams }: PageProps
   const daten = await ladeNamensschilder(id);
   if (!daten) notFound();
   const format: Format = sp.format === "karte" ? "karte" : "a7";
-  const stil: Stil = typeof sp.stil === "string" && sp.stil in stile ? (sp.stil as Stil) : "deckblatt";
+  const stil: Stil = typeof sp.stil === "string" && sp.stil in stile ? (sp.stil as Stil) : "klassisch";
   const fm = formate[format];
   const seiten = Array.from({ length: Math.ceil(daten.schilder.length / fm.je) }, (_, i) => daten.schilder.slice(i * fm.je, (i + 1) * fm.je));
   const k = fm.h / 74.25;
