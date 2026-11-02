@@ -52,11 +52,14 @@ export default async function Namensschilder({ params, searchParams }: PageProps
     <>
       <style>{`
         @page { size: A4; margin: 0; }
-        @media print { .nur-bildschirm { display: none !important; } body { background: #fff; } .seite { margin: 0 !important; box-shadow: none !important; } }
+        @media print { .nur-bildschirm { display: none !important; } html, body { margin: 0; padding: 0; background: #fff; }
+          .seite { margin: 0 !important; box-shadow: none !important; height: 296.5mm; overflow: hidden; } }
         * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         .seite { width: 210mm; height: 297mm; box-sizing: border-box; padding: ${fm.rand[1]}mm ${fm.rand[0]}mm; display: grid; background: #fff;
           grid-template-columns: repeat(${fm.spalten}, ${fm.b}mm); grid-template-rows: repeat(${fm.zeilen}, ${fm.h}mm);
           justify-content: center; break-after: page; margin: 8mm auto; box-shadow: 0 1mm 6mm rgb(0 0 0 / .12); }
+        /* Nach der letzten Seite kein leeres Blatt */
+        .seite:last-of-type { break-after: auto; }
         .schild { position: relative; box-sizing: border-box; overflow: hidden; outline: 0.15mm dashed #cfc8b6; outline-offset: -0.075mm;
           font-family: var(--font-inter), Arial, sans-serif; color: ${dunkel}; }
         .serif { font-family: var(--font-newsreader), Georgia, serif; }
@@ -93,9 +96,13 @@ export default async function Namensschilder({ params, searchParams }: PageProps
       <div className="nur-bildschirm sticky top-0 z-10 border-b border-line bg-paper px-5 py-3 text-sm">
         <div className="flex flex-wrap items-center gap-2">
           <p className="mr-auto"><span className="font-semibold">Namensschilder · {daten.titel}</span> · {daten.schilder.length - 4} Personen und 4 leere Schilder</p>
-          <button id="drucken" className="rounded-full bg-ink px-5 py-2 font-semibold text-paper">Drucken (A4, ohne Ränder, 100 %)</button>
+          <button id="drucken" className="rounded-full bg-ink px-5 py-2 font-semibold text-paper">Drucken</button>
           <script dangerouslySetInnerHTML={{ __html: "document.getElementById('drucken').onclick=()=>window.print()" }} />
         </div>
+        <p className="mt-1 text-ink-soft">
+          Im Druckdialog: A4, Skalierung 100 %, <span className="font-semibold text-ink">„Kopf- und Fußzeilen drucken“ ausschalten</span> und Ränder „Keine“.
+          Sonst verkleinert der Browser die Schilder und sie passen nicht mehr in die Hüllen. Am genauesten druckt Chrome.
+        </p>
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <span className="font-semibold">Farbe</span>
           {(Object.keys(stile) as Stil[]).map((x) => (
