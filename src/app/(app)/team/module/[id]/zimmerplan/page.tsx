@@ -333,7 +333,8 @@ function ZimmerRaster({ zimmer, personen, schonZusammen, zusammenfassung = true 
                     <li key={l.pid} className="flex flex-wrap items-center gap-1.5">
                       <span className="font-semibold">{p?.name}</span>
                       <span className={`chip ${gruende[l.grund].klasse}`}>{gruende[l.grund].text}</span>
-                      <span className="text-xs text-ink-soft">{[p?.region, p ? naechteKurz(p.nights) : null].filter(Boolean).join(" · ")}</span>
+                      {/* Nächte bewusst nicht: jedes Zimmer ist für den ganzen Aufenthalt gebucht */}
+                      {p?.region && <span className="text-xs text-ink-soft">{p.region}</span>}
                     </li>
                   );
                 })}
