@@ -52,6 +52,7 @@ export async function abgabeLoeschen(formData: FormData) {
   await requireStaff("orga");
   const supabase = await createClient();
   const id = String(formData.get("id"));
+  if (formData.get("bestaetigt") !== "ja") redirect(`/team/abgaben/${id}/?fehler=${encodeURIComponent("Bitte das Löschen bestätigen.")}`);
   const { data } = await supabase.from("submissions").select("assignment_id").eq("id", id).single();
   await supabase.from("submissions").delete().eq("id", id);
   revalidatePath("/team/hausaufgaben/", "layout");
@@ -97,6 +98,9 @@ export async function bewertungSpeichern(formData: FormData) {
       return [k.feld, v >= 1 && v <= 5 ? v : null];
     }),
   );
+  const vergeben = Object.values(punkte).filter((v) => v !== null).length;
+  if (vergeben === 0) redirect(`/team/abgaben/${submission_id}/?fehler=${encodeURIComponent("Bitte mindestens ein Kriterium bewerten. Nichts gespeichert.")}`);
+  if (vergeben < kriterien.length) redirect(`/team/abgaben/${submission_id}/?fehler=${encodeURIComponent(`Noch ${kriterien.length - vergeben} von ${kriterien.length} Kriterien ohne Punkte. Bitte alle bewerten. Nichts gespeichert.`)}`);
   // Ein importierter Bogen ohne Bewerter:in wird beim ersten Speichern übernommen
   const ziel = leer(formData.get("review_id"));
   const werte = {

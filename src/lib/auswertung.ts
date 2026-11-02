@@ -53,5 +53,10 @@ export async function ladeAuswertung(f: Filter) {
 
 /** Gefährdet: zuletzt mindestens 2 Serientage in Folge verpasst oder Quote unter 50 % bei mindestens 4 möglichen Tagen. */
 export function istGefaehrdet(p: PersonZeile): boolean {
-  return p.trailing_misses >= 2 || (p.total_attended + p.total_no_shows >= 4 && (p.attendance_rate ?? 100) < 50);
+  return verpasstInFolge(p) >= 2 || (p.total_attended + p.total_no_shows >= 4 && (p.attendance_rate ?? 100) < 50);
+}
+
+/** Zuletzt verpasste Tage in Folge, höchstens so viele wie insgesamt verpasst (Tage ohne Anmeldung zählen nicht). */
+export function verpasstInFolge(p: PersonZeile): number {
+  return Math.min(p.trailing_misses, p.total_no_shows);
 }

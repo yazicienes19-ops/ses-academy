@@ -13,6 +13,7 @@ import { createClient } from "@/lib/supabase/server";
 export const metadata: Metadata = { title: "Referenten | SES Academy" };
 
 const hinweise: Record<string, { text: string; gut: boolean }> = {
+  betrag: { text: "Honorar oder Reisekosten bitte als Betrag eingeben, z. B. 1.250,50. Nichts gespeichert.", gut: false },
   "referent-angelegt": { text: "Im Pool angelegt und für dieses Modul vorgemerkt.", gut: true },
   eingeladen: { text: "Für dieses Modul vorgemerkt.", gut: true },
   "schon-eingeladen": { text: "Diese Person ist mit dieser Rolle schon dabei.", gut: false },

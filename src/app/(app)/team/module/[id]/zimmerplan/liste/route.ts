@@ -15,8 +15,8 @@ function feld(wert: string | number): string {
 
 /**
  * Zimmerliste fürs Hotel aus der automatischen Einteilung (ab Orga-Team), als CSV für Excel (Semikolon, UTF-8 mit BOM).
- * Nur Namen und Zimmer, keine Kontaktdaten. Jedes Zimmer wird einmal für den ganzen Aufenthalt gebucht: Anreise
- * und Abreise sind für alle gleich (erste bis letzte Nacht, in der jemand übernachtet). ?groesse=2 oder 3.
+ * Nur Namen und Zimmer, keine Kontaktdaten. Jedes Zimmer wird einmal gebucht (erste bis letzte Nacht seiner Gäste);
+ * wer später dazukommt, hat eine eigene Anreise. ?groesse=2 oder 3.
  */
 export async function GET(request: Request, { params }: RouteContext<"/team/module/[id]/zimmerplan/liste">) {
   await requireStaff("orga");
@@ -32,12 +32,14 @@ export async function GET(request: Request, { params }: RouteContext<"/team/modu
     ? d.zimmer.map((z) => ({ label: z.label, art: art(z.capacity), bereich: z.section ?? "", ids: d.personen.filter((p) => p.room_id === z.id).map((p) => p.participant_id) }))
     : probeplan(d, groesse).zimmer.map((z) => ({ label: z.label, art: zimmerArt[groesse], bereich: z.bereich, ids: z.belegung.map((b) => b.id) }));
 
-  const alleNaechte = [...new Set(d.personen.flatMap((p) => p.nights))].sort();
-  const anreise = alleNaechte[0] ? tag(alleNaechte[0]) : "";
-  const abreise = alleNaechte.length ? tag(alleNaechte.at(-1)!, 1) : "";
-  const zeilen = [["Zimmer", "Zimmerart", "Bereich", "Name", "Anreise", "Abreise", "Nächte"]];
+  const zeilen = [["Zimmer", "Zimmerart", "Bereich", "Zimmer ab", "Zimmer bis", "Nächte", "Name", "Anreise der Person"]];
   for (const z of liste) {
-    for (const id of z.ids) zeilen.push([z.label, z.art, z.bereich, personen.get(id)?.name ?? "", anreise, abreise, String(alleNaechte.length)]);
+    const n = [...new Set(z.ids.flatMap((id) => personen.get(id)?.nights ?? []))].sort();
+    const an = n[0] ? tag(n[0]) : "", ab = n.length ? tag(n.at(-1)!, 1) : "";
+    for (const id of z.ids) {
+      const eigene = [...(personen.get(id)?.nights ?? [])].sort();
+      zeilen.push([z.label, z.art, z.bereich, an, ab, String(n.length), personen.get(id)?.name ?? "", eigene[0] && eigene[0] !== n[0] ? tag(eigene[0]) : an]);
+    }
   }
   const csv = "﻿" + zeilen.map((z) => z.map(feld).join(";")).join("\r\n") + "\r\n";
   const datei = `Zimmerliste ${d.modul.title}${d.zimmer.length ? "" : ` ${groesse}er-Zimmer`}.csv`;

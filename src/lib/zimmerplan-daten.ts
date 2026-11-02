@@ -56,12 +56,14 @@ export function probeplan(d: Zimmerplan, groesse: 2 | 3) {
   const leer = Array.from({ length: anzahl }, (_, i) => ({ id: `probe-${i}`, label: String(i).padStart(4, "0"), capacity: groesse }));
   const e = planen(personen, leer, d.paare);
   const geschlecht = new Map(personen.map((p) => [p.id, p.gender]));
+  const naechteVon = new Map(personen.map((p) => [p.id, [...p.nights].sort()]));
   const reihe = (g: string | null) => (g === "w" ? 0 : g === "m" ? 1 : 2);
+  // Frauen vor Männern, innerhalb nach Anreise (früheste zuerst); alle im Zimmer haben dieselben Nächte
   const zimmer = e.zimmer.filter((z) => z.belegung.length > 0)
-    .map((z) => ({ ...z, gender: geschlecht.get(z.belegung[0].id) ?? null }))
-    .sort((a, b) => reihe(a.gender) - reihe(b.gender))
+    .map((z) => ({ ...z, gender: geschlecht.get(z.belegung[0].id) ?? null, naechte: [...new Set(z.belegung.flatMap((b) => naechteVon.get(b.id) ?? []))].sort() }))
+    .sort((a, b) => reihe(a.gender) - reihe(b.gender) || a.naechte.join().localeCompare(b.naechte.join()))
     .map((z, i) => ({
-      id: `probe-${i + 1}`, label: `${groesse}er ${String(i + 1).padStart(2, "0")}`, capacity: groesse, belegung: z.belegung,
+      id: `probe-${i + 1}`, label: `${groesse}er ${String(i + 1).padStart(2, "0")}`, capacity: groesse, belegung: z.belegung, naechte: z.naechte,
       bereich: z.gender === "w" ? "Frauen" : z.gender === "m" ? "Männer" : "ohne Angabe",
     }));
   return { zimmer, hinweise: e.hinweise };

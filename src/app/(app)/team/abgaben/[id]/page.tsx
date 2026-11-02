@@ -64,7 +64,7 @@ export default async function Abgabe({ params, searchParams }: PageProps<"/team/
                 <div><label className="etikett" htmlFor="strengths">Das war besonders gut</label><textarea id="strengths" name="strengths" rows={2} defaultValue={meine?.strengths ?? ""} className="feld" /></div>
                 <div><label className="etikett" htmlFor="improvements">Das könnte verbessert werden</label><textarea id="improvements" name="improvements" rows={2} defaultValue={meine?.improvements ?? ""} className="feld" /></div>
                 <div><label className="etikett" htmlFor="tip">Konkreter Tipp für das nächste Video</label><textarea id="tip" name="tip" rows={2} defaultValue={meine?.tip ?? ""} className="feld" /></div>
-                <p className="text-xs text-ink-soft">Punkte und Feedback sehen die zugeordneten Teilnehmenden in „Mein Bereich“.</p>
+                <p className="text-xs text-ink-soft">Punkte und Feedback bleiben intern; Teilnehmende sehen sie nicht.</p>
                 <button className="knopf justify-self-start px-8 py-3">Bewertung speichern</button>
               </div>
             </form>
@@ -130,10 +130,14 @@ export default async function Abgabe({ params, searchParams }: PageProps<"/team/
                   {a.source === "self" && a.submitted_at && <span className="text-sm text-ink-soft">selbst abgegeben am {new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Berlin" }).format(new Date(a.submitted_at))} Uhr</span>}
                 </div>
               </form>
-              <form action={abgabeLoeschen} className="mt-4 border-t border-line pt-4">
-                <input type="hidden" name="id" value={id} />
-                <button className="text-sm text-rot hover:underline">Abgabe löschen</button>
-              </form>
+              <details className="mt-4 border-t border-line pt-4">
+                <summary className="cursor-pointer text-sm text-rot">Abgabe löschen …</summary>
+                <form action={abgabeLoeschen} className="mt-2 flex flex-wrap items-center gap-2">
+                  <input type="hidden" name="id" value={id} />
+                  <label className="flex gap-2 text-sm"><input type="checkbox" name="bestaetigt" value="ja" required /> Abgabe samt Bewertung endgültig löschen</label>
+                  <button className="rounded-full bg-red-800 px-4 py-1.5 text-sm font-semibold text-white">Löschen</button>
+                </form>
+              </details>
             </section>
           </div>
         </div>

@@ -6,7 +6,7 @@ import { Leer, Titel, Zahl } from "@/components/team/Ui";
 import { Verlauf, type VerlaufPunkt } from "@/components/team/Verlauf";
 import { requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { istGefaehrdet, ladeAuswertung, leseFilter, type PersonZeile } from "@/lib/auswertung";
+import { istGefaehrdet, ladeAuswertung, leseFilter, verpasstInFolge, type PersonZeile } from "@/lib/auswertung";
 import { zugehoerigkeit } from "@/lib/einlass";
 import { jetztMs } from "@/lib/zeit";
 
@@ -28,7 +28,7 @@ function Personen({ titel, text, personen, leer }: { titel: string; text: string
               <Link href={`/team/teilnehmende/${p.participant_id}/`} className="mr-auto font-semibold hover:underline">{p.vorname} {p.nachname}</Link>
               <span className="text-sm tabular-nums text-ink-soft">Quote {prozent(p.attendance_rate)}</span>
               <span className="chip bg-paper-deep tabular-nums">Serie {p.current_streak} · Rekord {p.longest_streak}</span>
-              {p.trailing_misses > 0 && <span className="chip bg-gelb-hell tabular-nums">{p.trailing_misses} Tage verpasst</span>}
+              {verpasstInFolge(p) > 0 && <span className="chip bg-gelb-hell tabular-nums">{verpasstInFolge(p)} Tage verpasst</span>}
             </li>
           ))}
         </ul>

@@ -80,5 +80,17 @@ ok("Männer nur in Männer-Zimmern", ["m1x", "m2x"].every((id) => ["m1", "m2"].i
 e = planen([p("f1", "w"), p("f2", "w"), p("f3", "w")], [{ id: "m1", label: "01", capacity: 2, vorgabe: "m" as const }, { id: "w1", label: "02", capacity: 2, vorgabe: "w" as const }], new Set());
 ok("kein Frauen-Bett frei: ohne Zimmer statt ins Männer-Zimmer", e.ohneZimmer.length === 1 && !e.zimmer.find((z) => z.id === "m1")!.belegung.length);
 
+// Anreise: Freitags- und Samstags-Anreisende nie im selben Zimmer; Wunsch über verschiedene Nächte → Hinweis
+const fr = ["2026-11-13", "2026-11-14"], sa = ["2026-11-14"];
+e = planen([p("a", "w", { nights: fr }), p("b", "w", { nights: sa }), p("c", "w", { nights: fr }), p("d", "w", { nights: sa, wuensche: ["a"] })], zimmer(3), new Set());
+ok("2 Freitag + 2 Samstag in Doppelzimmern: 2 Zimmer, alle mit Bett", e.zimmer.filter((z) => z.belegung.length).length === 2 && e.ohneZimmer.length === 0);
+ok("Samstag darf zu Freitag (Wunsch erfüllt, Zimmer ab Freitag)", wo(e, "d") === wo(e, "a") || e.hinweise.some((h) => h.personId === "d"));
+// Kosten: 3 Freitag + 1 Samstag in Doppelzimmern → 2 Zimmer (Samstag füllt das freie Bett), nicht 3
+e = planen([p("f1", "m", { nights: fr }), p("f2", "m", { nights: fr }), p("f3", "m", { nights: fr }), p("s1", "m", { nights: sa })], zimmer(4), new Set());
+ok("freies Freitags-Bett mit Samstag gefüllt (2 statt 3 Zimmer)", e.zimmer.filter((z) => z.belegung.length).length === 2);
+// Wer Freitag kommt, nie in ein Zimmer ab Samstag; nur Freitag und nur Samstag (je eine Nacht) nie zusammen
+e = planen([p("s1", "w", { nights: sa }), p("x", "w", { nights: ["2026-11-13"] })], zimmer(2), new Set());
+ok("verschiedene Einzelnächte getrennt", wo(e, "s1") !== wo(e, "x"));
+
 console.log(fehler ? `${fehler} Fehler` : "alle ok");
 process.exit(fehler ? 1 : 0);

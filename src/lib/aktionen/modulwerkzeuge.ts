@@ -52,7 +52,14 @@ export async function referentEinladen(formData: FormData) {
 }
 
 const statusSchema = z.enum(["idee", "angefragt", "zugesagt", "abgesagt", "bestaetigt"]);
-const zahl = (v: string) => (v ? Number(v.replace(",", ".")) : null);
+/** Betrag wie man ihn tippt: „1.250,50“, „1250,5“, „250.50“, „250 €“. Ungültig oder negativ → NaN (wird abgelehnt). */
+function zahl(v: string): number | null {
+  const t = v.replace(/\s|€|eur(o)?/gi, "");
+  if (!t) return null;
+  const norm = /,\d{1,2}$/.test(t) ? t.replace(/\./g, "").replace(",", ".") : t.replace(/,/g, "");
+  const n = Number(norm);
+  return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) / 100 : NaN;
+}
 
 /** Status und Gästeblatt einer Einladung speichern. */
 export async function gaesteblattSpeichern(formData: FormData) {
@@ -63,6 +70,9 @@ export async function gaesteblattSpeichern(formData: FormData) {
   const status = statusSchema.safeParse(formData.get("status"));
   if (!istToken(id) || !status.success) zurueck(pfad, "eingabe");
   const zeitpunkt = (tag: string, uhr: string) => (tag ? berlinerZeit(tag, uhr || "12:00") : null);
+  const fee = zahl(text(formData, "fee", 12));
+  const travel = zahl(text(formData, "travel_costs", 12));
+  if (Number.isNaN(fee) || Number.isNaN(travel)) zurueck(pfad, "betrag");
   const supabase = await createClient();
   const { error } = await supabase.from("module_speakers").update({
     status: status.data, topic: text(formData, "topic", 300), host_name: text(formData, "host_name", 200) || null,
@@ -70,7 +80,7 @@ export async function gaesteblattSpeichern(formData: FormData) {
     departure_at: zeitpunkt(text(formData, "departure_tag", 10), text(formData, "departure_zeit", 5)),
     hotel_info: text(formData, "hotel_info", 500), tech_needs: text(formData, "tech_needs", 500),
     slides_received: formData.get("slides_received") === "on", bio_received: formData.get("bio_received") === "on",
-    fee: zahl(text(formData, "fee", 12)), travel_costs: zahl(text(formData, "travel_costs", 12)), notes: text(formData, "notes"),
+    fee, travel_costs: travel, notes: text(formData, "notes"),
   }).eq("id", id);
   zurueck(pfad, error ? "fehler" : "gespeichert");
 }

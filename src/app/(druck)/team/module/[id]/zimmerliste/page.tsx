@@ -11,12 +11,15 @@ const tinte = "#173226";
 const tagLang = new Intl.DateTimeFormat("de-DE", { weekday: "short", day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC" });
 const stand = new Intl.DateTimeFormat("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Europe/Berlin" });
 
-type Zimmer = { label: string; art: string; bereich: string; gaeste: string[] };
+type Zimmer = { label: string; art: string; bereich: string; naechte: string[]; gaeste: { name: string; ab: string | null }[] };
+const kurz = new Intl.DateTimeFormat("de-DE", { weekday: "short", day: "2-digit", month: "2-digit", timeZone: "UTC" });
+const nachtDatum = (n: string, plus = 0) => new Date(Date.parse(`${n}T12:00:00Z`) + plus * 86_400_000);
 
 /**
  * Zimmerliste fürs Hotel im SES-Design zum Drucken oder als PDF (ab Orga-Team). Sind Zimmer angelegt, die echte
  * Zuteilung; sonst die automatische Einteilung (?groesse=2 oder 3). Jedes Zimmer ist einmal für den ganzen
- * Aufenthalt gebucht: ein Buchungszeitraum für alle. Nur Namen, keine Kontaktdaten.
+ * Aufenthalt gebucht: von der ersten bis zur letzten Nacht seiner Gäste; wer später dazukommt, ist vermerkt.
+ * Nur Namen, keine Kontaktdaten.
  */
 export default async function Zimmerliste({ params, searchParams }: PageProps<"/team/module/[id]/zimmerliste">) {
   await requireStaff("orga");
@@ -27,6 +30,14 @@ export default async function Zimmerliste({ params, searchParams }: PageProps<"/
   if (!d.modul) notFound();
   const groesse = sp.groesse === "3" ? 3 : 2;
   const name = new Map(d.personen.map((p) => [p.participant_id, p.name]));
+  const naechteVon = new Map(d.personen.map((p) => [p.participant_id, [...p.nights].sort()]));
+  // Ein Zimmer ist ab der frühesten Nacht seiner Gäste gebucht; wer später kommt, bekommt den Vermerk „ab …“
+  const belegen = (ids: string[]) => {
+    const naechte = [...new Set(ids.flatMap((i) => naechteVon.get(i) ?? []))].sort();
+    const gaeste = ids.map((i) => ({ name: name.get(i) ?? "?", ab: (naechteVon.get(i) ?? [])[0] !== naechte[0] ? (naechteVon.get(i) ?? [])[0] ?? null : null }))
+      .sort((a, b) => a.name.localeCompare(b.name, "de"));
+    return { naechte, gaeste };
+  };
   // Bereich aus den Gästen selbst (die Beschriftung eines Zimmers kann nach Umplanen veraltet sein)
   const bereichVon = (leute: { gender: string | null }[], fallback: string) =>
     leute.length && leute.every((x) => x.gender === "w") ? "Frauen" : leute.length && leute.every((x) => x.gender === "m") ? "Männer" : fallback;
@@ -37,10 +48,10 @@ export default async function Zimmerliste({ params, searchParams }: PageProps<"/
         const leute = d.personen.filter((p) => p.room_id === z.id);
         return {
           label: z.label, art: z.capacity === 2 ? zimmerArt[2] : z.capacity === 3 ? zimmerArt[3] : `${z.capacity}-Bett-Zimmer`,
-          bereich: bereichVon(leute, z.section ?? ""), gaeste: leute.map((p) => p.name).sort((a, b) => a.localeCompare(b, "de")),
+          bereich: bereichVon(leute, z.section ?? ""), ...belegen(leute.map((p) => p.participant_id)),
         };
       }).filter((z) => z.gaeste.length > 0)
-    : probeplan(d, groesse).zimmer.map((z) => ({ label: z.label, art: zimmerArt[groesse], bereich: z.bereich, gaeste: z.belegung.map((b) => name.get(b.id) ?? "?") }));
+    : probeplan(d, groesse).zimmer.map((z) => ({ label: z.label, art: zimmerArt[groesse], bereich: z.bereich, ...belegen(z.belegung.map((b) => b.id)) }));
   const bereiche = [...new Set(zimmer.map((z) => z.bereich || "Zimmer"))];
   const alleNaechte = [...new Set(d.personen.flatMap((p) => p.nights))].sort();
   const anreise = alleNaechte[0] ? new Date(`${alleNaechte[0]}T12:00:00Z`) : null;
@@ -75,7 +86,7 @@ export default async function Zimmerliste({ params, searchParams }: PageProps<"/
         th { text-align: left; font-size: 7.5pt; letter-spacing: .12em; text-transform: uppercase; color: #5d6b63; padding: 2mm 2.5mm; border-bottom: 0.4mm solid ${gruen}; }
         td { padding: 2.2mm 2.5mm; border-bottom: 0.3mm solid #e4e1d8; vertical-align: top; }
         td.zimmer { width: 22mm; font-weight: 700; white-space: nowrap; }
-        td.art { width: 32mm; color: #5d6b63; white-space: nowrap; }
+        td.art { width: 30mm; color: #5d6b63; white-space: nowrap; }
         td.nr { width: 8mm; text-align: center; color: #5d6b63; }
         tr { break-inside: avoid; }
         .gast { display: block; }
@@ -99,9 +110,9 @@ export default async function Zimmerliste({ params, searchParams }: PageProps<"/
           <p>{d.hotel && d.hotel.name !== "Hotel (Name folgt)" ? [d.hotel.name, d.hotel.address].filter(Boolean).join(", ") : `Veranstaltung: ${d.modul.location ?? "Ort folgt"}`}</p>
         </div>
         <div className="eckdaten">
-          <div><b>{anreise ? tagLang.format(anreise) : "–"}</b><span>Anreise (alle Zimmer)</span></div>
-          <div><b>{abreise ? tagLang.format(abreise) : "–"}</b><span>Abreise (alle Zimmer)</span></div>
-          <div><b>{zimmer.length}</b><span>Zimmer{bereiche.length > 1 ? ` (${bereiche.map((b) => `${zimmer.filter((z) => (z.bereich || "Zimmer") === b).length} ${b}`).join(", ")})` : ""}</span></div>
+          <div><b>{anreise ? tagLang.format(anreise) : "–"}</b><span>erste Anreise</span></div>
+          <div><b>{abreise ? tagLang.format(abreise) : "–"}</b><span>Abreise</span></div>
+          <div><b>{zimmer.length}</b><span>Zimmer · {[...new Set(zimmer.map((z) => z.naechte[0]).filter(Boolean))].sort().map((n) => `${zimmer.filter((z) => z.naechte[0] === n).length} ab ${kurz.format(nachtDatum(n))}`).join(", ")}</span></div>
           <div><b>{gaeste}</b><span>Gäste · {alleNaechte.length} {alleNaechte.length === 1 ? "Nacht" : "Nächte"}</span></div>
         </div>
 
@@ -111,13 +122,14 @@ export default async function Zimmerliste({ params, searchParams }: PageProps<"/
             <section key={b}>
               <h2>{b} · {teil.length} Zimmer</h2>
               <table>
-                <thead><tr><th>Zimmer</th><th>Zimmerart</th><th>Gäste</th><th className="text-center">Anz.</th></tr></thead>
+                <thead><tr><th>Zimmer</th><th>Zimmerart</th><th>Gebucht</th><th>Gäste</th><th className="text-center">Anz.</th></tr></thead>
                 <tbody>
                   {teil.map((z) => (
                     <tr key={z.label}>
                       <td className="zimmer">{z.label}</td>
                       <td className="art">{z.art}</td>
-                      <td>{z.gaeste.map((g) => <span key={g} className="gast">{g}</span>)}</td>
+                      <td className="art">{z.naechte.length ? `${kurz.format(nachtDatum(z.naechte[0]))} – ${kurz.format(nachtDatum(z.naechte.at(-1)!, 1))}` : "–"}</td>
+                      <td>{z.gaeste.map((g) => <span key={g.name} className="gast">{g.name}{g.ab && <span style={{ color: "#5d6b63" }}> (kommt {kurz.format(nachtDatum(g.ab))} dazu)</span>}</span>)}</td>
                       <td className="nr">{z.gaeste.length}</td>
                     </tr>
                   ))}

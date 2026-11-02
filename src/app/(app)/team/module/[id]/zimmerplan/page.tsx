@@ -326,9 +326,11 @@ function ZimmerRaster({ zimmer, personen, schonZusammen, zusammenfassung = true 
       {zusammenfassung && <p className="mt-4 text-sm text-ink-soft">{belegt.length} von {zimmer.length} Zimmern belegt, {zimmer.length - belegt.length} bleiben frei.</p>}
       <ul className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {belegt.map((z) => {
+          // Gebucht ab der frühesten Nacht der Gäste; wer später dazukommt, wird markiert
+          const gebucht = [...new Set(z.leute.flatMap((l) => personen.get(l.pid)?.nights ?? []))].sort();
           return (
             <li key={z.id} className="rounded-2xl bg-white p-4 ring-1 ring-line">
-              <p className="flex items-center gap-2 font-semibold">{z.label}<span className="chip ml-auto bg-paper-deep">{z.leute.length}/{z.capacity}</span></p>
+              <p className="flex items-center gap-2 font-semibold">{z.label}<span className="text-xs font-normal text-ink-soft">{gebucht.length ? `${naechteKurz([gebucht[0]]).split("/")[0]}–${naechteKurz([gebucht.at(-1)!]).split("/")[1]}` : ""}</span><span className="chip ml-auto bg-paper-deep">{z.leute.length}/{z.capacity}</span></p>
               <ul className="mt-2 space-y-1 text-sm">
                 {z.leute.map((l) => {
                   const p = personen.get(l.pid);
@@ -336,8 +338,8 @@ function ZimmerRaster({ zimmer, personen, schonZusammen, zusammenfassung = true 
                     <li key={l.pid} className="flex flex-wrap items-center gap-1.5">
                       <span className="font-semibold">{p?.name}</span>
                       <span className={`chip ${gruende[l.grund].klasse}`}>{gruende[l.grund].text}</span>
-                      {/* Nächte bewusst nicht: jedes Zimmer ist für den ganzen Aufenthalt gebucht */}
                       {p?.region && <span className="text-xs text-ink-soft">{p.region}</span>}
+                      {p && gebucht[0] && [...p.nights].sort()[0] !== gebucht[0] && <span className="chip bg-gelb-hell text-xs">kommt {naechteKurz([[...p.nights].sort()[0]]).split("/")[0]} dazu</span>}
                     </li>
                   );
                 })}
