@@ -1,4 +1,5 @@
 import { KontaktFormular, LetzterKontakt, type Kontakt } from "@/components/team/Kontakt";
+import { telLink } from "@/lib/telefon";
 import { uhrzeit } from "@/lib/einlass";
 
 export type GruppenPerson = {
@@ -9,9 +10,6 @@ export type GruppenPerson = {
   checked_in_at: string | null;
 };
 
-function telLink(nummer: string) {
-  return `tel:${nummer.replace(/[^\d+]/g, "")}`;
-}
 
 /**
  * Eine Sorumlu-Gruppe am Eventtag: wer fehlt noch (mit Anruf-Knopf), wer ist entschuldigt, wer ist da.

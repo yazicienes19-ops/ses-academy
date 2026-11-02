@@ -99,7 +99,7 @@ export async function offlinePruefen(tagId: string, code: string): Promise<Einla
   } else {
     treffer = liste.eintraege.find((e) => e.short_code === code);
   }
-  if (!treffer) return { result: "not_found" };
+  if (!treffer) return { result: "offline_unbekannt" };
 
   const person = {
     participant_id: treffer.participant_id,

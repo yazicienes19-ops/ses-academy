@@ -107,6 +107,11 @@ export default async function ZimmerplanSeite({ params, searchParams }: PageProp
                 <div className="mr-auto">
                   <h2 className="font-display text-2xl font-bold">Vorschlag</h2>
                   <p className="text-sm text-ink-soft">Gegenseitige Wünsche zuerst, Zimmer nur Frauen oder nur Männer, sonst gemischt nach Region und ohne frühere Zimmerpartner. Von Hand Zugeteiltes bleibt.</p>
+                  <p className="mt-1 text-sm">
+                    {d.hotel.rooms_visible
+                      ? <><span className="font-semibold">Achtung:</span> Die Zimmer sind in „Mein Bereich“ freigegeben, Übernommenes sehen die Teilnehmenden sofort.</>
+                      : <>Teilnehmende sehen ihr Zimmer erst, wenn es unter <Link href={`/team/module/${id}/hotel/`} className="link font-semibold">Logistik</Link> freigegeben ist.</>}
+                  </p>
                 </div>
                 {zeigeVorschlag ? (
                   <>

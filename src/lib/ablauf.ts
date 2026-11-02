@@ -30,7 +30,4 @@ export function zustaendigWaehrend(liste: Punkt[], i: number, einsaetze: Einsatz
   return einsaetze.filter((e) => e.starts_at && Date.parse(e.starts_at) < bis && (e.ends_at ? Date.parse(e.ends_at) : Infinity) > von);
 }
 
-/** Telefonnummer für tel:-Links: nur Ziffern und führendes Plus. */
-export function telLink(nummer: string) {
-  return `tel:${nummer.replace(/[^\d+]/g, "").replace(/^00/, "+")}`;
-}
+export { telLink } from "@/lib/telefon";

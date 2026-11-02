@@ -455,14 +455,14 @@ isOneToOne: false
                   ]
                 },"hotels": {
                   Row: {
-                    "address": string | null,"cancellation_deadline": string | null,"contact": string | null,"created_at": string,"id": string,"module_id": string,"name": string,"notes": string,"price_per_night": number | null,"quota_rooms": number | null
+                    "address": string | null,"cancellation_deadline": string | null,"contact": string | null,"created_at": string,"id": string,"module_id": string,"name": string,"notes": string,"price_per_night": number | null,"quota_rooms": number | null,"rooms_visible": boolean
                   }
                   ComputedFields: never
                   Insert: {
-                    "address"?: string | null,"cancellation_deadline"?: string | null,"contact"?: string | null,"created_at"?: string,"id"?: string,"module_id": string,"name": string,"notes"?: string,"price_per_night"?: number | null,"quota_rooms"?: number | null
+                    "address"?: string | null,"cancellation_deadline"?: string | null,"contact"?: string | null,"created_at"?: string,"id"?: string,"module_id": string,"name": string,"notes"?: string,"price_per_night"?: number | null,"quota_rooms"?: number | null,"rooms_visible"?: boolean
                   }
                   Update: {
-                    "address"?: string | null,"cancellation_deadline"?: string | null,"contact"?: string | null,"created_at"?: string,"id"?: string,"module_id"?: string,"name"?: string,"notes"?: string,"price_per_night"?: number | null,"quota_rooms"?: number | null
+                    "address"?: string | null,"cancellation_deadline"?: string | null,"contact"?: string | null,"created_at"?: string,"id"?: string,"module_id"?: string,"name"?: string,"notes"?: string,"price_per_night"?: number | null,"quota_rooms"?: number | null,"rooms_visible"?: boolean
                   }
                   Relationships: [
                     {
@@ -1138,7 +1138,7 @@ isOneToOne: false
 { Args: { "p_module_id": string }; Returns: number
                            },
 "create_walk_in":
-{ Args: { "p_affiliation"?: Database["public"]['Enums']["affiliation_status"],"p_email"?: string,"p_first_name": string,"p_last_name": string,"p_module_day_id": string,"p_privacy_consent"?: boolean }; Returns: Json
+{ Args: { "p_affiliation"?: Database["public"]['Enums']["affiliation_status"],"p_allow_off_window"?: boolean,"p_email"?: string,"p_first_name": string,"p_force_new"?: boolean,"p_last_name": string,"p_module_day_id": string,"p_privacy_consent"?: boolean }; Returns: Json
                            },
 "current_staff_role":
 { Args: Record<PropertyKey, never>; Returns: Database["public"]['Enums']["staff_role"]
@@ -1300,6 +1300,9 @@ isOneToOne: false
                            },
 "my_participant_id":
 { Args: Record<PropertyKey, never>; Returns: string
+                           },
+"name_key":
+{ Args: { "p": string }; Returns: string
                            },
 "new_round_code":
 { Args: Record<PropertyKey, never>; Returns: string

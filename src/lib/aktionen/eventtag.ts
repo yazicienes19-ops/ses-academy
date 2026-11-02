@@ -9,7 +9,7 @@ import { versandrundeSeit } from "@/lib/eventtag";
 import { sendeTicketMail } from "@/lib/mail";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { berlinerZeit } from "@/lib/zeit";
+import { berlinerZeit, jetztMs } from "@/lib/zeit";
 
 function zurueck(pfad: string, hinweis: string): never {
   revalidatePath(pfad);
@@ -110,10 +110,13 @@ export async function programmVerschieben(formData: FormData) {
     .neq("status", "entfaellt");
   const versatz = minuten * 60_000;
   const plus = (iso: string | null) => (iso ? new Date(Date.parse(iso) + versatz).toISOString() : null);
+  // Läuft der gewählte Punkt schon (Redner überzieht), bleibt sein Beginn stehen: nur sein Ende und alles danach rückt
+  const laeuftSchon = Date.parse(ab.starts_at) <= jetztMs();
   for (const p of betroffen ?? []) {
+    const nurEnde = laeuftSchon && p.id === id;
     const { error } = await supabase.from("program_items").update({
-      starts_at: plus(p.starts_at)!, ends_at: plus(p.ends_at),
-      status: p.status === "geplant" ? "verschoben" : p.status, updated_by: staff.userId,
+      starts_at: nurEnde ? p.starts_at : plus(p.starts_at)!, ends_at: plus(p.ends_at),
+      status: p.status === "geplant" && !nurEnde ? "verschoben" : p.status, updated_by: staff.userId,
     }).eq("id", p.id);
     if (error) zurueck(pfad, "fehler");
   }
@@ -194,9 +197,16 @@ export async function einsaetzeUebernehmen(formData: FormData) {
     starts_at: e.starts_at ? berlinerZeit(ziel.day, uhrzeitVon(e.starts_at)!) : null,
     ends_at: e.ends_at ? berlinerZeit(ziel.day, uhrzeitVon(e.ends_at)!) : null,
   }));
+  // Schon vorhandene Einsätze nicht doppelt anlegen (z. B. zweimal auf „Übernehmen“ getippt)
+  const { data: vorhanden } = await supabase.from("duty_assignments").select("person_name, task, starts_at, ends_at").eq("module_day_id", ziel.id);
+  const schluessel = (e: { person_name: string; task: string | null; starts_at: string | null; ends_at: string | null }) =>
+    [e.person_name, e.task ?? "", e.starts_at ? Date.parse(e.starts_at) : "", e.ends_at ? Date.parse(e.ends_at) : ""].join("|");
+  const schonDa = new Set((vorhanden ?? []).map(schluessel));
+  const fehlend = neu.filter((e) => !schonDa.has(schluessel(e)));
   if (neu.length === 0) zurueck(pfad, "nichts");
-  const { error } = await supabase.from("duty_assignments").insert(neu);
-  zurueck(pfad, error ? "fehler" : `uebernommen-${neu.length}`);
+  if (fehlend.length === 0) zurueck(pfad, "schon-uebernommen");
+  const { error } = await supabase.from("duty_assignments").insert(fehlend);
+  zurueck(pfad, error ? "fehler" : `uebernommen-${fehlend.length}`);
 }
 
 // ---------------------------------------------------------------------------

@@ -51,8 +51,11 @@ const walkInSchema = z.object({
   einwilligung: z.literal("ja"),
 });
 
-/** Walk-in: Person vor Ort erfassen, anmelden und einchecken (ab Orga-Team). Mit E-Mail kommt gleich das Ticket. */
-export async function walkIn(tagId: string, formData: FormData): Promise<EinlassAntwort> {
+/**
+ * Walk-in: Person vor Ort erfassen, anmelden und einchecken (ab Orga-Team). Mit E-Mail kommt gleich das Ticket.
+ * Gibt es den Namen im Modul schon, legt die Datenbank nur mit „trotzdem“ eine neue Person an.
+ */
+export async function walkIn(tagId: string, formData: FormData, zeitfensterIgnorieren = false): Promise<EinlassAntwort> {
   await requireStaff("orga");
   const d = walkInSchema.safeParse(Object.fromEntries(formData.entries()));
   if (!d.success) {
@@ -67,6 +70,8 @@ export async function walkIn(tagId: string, formData: FormData): Promise<Einlass
     p_email: d.data.email || undefined,
     p_affiliation: d.data.zugehoerigkeit,
     p_privacy_consent: true,
+    p_allow_off_window: zeitfensterIgnorieren,
+    p_force_new: formData.get("trotzdem") === "ja",
   });
   const ergebnis = alsErgebnis(data, error);
   if (ergebnis.result === "checked_in" && d.data.email && ergebnis.participant_id) await sendeTicketMail(ergebnis.participant_id);

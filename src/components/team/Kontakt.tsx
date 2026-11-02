@@ -1,5 +1,6 @@
 import { MessageCircle, Phone } from "lucide-react";
 import { kontaktEintragen, kontaktLoeschen } from "@/lib/aktionen/kontakte";
+import { telLink, whatsappLink } from "@/lib/telefon";
 import { jetztMs } from "@/lib/zeit";
 
 /** Rückmeldungen der Kontakt-Aktionen für <Hinweis />. */
@@ -30,15 +31,7 @@ export function wann(zeitpunkt: string) {
   return tag === heute ? `heute ${uhr.format(d)}` : tag === gestern ? `gestern ${uhr.format(d)}` : tagUndUhr.format(d);
 }
 
-export function telLink(nummer: string) {
-  return `tel:${nummer.replace(/[^\d+]/g, "")}`;
-}
-
-/** WhatsApp braucht die internationale Form; nationale Nummern (0…) bekommen keinen Knopf. */
-export function whatsappLink(nummer: string) {
-  const n = nummer.replace(/[^\d+]/g, "").replace(/^00/, "+");
-  return n.startsWith("+") ? `https://wa.me/${n.slice(1)}` : null;
-}
+export { telLink, whatsappLink } from "@/lib/telefon";
 
 export type Kontakt = {
   id: string; participant_id: string; module_title?: string | null; channel: string; outcome: string; note: string;

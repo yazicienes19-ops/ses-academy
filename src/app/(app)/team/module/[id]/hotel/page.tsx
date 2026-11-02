@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { Hinweis } from "@/components/team/Hinweis";
 import { ModulReiter } from "@/components/team/ModulReiter";
 import { TeamKopf } from "@/components/team/TeamKopf";
-import { abfrageUmschalten, hotelSpeichern, zimmerAnlegen, zimmerEntfernen, zimmerZuteilen } from "@/lib/aktionen/hotel";
+import { abfrageUmschalten, hotelSpeichern, zimmerAnlegen, zimmerEntfernen, zimmerSichtbarUmschalten, zimmerZuteilen } from "@/lib/aktionen/hotel";
 import { darf, requireStaff } from "@/lib/auth";
 import { istToken } from "@/lib/codes";
 import { naechte, nachtName } from "@/lib/uebernachtung";
@@ -18,7 +18,9 @@ const hinweise: Record<string, { text: string; gut: boolean }> = {
   zimmer: { text: "Zimmer angelegt.", gut: true },
   "zimmer-entfernt": { text: "Zimmer entfernt.", gut: true },
   zugeteilt: { text: "Zuteilung gespeichert.", gut: true },
-  "zimmer-voll": { text: "Das Zimmer ist schon voll.", gut: false },
+  "zimmer-voll": { text: "Das Zimmer ist schon voll. Die bisherige Zuteilung bleibt.", gut: false },
+  "zimmer-sichtbar": { text: "Die Zimmer stehen jetzt bei den Teilnehmenden in „Mein Bereich“.", gut: true },
+  "zimmer-verborgen": { text: "Die Zimmer sind in „Mein Bereich“ verborgen.", gut: true },
   eingabe: { text: "Bitte die Angaben prüfen.", gut: false },
   fehler: { text: "Das hat nicht geklappt.", gut: false },
 };
@@ -68,6 +70,19 @@ export default async function HotelSeite({ params, searchParams }: PageProps<"/t
               </form>
             )}
           </div>
+          {hotel && (
+            <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-line pt-3">
+              <p className="mr-auto">
+                <span className="font-semibold">Zimmer in „Mein Bereich“:</span>{" "}
+                {hotel.rooms_visible ? "sichtbar, alle Zugeteilten sehen ihr Zimmer" : "verborgen, erst nach Prüfung des Zimmerplans freigeben"}
+              </p>
+              <form action={zimmerSichtbarUmschalten}>
+                <input type="hidden" name="module_id" value={id} /><input type="hidden" name="hotel_id" value={hotel.id} />
+                <input type="hidden" name="sichtbar" value={hotel.rooms_visible ? "0" : "1"} />
+                <button type="submit" className={hotel.rooms_visible ? "knopf-hell" : "knopf"}>{hotel.rooms_visible ? "Zimmer verbergen" : "Zimmer freigeben"}</button>
+              </form>
+            </div>
+          )}
           {proNacht.length > 0 && (
             <ul className="mt-4 flex flex-wrap gap-2" aria-label="Übernachtungen je Nacht">
               {proNacht.map((n) => <li key={n.nacht} className="chip bg-paper-deep px-3 py-1.5 text-sm">{nachtName(n.nacht)}: {n.anzahl}{n.anzahl ? ` (${n.w} w · ${n.m} m)` : ""}</li>)}

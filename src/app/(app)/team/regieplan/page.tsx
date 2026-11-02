@@ -25,6 +25,7 @@ const hinweise: Record<string, { text: string; gut: boolean }> = {
   "einsatz-angelegt": { text: "Einsatz eingetragen.", gut: true },
   "einsatz-entfernt": { text: "Einsatz entfernt.", gut: true },
   nichts: { text: "Am gewählten Tag gibt es keine Einsätze zum Übernehmen.", gut: false },
+  "schon-uebernommen": { text: "Diese Einsätze stehen schon an diesem Tag. Nichts doppelt angelegt.", gut: true },
   pdf: { text: "PDF als Regieplan für diesen Tag festgelegt.", gut: true },
   "pdf-entfernt": { text: "PDF entfernt. Der Regieplan zeigt wieder die Programmliste.", gut: true },
   eingabe: { text: "Bitte die Angaben prüfen (Ende nach Beginn).", gut: false },

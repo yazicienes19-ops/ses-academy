@@ -121,6 +121,20 @@ GRANT SELECT ON w TO authenticated;
 SELECT pg_temp.ok('Walk-in checkt direkt ein', r->>'result', 'checked_in') FROM w;
 SELECT pg_temp.ok('Rücknahme', (public.undo_check_in(
   (SELECT attendance_id FROM public.get_checkin_list((SELECT probe_day FROM t)) WHERE display_name = 'Spontan Gast')))->>'result', 'undone');
+SELECT pg_temp.ok('Walk-in: gleicher Name ohne E-Mail fragt erst nach',
+  (public.create_walk_in(probe_day, 'spontan', 'GAST', NULL, 'guest', true))->>'result', 'possible_duplicate') FROM t;
+SELECT pg_temp.ok('Walk-in: mit „trotzdem“ neue Person',
+  (public.create_walk_in(probe_day, 'Spontan', 'Gast', NULL, 'guest', true, false, true))->>'result', 'checked_in') FROM t;
+SELECT pg_temp.ok('Walk-in: fremde E-Mail checkt niemanden ein',
+  (public.create_walk_in(probe_day, 'Anders', 'Name', 'spontan@example.test', 'guest', true))->>'result', 'email_other_person') FROM t;
+SELECT pg_temp.ok('Walk-in: Zeitfenster vorbei, nichts angelegt',
+  (public.create_walk_in(d.id, 'Zu', 'Spät', NULL, 'guest', true))->>'result', 'outside_checkin_window')
+  FROM public.module_days d JOIN public.modules m ON m.id = d.module_id
+ WHERE m.status = 'published' AND m.cancelled_at IS NULL AND d.ends_at < now() - interval '1 day' ORDER BY d.ends_at DESC LIMIT 1;
+SELECT pg_temp.login('admin@ses.test');
+SELECT pg_temp.ok('Walk-in: außerhalb nichts angelegt (Person fehlt)',
+  (SELECT count(*)::text FROM public.participants WHERE first_name = 'Zu' AND last_name = 'Spät'), '0');
+SELECT pg_temp.login('orga@ses.test');
 
 -- 12. Kennzahlen (Stand der Testdaten, vor heutigen Scans unverändert für vergangene Tage)
 SELECT pg_temp.login('admin@ses.test');

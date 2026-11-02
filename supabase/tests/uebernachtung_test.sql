@@ -76,7 +76,11 @@ SELECT pg_temp.ok('Yusuf: noch keine Angaben', (SELECT answered::text FROM ov WH
 SELECT pg_temp.login('helfer@ses.test');
 SELECT pg_temp.ok('Helfer sieht keinen Überblick', (SELECT count(*)::text FROM public.get_stay_overview((SELECT ws FROM t))), '0');
 
--- 4) Amina sieht ihr Zimmer, aber nicht, wer sonst darin schläft
+-- 4) Amina sieht ihr Zimmer erst nach Freigabe, und nicht, wer sonst darin schläft
+SELECT pg_temp.login('amina@example.test');
+SELECT pg_temp.ok('Amina: Zimmer vor Freigabe verborgen', (SELECT count(*)::text FROM public.get_my_rooms()), '0');
+SELECT pg_temp.login('orga@ses.test');
+UPDATE public.hotels SET rooms_visible = true WHERE module_id = (SELECT ws FROM t);
 SELECT pg_temp.login('amina@example.test');
 SELECT pg_temp.ok('Amina: eigenes Zimmer', (SELECT hotel_name || ' ' || room_label FROM public.get_my_rooms()), 'Testhotel 101');
 SELECT pg_temp.ok('Amina sieht keine Zimmerbelegung', (SELECT count(*)::text FROM public.room_assignments), '0');

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { telLink } from "@/lib/telefon";
 import { AutoAktualisieren } from "@/components/team/AutoAktualisieren";
 import { GruppenListe, type GruppenPerson } from "@/components/team/GruppenListe";
 import { Hinweis } from "@/components/team/Hinweis";
@@ -22,9 +23,6 @@ const hinweise: Record<string, { text: string; gut: boolean }> = {
   fehler: { text: "Das hat nicht geklappt.", gut: false },
 };
 
-function telLink(nummer: string) {
-  return `tel:${nummer.replace(/[^\d+]/g, "")}`;
-}
 
 /** „Fehlt noch“ je Sorumlu: am Eventtag sieht das Team jede Gruppe, wer noch nicht eingecheckt ist, mit Anruf-Knopf. */
 export default async function Gruppen({ searchParams }: PageProps<"/team/gruppen">) {

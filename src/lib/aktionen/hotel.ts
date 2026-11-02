@@ -94,12 +94,27 @@ export async function zimmerZuteilen(formData: FormData) {
   const zimmer = String(formData.get("room_id") ?? "");
   if (!istToken(person) || !istToken(hotel)) zurueck(modulId, "eingabe");
   const supabase = await createClient();
-  await supabase.from("room_assignments").delete().eq("participant_id", person).eq("hotel_id", hotel);
   if (istToken(zimmer)) {
-    const { error } = await supabase.from("room_assignments").insert({ room_id: zimmer, participant_id: person, hotel_id: hotel });
+    // In einem Schritt umziehen: Ist das neue Zimmer voll, bleibt die bisherige Zuteilung stehen
+    const { error } = await supabase.from("room_assignments")
+      .upsert({ room_id: zimmer, participant_id: person, hotel_id: hotel, source: "manual" }, { onConflict: "hotel_id,participant_id" });
     if (error) zurueck(modulId, error.message.includes("room_full") ? "zimmer-voll" : "fehler");
+  } else {
+    await supabase.from("room_assignments").delete().eq("participant_id", person).eq("hotel_id", hotel);
   }
   zurueck(modulId, "zugeteilt");
+}
+
+/** Zimmer in „Mein Bereich“ zeigen oder verbergen (z. B. solange der Zimmerplan noch ein ungeprüfter Vorschlag ist). */
+export async function zimmerSichtbarUmschalten(formData: FormData) {
+  await requireStaff("orga");
+  const modulId = String(formData.get("module_id"));
+  const hotel = String(formData.get("hotel_id"));
+  if (!istToken(modulId) || !istToken(hotel)) zurueck(modulId, "eingabe");
+  const sichtbar = formData.get("sichtbar") === "1";
+  const supabase = await createClient();
+  const { error } = await supabase.from("hotels").update({ rooms_visible: sichtbar }).eq("id", hotel);
+  zurueck(modulId, error ? "fehler" : sichtbar ? "zimmer-sichtbar" : "zimmer-verborgen");
 }
 
 // ---------------------------------------------------------------------------

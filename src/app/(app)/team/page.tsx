@@ -60,7 +60,7 @@ export default async function TeamStart({ searchParams }: PageProps<"/team">) {
 
   const alles = darf.alles(staff.role);
   const [{ data: naechste }, { data: meine }, { data: fristen }, { data: hotels }, { data: hausaufgaben }, { count: offeneFreigaben }] = await Promise.all([
-    supabase.from("module_days").select("day, module:modules!inner(id, title, location, status, cancelled_at, slug)").gte("day", heute).eq("module.status", "published").is("module.cancelled_at", null).not("module.slug", "like", "probe-%").order("day").limit(1),
+    supabase.from("module_days").select("id, day, module:modules!inner(id, title, location, status, cancelled_at, slug)").gte("day", heute).eq("module.status", "published").is("module.cancelled_at", null).not("module.slug", "like", "probe-%").order("day").limit(1),
     supabase.from("tasks").select("id, title, due_date, module:modules(id, title)").eq("assignee_user", staff.userId).is("done_at", null).order("due_date", { nullsFirst: false }).limit(8),
     supabase.from("tasks").select("id, title, due_date, module:modules(id, title)").is("done_at", null).lte("due_date", inZweiWochen).order("due_date").limit(8),
     supabase.from("hotels").select("name, cancellation_deadline, module:modules(id, title)").gte("cancellation_deadline", heute).lte("cancellation_deadline", inZweiWochen),
@@ -74,7 +74,10 @@ export default async function TeamStart({ searchParams }: PageProps<"/team">) {
   if (naechstes) {
     const m = naechstes.module.id;
     const [{ count: a }, { data: t }, { data: auf }, { count: p }] = await Promise.all([
-      supabase.from("registrations").select("id", { count: "exact", head: true }).eq("module_id", m).eq("status", "confirmed"),
+      // Anmeldungen lesen darf nur Admin/Vorstand; das Orga-Team bekommt die Zahl über die Einlass-Zählung des Tages
+      alles
+        ? supabase.from("registrations").select("id", { count: "exact", head: true }).eq("module_id", m).eq("status", "confirmed")
+        : supabase.rpc("get_day_counts", { p_module_day_id: naechstes.id }).then(({ data }) => ({ count: (data as { expected?: number } | null)?.expected ?? 0 })),
       alles ? supabase.rpc("get_ticket_status", { p_module_id: m, p_since: new Date(Date.parse(`${naechstes.day}T00:00:00Z`) - 30 * 86_400_000).toISOString() }) : Promise.resolve({ data: [] }),
       supabase.from("tasks").select("done_at").eq("module_id", m),
       supabase.from("program_items").select("id, module_days!inner(module_id)", { count: "exact", head: true }).eq("module_days.module_id", m),
@@ -114,11 +117,17 @@ export default async function TeamStart({ searchParams }: PageProps<"/team">) {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Link href="/team/einlass/" className="inline-flex items-center gap-2 rounded-full bg-signal px-5 py-2.5 text-sm font-semibold text-ink"><ScanLine aria-hidden className="h-4 w-4" /> Einlass</Link>
-                  <Link href={`/team/module/${naechstes.module.id}/`} className="inline-flex items-center gap-2 rounded-full bg-white/10 px-5 py-2.5 text-sm font-semibold hover:bg-white/16">Modul öffnen <ArrowRight aria-hidden className="h-4 w-4" /></Link>
+                  <Link href={`/team/module/${naechstes.module.id}/${alles ? "" : "programm/"}`} className="inline-flex items-center gap-2 rounded-full bg-white/10 px-5 py-2.5 text-sm font-semibold hover:bg-white/16">Modul öffnen <ArrowRight aria-hidden className="h-4 w-4" /></Link>
+                  {!alles && (
+                    <>
+                      <Link href={`/team/module/${naechstes.module.id}/hotel/`} className="inline-flex items-center gap-2 rounded-full bg-white/10 px-5 py-2.5 text-sm font-semibold hover:bg-white/16">Logistik</Link>
+                      <Link href={`/team/module/${naechstes.module.id}/zimmerplan/`} className="inline-flex items-center gap-2 rounded-full bg-white/10 px-5 py-2.5 text-sm font-semibold hover:bg-white/16">Zimmerplan</Link>
+                    </>
+                  )}
                 </div>
               </div>
               <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-                <Kennzahl icon={Users} wert={String(angemeldet)} text="angemeldet" href={`/team/module/${naechstes.module.id}/`} />
+                <Kennzahl icon={Users} wert={String(angemeldet)} text="angemeldet" href={alles ? `/team/module/${naechstes.module.id}/` : "/team/einlass/"} />
                 {alles && <Kennzahl icon={Ticket} wert={`${tickets}/${angemeldet}`} text="Tickets verschickt" href={`/team/module/${naechstes.module.id}/#tickets`} />}
                 <Kennzahl icon={ClipboardList} wert={aufgabenGesamt ? `${aufgabenGesamt - aufgabenOffen}/${aufgabenGesamt}` : "–"} text={aufgabenGesamt ? "Aufgaben erledigt" : "Checkliste anlegen"} href={`/team/module/${naechstes.module.id}/checkliste/`} />
                 <Kennzahl icon={CalendarClock} wert={String(programm)} text="Programmpunkte" href={`/team/module/${naechstes.module.id}/programm/`} />
