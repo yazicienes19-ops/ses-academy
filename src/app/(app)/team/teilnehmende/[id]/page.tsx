@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Mail, Phone, QrCode, Send } from "lucide-react";
+import { Hinweis as Meldung } from "@/components/team/Hinweis";
+import { KontaktFormular, KontaktKnoepfe, KontaktVerlauf, kontaktHinweise, type Kontakt } from "@/components/team/Kontakt";
 import { TeamKopf } from "@/components/team/TeamKopf";
 import { Rueckmeldung, laender } from "@/components/team/Ui";
 import { requireStaff } from "@/lib/auth";
@@ -50,7 +52,7 @@ export default async function Person({ params, searchParams }: PageProps<"/team/
   const { id } = await params;
   const sp = await searchParams;
   const supabase = await createClient();
-  const [{ data: p }, { data: notiz }, { data: regionen }, { data: mentoren }, { data: regs }, { data: abg }, { data: beitraege }, { data: kennzahlen }] = await Promise.all([
+  const [{ data: p }, { data: notiz }, { data: regionen }, { data: mentoren }, { data: regs }, { data: abg }, { data: beitraege }, { data: kennzahlen }, { data: kontakte }] = await Promise.all([
     supabase.from("participants").select("*").eq("id", id).maybeSingle(),
     supabase.from("participant_notes").select("body").eq("participant_id", id).maybeSingle(),
     supabase.from("regions").select("id,name").order("name"),
@@ -59,6 +61,7 @@ export default async function Person({ params, searchParams }: PageProps<"/team/
     supabase.from("submission_participants").select("submissions(id,label,assignments(number,title),reviews(*))").eq("participant_id", id),
     supabase.from("contributions").select("*").eq("participant_id", id).order("published_on", { ascending: false }),
     supabase.rpc("get_participant_analytics"),
+    supabase.rpc("get_contacts", { p_participant_id: id }),
   ]);
   if (!p) notFound();
   const jetzt = jetztMs();
@@ -156,6 +159,7 @@ export default async function Person({ params, searchParams }: PageProps<"/team/
         </header>
 
         <Rueckmeldung hinweis={sp.hinweis} fehler={sp.fehler} />
+        <Meldung code={sp.hinweis} texte={kontaktHinweise} />
 
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
           <div className="space-y-6">
@@ -197,6 +201,18 @@ export default async function Person({ params, searchParams }: PageProps<"/team/
                 })}
                 {!anmeldungen.length && <li className="py-3 text-ink-soft">Für kein Modul angemeldet.</li>}
               </ul>
+            </section>
+
+            <section className="karte" id={`p-${p.id}`}>
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <h2 className="font-display text-2xl font-bold">Kontakte</h2>
+                <KontaktKnoepfe name={name} phone={p.phone} />
+              </div>
+              <KontaktVerlauf eintraege={(kontakte ?? []) as Kontakt[]} zurueck={`/team/teilnehmende/${p.id}/`} mitModul />
+              <details className="mt-3">
+                <summary className="cursor-pointer text-sm font-semibold">+ Kontakt vermerken</summary>
+                <div className="mt-3"><KontaktFormular participantId={p.id} moduleId={null} zurueck={`/team/teilnehmende/${p.id}/`} /></div>
+              </details>
             </section>
 
             <section className="karte">

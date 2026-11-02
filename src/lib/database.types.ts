@@ -143,14 +143,14 @@ isOneToOne: false
                   ]
                 },"audience_questions": {
                   Row: {
-                    "created_at": string,"device": string,"id": string,"name": string | null,"round_id": string,"status": string,"text": string,"votes": number
+                    "created_at": string,"device": string,"id": string,"ip_hash": string | null,"name": string | null,"round_id": string,"status": string,"text": string,"votes": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"device": string,"id"?: string,"name"?: string | null,"round_id": string,"status"?: string,"text": string,"votes"?: number
+                    "created_at"?: string,"device": string,"id"?: string,"ip_hash"?: string | null,"name"?: string | null,"round_id": string,"status"?: string,"text": string,"votes"?: number
                   }
                   Update: {
-                    "created_at"?: string,"device"?: string,"id"?: string,"name"?: string | null,"round_id"?: string,"status"?: string,"text"?: string,"votes"?: number
+                    "created_at"?: string,"device"?: string,"id"?: string,"ip_hash"?: string | null,"name"?: string | null,"round_id"?: string,"status"?: string,"text"?: string,"votes"?: number
                   }
                   Relationships: [
                     {
@@ -208,6 +208,32 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"contact_log": {
+                  Row: {
+                    "channel": string,"created_at": string,"created_by": string | null,"id": string,"module_id": string | null,"note": string,"outcome": string,"participant_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "channel"?: string,"created_at"?: string,"created_by"?: string | null,"id"?: string,"module_id"?: string | null,"note"?: string,"outcome": string,"participant_id": string
+                  }
+                  Update: {
+                    "channel"?: string,"created_at"?: string,"created_by"?: string | null,"id"?: string,"module_id"?: string | null,"note"?: string,"outcome"?: string,"participant_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "contact_log_module_id_fkey"
+      columns: ["module_id"]
+isOneToOne: false
+      referencedRelation: "modules"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "contact_log_participant_id_fkey"
+      columns: ["participant_id"]
+isOneToOne: false
+      referencedRelation: "participants"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"contributions": {
                   Row: {
@@ -717,6 +743,20 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"question_rate": {
+                  Row: {
+                    "art": string,"at": string,"ip_hash": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "art": string,"at"?: string,"ip_hash": string
+                  }
+                  Update: {
+                    "art"?: string,"at"?: string,"ip_hash"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"question_rounds": {
                   Row: {
                     "code": string,"created_at": string,"created_by": string | null,"id": string,"moderated": boolean,"module_id": string | null,"open": boolean,"program_item_id": string | null,"title": string
@@ -745,14 +785,14 @@ isOneToOne: false
                   ]
                 },"question_votes": {
                   Row: {
-                    "device": string,"question_id": string
+                    "device": string,"ip_hash": string | null,"question_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "device": string,"question_id": string
+                    "device": string,"ip_hash"?: string | null,"question_id": string
                   }
                   Update: {
-                    "device"?: string,"question_id"?: string
+                    "device"?: string,"ip_hash"?: string | null,"question_id"?: string
                   }
                   Relationships: [
                     {
@@ -1079,9 +1119,19 @@ isOneToOne: false
               "display_name": string,"participant_id": string,"review_count": number,"status": string,"submitted_on": string
             }[]
                            },
+"get_call_list":
+{ Args: { "p_module_id": string }; Returns: {
+              "contacts": number,"last_at": string,"last_by": string,"last_channel": string,"last_note": string,"last_outcome": string,"mentor_name": string,"name": string,"nights": (string)[],"participant_id": string,"phone": string,"region": string,"registration_status": Database["public"]['Enums']["registration_status"],"stay_answered": boolean
+            }[]
+                           },
 "get_checkin_list":
 { Args: { "p_module_day_id": string }; Returns: {
               "affiliation_status": Database["public"]['Enums']["affiliation_status"],"attendance_id": string,"checked_in_at": string,"display_name": string,"participant_id": string,"registration_status": Database["public"]['Enums']["registration_status"],"short_code": string,"token_hash": string
+            }[]
+                           },
+"get_contacts":
+{ Args: { "p_module_id"?: string,"p_participant_id"?: string }; Returns: {
+              "by_name": string,"channel": string,"created_at": string,"id": string,"mine": boolean,"module_id": string,"module_title": string,"note": string,"outcome": string,"participant_id": string
             }[]
                            },
 "get_day_counts":
@@ -1203,6 +1253,9 @@ isOneToOne: false
                            },
 "normalize_email":
 { Args: { "value": string }; Returns: string
+                           },
+"question_rate_exceeded":
+{ Args: { "p_art": string,"p_ip": string,"p_max": number }; Returns: boolean
                            },
 "record_approval_result":
 { Args: { "p_id": string,"p_result": Json }; Returns: undefined

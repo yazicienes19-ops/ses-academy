@@ -10,7 +10,7 @@ export async function sitzungAuffrischen(request: NextRequest) {
 
   const supabase = createServerClient(url, key, {
     // wie sitzungsCookie in server.ts (der Proxy darf server-only nicht importieren)
-    cookieOptions: { secure: (process.env.NEXT_PUBLIC_SITE_URL ?? "").startsWith("https://") },
+    cookieOptions: { name: "sb-ses-auth-token", secure: (process.env.NEXT_PUBLIC_SITE_URL ?? "").startsWith("https://") },
     cookies: {
       getAll: () => request.cookies.getAll(),
       setAll(cookiesToSet) {

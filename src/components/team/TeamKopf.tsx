@@ -1,14 +1,14 @@
 import Link from "next/link";
 import {
   BookOpen, CalendarClock, ChartColumn, Contact, FolderOpen, House, Inbox, KeyRound, Layers, LogOut,
-  MessagesSquare, ScanLine, Send, ShieldCheck, Upload, UserCog, Users, UserX, type LucideIcon,
+  MessagesSquare, PhoneCall, ScanLine, Send, ShieldCheck, Upload, UserCog, Users, UserX, type LucideIcon,
 } from "lucide-react";
 import { HandyMenue } from "@/components/team/HandyMenue";
 import { abmelden } from "@/lib/aktionen/team";
 import { darf, rollenName, type Staff, type StaffRole } from "@/lib/auth";
 
 type Bereich =
-  | "start" | "einlass" | "regieplan" | "rollenplan" | "gruppen" | "module" | "bewerbungen" | "teilnehmende" | "hausaufgaben"
+  | "start" | "einlass" | "regieplan" | "rollenplan" | "gruppen" | "module" | "bewerbungen" | "teilnehmende" | "anrufe" | "hausaufgaben"
   | "mitglieder" | "auswertung" | "import" | "dokumente" | "sitzungen" | "nachrichten" | "freigaben" | "team";
 
 type Eintrag = { id: Bereich; name: string; href: string; icon: LucideIcon; recht: (r: StaffRole) => boolean };
@@ -35,6 +35,7 @@ const gruppen: { titel: string; eintraege: Eintrag[] }[] = [
     titel: "Teilnehmende",
     eintraege: [
       { id: "teilnehmende", name: "Teilnehmende", href: "/team/teilnehmende/", icon: Users, recht: darf.alles },
+      { id: "anrufe", name: "Anrufliste", href: "/team/anrufe/", icon: PhoneCall, recht: darf.orga },
       { id: "hausaufgaben", name: "Hausaufgaben", href: "/team/hausaufgaben/", icon: BookOpen, recht: darf.orga },
       { id: "mitglieder", name: "Mitglieder", href: "/mein-bereich/verzeichnis/", icon: Contact, recht: darf.orga },
       { id: "auswertung", name: "Auswertung", href: "/team/auswertung/", icon: ChartColumn, recht: darf.alles },

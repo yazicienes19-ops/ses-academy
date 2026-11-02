@@ -10,8 +10,12 @@ function env(name: string): string {
   return value;
 }
 
-/** Läuft die Seite unter https (Betrieb), gehen Sitzungs-Cookies nur über verschlüsselte Verbindungen. */
-const sitzungsCookie = { secure: (process.env.NEXT_PUBLIC_SITE_URL ?? "").startsWith("https://") };
+/**
+ * Läuft die Seite unter https (Betrieb), gehen Sitzungs-Cookies nur über verschlüsselte Verbindungen.
+ * Eigener Name statt „sb-127-auth-token“: Den teilen sich sonst alle lokalen Supabase-Projekte auf localhost, und
+ * Safari speichert unter http kein neues Cookie, wenn ein gleichnamiges per https gesetztes existiert.
+ */
+const sitzungsCookie = { name: "sb-ses-auth-token", secure: (process.env.NEXT_PUBLIC_SITE_URL ?? "").startsWith("https://") };
 
 /** Supabase mit der Sitzung der angemeldeten Person: alle Rechte laufen über RLS. */
 export async function createClient() {

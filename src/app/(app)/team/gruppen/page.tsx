@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { AutoAktualisieren } from "@/components/team/AutoAktualisieren";
 import { GruppenListe, type GruppenPerson } from "@/components/team/GruppenListe";
 import { Hinweis } from "@/components/team/Hinweis";
+import { kontaktHinweise, type Kontakt } from "@/components/team/Kontakt";
 import { TagWahl } from "@/components/team/TagWahl";
 import { TeamKopf } from "@/components/team/TeamKopf";
 import { jetztMs } from "@/lib/zeit";
@@ -33,8 +34,9 @@ export default async function Gruppen({ searchParams }: PageProps<"/team/gruppen
   const tag = tage.find((t) => t.id === gewaehlt) ?? vorschlag;
   const supabase = await createClient();
 
-  const [{ data: zeilen }, { data: sorumlu }] = await Promise.all([
+  const [{ data: zeilen }, { data: kontakte }, { data: sorumlu }] = await Promise.all([
     tag ? supabase.rpc("get_group_status", { p_module_day_id: tag.id }) : Promise.resolve({ data: [] }),
+    tag ? supabase.rpc("get_contacts", { p_module_id: tag.module_id }) : Promise.resolve({ data: [] }),
     // Die geheimen Links sind für Teamkonten nicht lesbar; Admin/Vorstand bekommen sie über den Server
     darf.alles(staff.role) ? createAdminClient().from("mentors").select("id, name, phone, access_token").order("name") : Promise.resolve({ data: [] }),
   ]);
@@ -46,6 +48,10 @@ export default async function Gruppen({ searchParams }: PageProps<"/team/gruppen
     if (!gruppen.has(schluessel)) gruppen.set(schluessel, { name: z.mentor_name ?? "Ohne Sorumlu", telefon: z.mentor_phone, personen: [] });
     gruppen.get(schluessel)!.personen.push(z);
   }
+  // neuester Kontakt je Person (get_contacts liefert neueste zuerst)
+  const letzte = new Map<string, Kontakt>();
+  for (const k of kontakte ?? []) if (!letzte.has(k.participant_id)) letzte.set(k.participant_id, k);
+  const zurueck = `/team/gruppen/${tag ? `?tag=${tag.id}` : ""}`;
   const liste = [...gruppen.entries()].map(([id, g]) => ({ id, ...g, fehlt: g.personen.filter((p) => !p.checked_in_at && p.registration_status === "confirmed").length }))
     .sort((a, b) => (a.id === "ohne" ? 1 : b.id === "ohne" ? -1 : b.fehlt - a.fehlt || a.name.localeCompare(b.name, "de")));
 
@@ -55,7 +61,7 @@ export default async function Gruppen({ searchParams }: PageProps<"/team/gruppen
       <AutoAktualisieren />
       <main className="mx-auto max-w-3xl px-4 py-6">
         <h1 className="font-display text-3xl font-bold">Gruppen · fehlt noch</h1>
-        <Hinweis code={hinweis} texte={hinweise} />
+        <Hinweis code={hinweis} texte={{ ...hinweise, ...kontaktHinweise }} />
         {!tag ? <p className="karte mt-6">Es gibt noch keine veröffentlichten Modultage.</p> : (
           <>
             <TagWahl tage={tage} aktiv={tag.id} pfad="/team/gruppen/" jetzt={jetztMs()} />
@@ -68,7 +74,7 @@ export default async function Gruppen({ searchParams }: PageProps<"/team/gruppen
                     {g.fehlt > 0 && <span className="chip bg-gelb-hell">{g.fehlt} fehlen</span>}
                     {g.telefon && <a href={telLink(g.telefon)} className="knopf-hell" aria-label={`Sorumlu ${g.name} anrufen`}>Sorumlu anrufen</a>}
                   </div>
-                  <div className="mt-3"><GruppenListe personen={g.personen} /></div>
+                  <div className="mt-3"><GruppenListe personen={g.personen} kontakt={{ moduleId: tag.module_id, zurueck, letzte }} /></div>
                 </section>
               ))}
               {liste.length === 0 && <p className="rounded-3xl border-2 border-dashed border-line p-8 text-center text-ink-soft">Für diesen Tag gibt es keine Anmeldungen.</p>}
