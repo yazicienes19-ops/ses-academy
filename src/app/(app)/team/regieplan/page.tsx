@@ -86,7 +86,8 @@ export default async function Regieplan({ searchParams }: PageProps<"/team/regie
           <h1 className="font-display text-3xl font-bold">Regieplan</h1>
           {tag && (
             <div className="flex flex-wrap gap-2">
-              <Link href={`/team/regieplan/druck/?tag=${tag.id}`} target="_blank" className="knopf-hell"><Printer aria-hidden className="h-4 w-4" />Drucken / PDF</Link>
+              <Link href={`/team/regieplan/druck/?tag=${tag.id}`} target="_blank" className="knopf-hell"><Printer aria-hidden className="h-4 w-4" />Regieplan fürs Team drucken</Link>
+              {darfPflegen && <Link href={`/team/module/${tag.module_id}/tagesordnung/`} target="_blank" className="knopf"><Printer aria-hidden className="h-4 w-4" />Tagesordnung für Teilnehmende</Link>}
             </div>
           )}
         </div>

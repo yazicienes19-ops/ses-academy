@@ -55,6 +55,10 @@ export function ModulFormular({ modul, aktion, knopf }: { modul?: Modul; aktion:
         <p className="mt-1 text-xs text-ink-soft">Zählt alle bestätigten Anmeldungen. Wer danach kommt, landet auf der Warteliste.</p>
       </div>
       <div className="sm:col-span-2">
+        <label htmlFor="subtitle" className={label}>Untertitel (Tagesordnung, Deckblatt)</label>
+        <input id="subtitle" name="subtitle" maxLength={200} defaultValue={modul?.subtitle ?? ""} placeholder="z. B. Modelle, Chancen und Belastungsproben" className={feld} />
+      </div>
+      <div className="sm:col-span-2">
         <label htmlFor="description" className={label}>Interne Beschreibung</label>
         <textarea id="description" name="description" rows={3} defaultValue={modul?.description} className={feld} />
       </div>

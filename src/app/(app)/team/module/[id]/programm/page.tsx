@@ -30,6 +30,12 @@ export default async function Programm({ params }: PageProps<"/team/module/[id]/
       <TeamKopf staff={staff} aktiv="module" breit />
       <main className="mx-auto max-w-5xl px-4 py-8">
         <ModulReiter id={id} titel={modul.title} aktiv="programm/" />
+        {tage.length > 0 && (
+          <div className="mb-6 flex flex-wrap items-center gap-3">
+            <p className="mr-auto text-sm text-ink-soft">Die Tagesordnung für Teilnehmende entsteht aus diesem Programm und den Kurzprofilen der Referenten.</p>
+            <Link href={`/team/module/${id}/tagesordnung/`} target="_blank" className="knopf">Tagesordnung drucken / als PDF</Link>
+          </div>
+        )}
         {tage.length === 0 && <p className="karte">Noch keine Termine. Termine trägt man in der Übersicht ein.</p>}
         <div className="space-y-6">
           {tage.map((t) => {
