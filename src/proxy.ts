@@ -15,4 +15,4 @@ export function proxy(request: NextRequest) {
 // Nur Team-Bereich und „Mein Bereich“ brauchen eine Sitzung; die öffentlichen Seiten bleiben unberührt (außer /fragen, s. o.).
 // Ausgenommen ist die Hausaufgaben-Abgabe: Der Proxy puffert Anfragen nur bis 10 MB (proxyClientMaxBodySize), Videos
 // sind bis 100 MB groß. Die Route prüft Anmeldung und Größe selbst, bevor sie etwas einliest.
-export const config = { matcher: ["/team/:path*", "/mein-bereich/((?!abgabe/).*)", "/auth/:path*", "/portal/:path*", "/fragen/:path*"] };
+export const config = { matcher: ["/team/:path*", "/mein-bereich", "/mein-bereich/:pfad((?!abgabe).*)", "/auth/:path*", "/portal/:path*", "/fragen/:path*"] };
