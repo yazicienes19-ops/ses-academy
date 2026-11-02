@@ -825,14 +825,14 @@ isOneToOne: false
                   ]
                 },"registrations": {
                   Row: {
-                    "created_at": string,"excuse_note": string | null,"id": string,"module_id": string,"participant_id": string,"source": Database["public"]['Enums']["registration_source"],"status": Database["public"]['Enums']["registration_status"],"status_changed_at": string
+                    "created_at": string,"excuse_note": string | null,"id": string,"module_id": string,"participant_id": string,"rsvp": string | null,"rsvp_at": string | null,"rsvp_source": string | null,"source": Database["public"]['Enums']["registration_source"],"status": Database["public"]['Enums']["registration_status"],"status_changed_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"excuse_note"?: string | null,"id"?: string,"module_id": string,"participant_id": string,"source": Database["public"]['Enums']["registration_source"],"status"?: Database["public"]['Enums']["registration_status"],"status_changed_at"?: string
+                    "created_at"?: string,"excuse_note"?: string | null,"id"?: string,"module_id": string,"participant_id": string,"rsvp"?: string | null,"rsvp_at"?: string | null,"rsvp_source"?: string | null,"source": Database["public"]['Enums']["registration_source"],"status"?: Database["public"]['Enums']["registration_status"],"status_changed_at"?: string
                   }
                   Update: {
-                    "created_at"?: string,"excuse_note"?: string | null,"id"?: string,"module_id"?: string,"participant_id"?: string,"source"?: Database["public"]['Enums']["registration_source"],"status"?: Database["public"]['Enums']["registration_status"],"status_changed_at"?: string
+                    "created_at"?: string,"excuse_note"?: string | null,"id"?: string,"module_id"?: string,"participant_id"?: string,"rsvp"?: string | null,"rsvp_at"?: string | null,"rsvp_source"?: string | null,"source"?: Database["public"]['Enums']["registration_source"],"status"?: Database["public"]['Enums']["registration_status"],"status_changed_at"?: string
                   }
                   Relationships: [
                     {
@@ -1162,7 +1162,7 @@ isOneToOne: false
                            },
 "get_call_list":
 { Args: { "p_module_id": string }; Returns: {
-              "contacts": number,"last_at": string,"last_by": string,"last_channel": string,"last_note": string,"last_outcome": string,"mentor_name": string,"name": string,"nights": (string)[],"participant_id": string,"phone": string,"region": string,"registration_status": Database["public"]['Enums']["registration_status"],"stay_answered": boolean
+              "contacts": number,"last_at": string,"last_by": string,"last_channel": string,"last_note": string,"last_outcome": string,"mentor_name": string,"name": string,"nights": (string)[],"participant_id": string,"phone": string,"region": string,"registration_status": Database["public"]['Enums']["registration_status"],"rsvp": string,"stay_answered": boolean
             }[]
                            },
 "get_checkin_list":
@@ -1330,6 +1330,9 @@ isOneToOne: false
                            },
 "set_day_document":
 { Args: { "p_day_id": string,"p_document_id": string }; Returns: undefined
+                           },
+"set_rsvp":
+{ Args: { "p_module_id": string,"p_participant_id": string,"p_rsvp": string }; Returns: undefined
                            },
 "staff_role_name":
 { Args: { "r": Database["public"]['Enums']["staff_role"] }; Returns: string

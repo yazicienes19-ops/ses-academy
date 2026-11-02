@@ -10,7 +10,7 @@ import { faltName, finde, landAusText, regionName, type Person, type Treffer } f
 
 type Db = SupabaseClient<Database>;
 
-export type ImportArt = "teilnehmerliste" | "hausaufgaben" | "bewertungsbogen" | "emails";
+export type ImportArt = "teilnehmerliste" | "hausaufgaben" | "bewertungsbogen" | "emails" | "zusagen";
 
 export type Optionen = {
   anwenden: boolean;
@@ -21,6 +21,8 @@ export type Optionen = {
   /** Vorhandene E-Mail-Adressen durch die aus der Datei ersetzen. */
   ueberschreiben: boolean;
   hausaufgabeNr: number;
+  /** Für Zusagen: zu welchem Modul die Antworten gehören. */
+  modulId?: string;
 };
 
 export type Hinweis = { stufe: "ok" | "info" | "warnung"; text: string };
@@ -458,6 +460,84 @@ async function emails(sb: Db, blaetter: { name: string; zeilen: Zeile[] }[], o: 
   if (ohne) p.info(`${ohne} Personen haben danach noch keine E-Mail-Adresse.`);
 }
 
+// ── 5. Zusagen (Antworten auf „Kommst du?“, z. B. Google-Formular „Katılım ve Konaklama“) ──────
+
+const JA = /^(evet|ja|yes|oui|komme|katılacağım|katilacagim)\b/i;
+const NEIN = /^(hayır|hayir|nein|no|non|komme nicht|katılamayacağım|katilamayacagim)\b/i;
+
+async function zusagen(sb: Db, blaetter: { name: string; zeilen: Zeile[] }[], o: Optionen, p: Protokoll) {
+  if (!o.modulId) throw new Error("Bitte das Modul wählen, zu dem die Zusagen gehören.");
+  const { data: modul } = await sb.from("modules").select("id, title").eq("id", o.modulId).maybeSingle();
+  if (!modul) throw new Error("Das gewählte Modul gibt es nicht.");
+  let gefunden: { zeilen: Zeile[]; kopf: number; namen: number[]; antwort: number; tel: number } | null = null;
+  for (const b of blaetter) {
+    for (let i = 0; i < Math.min(15, b.zeilen.length) && !gefunden; i++) {
+      const k = b.zeilen[i].map(klein);
+      const voll = k.findIndex((z) => /ad[ıi]n?[ıi]?z? ?soyad|isim soyisim|vollständiger name|name, vorname|^name$|ad soyad|^isim$/.test(z));
+      const vor = k.findIndex((z) => /^(ad[ıi]?|vorname|first name|prénom)$/.test(z));
+      const nach = k.findIndex((z) => /^(soyad[ıi]?|nachname|last name|nom)$/.test(z));
+      const namen = voll >= 0 ? [voll] : vor >= 0 && nach >= 0 ? [vor, nach] : [];
+      if (!namen.length) continue;
+      gefunden = {
+        zeilen: b.zeilen, kopf: i, namen,
+        antwort: k.findIndex((z) => /katıl|katil|teilnahme|teilnehmen|kommst du|kommen sie|participat|attend/.test(z)),
+        tel: k.findIndex((z) => /telefon|tel\.?$|handy|phone|gsm|cep/.test(z)),
+      };
+    }
+    if (gefunden) break;
+  }
+  if (!gefunden) throw new Error("Keine Namensspalte gefunden. Die Datei braucht eine Kopfzeile mit z. B. „Adınız Soyadınız“ oder „Vorname“/„Nachname“.");
+  if (gefunden.antwort < 0) p.info("Keine Spalte „Katılım sağlayacak mısınız?“ / „Teilnahme“ gefunden: jede Zeile zählt als Zusage.");
+
+  const d = await lade(sb);
+  const [{ data: anmeldungen }, { data: telefone }] = await Promise.all([
+    sb.from("registrations").select("id, participant_id, status, rsvp").eq("module_id", modul.id),
+    sb.from("participants").select("id, phone"),
+  ]);
+  const anmeldung = new Map((anmeldungen ?? []).map((r) => [r.participant_id, r]));
+  const telefon = new Map((telefone ?? []).map((t) => [t.id, t.phone]));
+  const schon = new Set<string>();
+  for (const [zi, z] of gefunden.zeilen.slice(gefunden.kopf + 1).entries()) {
+    const name = gefunden.namen.map((c) => text(z[c])).join(" ").trim();
+    if (!name) continue;
+    const zeilenNr = gefunden.kopf + 2 + zi;
+    p.zaehle("Zeilen gelesen");
+    const roh = gefunden.antwort >= 0 ? text(z[gefunden.antwort]).trim() : "Evet";
+    const rsvp = JA.test(roh) ? "zugesagt" : NEIN.test(roh) ? "abgesagt" : null;
+    if (!rsvp) { p.warn(`Zeile ${zeilenNr} (${name}): Antwort „${roh || "leer"}“ nicht verstanden, übersprungen.`); p.zaehle("Antwort unklar"); continue; }
+    let person = zuordnen(name, d.personen, o, p, `Zeile ${zeilenNr}`);
+    if (!person) {
+      if (finde(name, d.personen).art !== "keiner") continue;
+      if (!o.fehlendeAnlegen) { p.warn(`Zeile ${zeilenNr}: „${name}“ ist nicht in der Teilnehmerliste.`); p.zaehle("Nicht gefunden"); continue; }
+      person = await personAnlegen(sb, d, name, {}, o);
+      p.zaehle("Neue Teilnehmende");
+    }
+    if (schon.has(person.id)) { p.info(`Zeile ${zeilenNr}: „${person.name}“ steht mehrfach in der Datei, die letzte Antwort gilt.`); }
+    schon.add(person.id);
+    const reg = anmeldung.get(person.id);
+    if (!reg) {
+      p.zaehle("Neu angemeldet");
+      if (o.anwenden && !person.id.startsWith("neu-")) {
+        pruefe(await sb.from("registrations").insert({ module_id: modul.id, participant_id: person.id, status: "confirmed", source: "staff", rsvp, rsvp_at: new Date().toISOString(), rsvp_source: "import" }), `Anmeldung für „${person.name}“`);
+      }
+    } else if (reg.rsvp === rsvp) {
+      p.zaehle("Schon eingetragen");
+    } else {
+      if (reg.status !== "confirmed" && rsvp === "zugesagt") p.info(`„${person.name}“ sagt zu, ist aber „${reg.status}“ (z. B. Warteliste): Status bitte prüfen.`);
+      if (o.anwenden) pruefe(await sb.from("registrations").update({ rsvp, rsvp_at: new Date().toISOString(), rsvp_source: "import" }).eq("id", reg.id), `Zusage für „${person.name}“`);
+    }
+    p.zaehle(rsvp === "zugesagt" ? "Zusagen" : "Absagen");
+    const tel = gefunden.tel >= 0 ? text(z[gefunden.tel]).trim() : "";
+    if (tel && !telefon.get(person.id) && !person.id.startsWith("neu-")) {
+      p.zaehle("Telefon ergänzt");
+      if (o.anwenden) pruefe(await sb.from("participants").update({ phone: tel }).eq("id", person.id), `Telefon für „${person.name}“`);
+      telefon.set(person.id, tel);
+    }
+  }
+  const ohne = (anmeldungen ?? []).filter((r) => r.status === "confirmed" && !r.rsvp && !schon.has(r.participant_id)).length;
+  p.info(`${modul.title}: ${ohne} Angemeldete haben danach noch keine Rückmeldung. Sie stehen in der Anrufliste unter „Zusage: offen“.`);
+}
+
 // ── Einstieg ──────────────────────────────────────────────────────────────────
 
 const titel: Record<ImportArt, string> = {
@@ -465,6 +545,7 @@ const titel: Record<ImportArt, string> = {
   hausaufgaben: "Hausaufgabenliste",
   bewertungsbogen: "Bewertungsbogen Rhetorik",
   emails: "E-Mail-Adressen",
+  zusagen: "Zusagen",
 };
 
 /** Liest die Datei und gleicht sie ab. Nur mit `anwenden` wird geschrieben. Aufrufer prüft vorher die Rolle. */
@@ -475,6 +556,7 @@ export async function importiere(sb: Db, art: ImportArt, datei: File, o: Optione
   if (art === "teilnehmerliste") await teilnehmerliste(sb, erstes, o, p);
   else if (art === "hausaufgaben") await hausaufgaben(sb, erstes, o, p);
   else if (art === "bewertungsbogen") await bewertungsbogen(sb, blaetter, o, p);
+  else if (art === "zusagen") await zusagen(sb, blaetter, o, p);
   else await emails(sb, blaetter, o, p);
   return { titel: titel[art], zahlen: [...p.zahlen.entries()], hinweise: p.hinweise, angewendet: o.anwenden };
 }

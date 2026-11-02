@@ -4,13 +4,16 @@ import { startTransition, useActionState, useRef, useState } from "react";
 import { importieren, type ImportZustand } from "@/lib/aktionen/import";
 
 const arten = [
+  { wert: "zusagen", name: "Zusagen für ein Modul", text: "z. B. „Katılım ve Konaklama“-Formular: Name und „Katılım sağlayacak mısınız?“ (Evet/Hayır). Ergänzt fehlende Telefonnummern." },
   { wert: "emails", name: "E-Mail-Adressen", text: "z. B. Export der Google-Formular-Antworten: Spalten mit Name (oder Vor-/Nachname) und E-Mail." },
   { wert: "teilnehmerliste", name: "Teilnehmerliste", text: "„SES Academy Katılımcı listesi“: Bölge, İsim Soyisim, KGT/GT, Modul 1…n (+/–), Sorumlu Kişi. Modul 1 = Auftakt, 2 = Verfassungen, 3 = Skills-Workshop." },
   { wert: "hausaufgaben", name: "Hausaufgabenliste", text: "„Ödev Takip Çizelgesi“: Name, Bölge, Ülke, Ödev 1…n (✓)." },
   { wert: "bewertungsbogen", name: "Bewertungsbogen Rhetorik", text: "„Bewertungsbogen_Rhetorik“ (.xlsx/.xlsm): Blatt „Alle Videos“ mit 9 Kriterien und Feedback." },
 ] as const;
 
-export function ImportFormular() {
+export type ModulWahl = { id: string; titel: string };
+
+export function ImportFormular({ module = [] }: { module?: ModulWahl[] }) {
   const [z, aktion, laeuft] = useActionState<ImportZustand, FormData>(importieren, {});
   const [art, setArt] = useState<string>("emails");
   const form = useRef<HTMLFormElement>(null);
@@ -45,6 +48,13 @@ export function ImportFormular() {
         </div>
         <fieldset className="space-y-2 text-sm">
           <legend className="etikett">3. Optionen</legend>
+          {art === "zusagen" && (
+            <label className="block">Modul
+              <select name="modul_id" required defaultValue={module[0]?.id} className="feld mt-1">
+                {module.map((m) => <option key={m.id} value={m.id}>{m.titel}</option>)}
+              </select>
+            </label>
+          )}
           {art === "bewertungsbogen" && (
             <label className="flex items-center gap-2">Gehört zu Hausaufgabe Nr. <input name="hausaufgabe_nr" type="number" min={1} defaultValue={1} className="feld w-20 py-1" /></label>
           )}

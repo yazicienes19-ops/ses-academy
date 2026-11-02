@@ -10,10 +10,30 @@ import { jetztMs } from "@/lib/zeit";
 
 export const metadata: Metadata = { title: "Teilnehmende | SES Academy" };
 
+const tagZahl = new Intl.DateTimeFormat("de-DE", { day: "numeric", timeZone: "Europe/Berlin" });
+const monat = new Intl.DateTimeFormat("de-DE", { month: "short", timeZone: "Europe/Berlin" });
+/** Spaltenkopf eines Moduls: seine Termine statt eines Kürzels, z. B. „14./15. Nov.“ */
+function termine(tage: { starts_at: string }[]) {
+  const d = tage.map((t) => new Date(t.starts_at));
+  const monate = [...new Set(d.map((x) => monat.format(x)))];
+  return monate.length === 1 ? `${d.map((x) => tagZahl.format(x)).join("./")}. ${monate[0]}` : d.map((x) => `${tagZahl.format(x)}. ${monat.format(x)}`).join(" / ");
+}
+
+/** Punkt je Modul: da (grün), teilweise (orange), zugesagt (gelb), keine Zusage bzw. nicht gekommen (rot), abgesagt (grau). */
+function punkt(reg: { status: string; rsvp: string | null } | undefined, da: number, tage: number, vorbei: boolean) {
+  if (!reg) return null;
+  if (da >= tage) return { farbe: "bg-mint", text: "alle Tage da" };
+  if (da > 0) return { farbe: "bg-orange-400", text: `${da} von ${tage} Tagen da` };
+  if (reg.status === "excused" || reg.status === "cancelled" || reg.rsvp === "abgesagt") return { farbe: "bg-zinc-300", text: "abgesagt oder entschuldigt" };
+  if (vorbei) return { farbe: "bg-rot", text: "nicht da" };
+  if (reg.status === "waitlist") return { farbe: "bg-paper-deep ring-1 ring-line", text: "Warteliste" };
+  return reg.rsvp === "zugesagt" ? { farbe: "bg-yellow-300", text: "zugesagt" } : { farbe: "bg-rot", text: "noch keine Zusage" };
+}
+
 type Zeile = {
   id: string; first_name: string; last_name: string; email: string | null; branch: string | null; active: boolean;
   regions: { name: string } | null; mentors: { name: string } | null;
-  registrations: { module_id: string; status: string; attendances: { module_day_id: string }[] }[];
+  registrations: { module_id: string; status: string; rsvp: string | null; attendances: { module_day_id: string }[] }[];
   submission_participants: { submissions: { assignment_id: string } | null }[];
 };
 
@@ -26,7 +46,7 @@ export default async function Teilnehmende({ searchParams }: PageProps<"/team/te
   const [{ data: personen }, { data: regionen }, { data: mentoren }, { data: module }, { data: aufgaben }] = await Promise.all([
     supabase
       .from("participants")
-      .select("id,first_name,last_name,email,branch,active,regions(name),mentors(name),registrations(module_id,status,attendances(module_day_id)),submission_participants(submissions(assignment_id))")
+      .select("id,first_name,last_name,email,branch,active,regions(name),mentors(name),registrations(module_id,status,rsvp,attendances(module_day_id)),submission_participants(submissions(assignment_id))")
       .eq("affiliation_status", "academy_student")
       .order("first_name"),
     supabase.from("regions").select("id,name").order("name"),
@@ -138,7 +158,7 @@ export default async function Teilnehmende({ searchParams }: PageProps<"/team/te
                   <thead>
                     <tr>
                       <th>Name</th><th>Region</th><th>GT/KGT</th><th>Verantwortlich</th><th>E-Mail</th>
-                      {modulListe.map((m) => <th key={m.id} title={m.title} className="text-center">{m.slug.slice(0, 5)}</th>)}
+                      {modulListe.map((m) => <th key={m.id} title={m.title} className={`text-center whitespace-nowrap ${m.tage[m.tage.length - 1].ends_at < jetzt ? "opacity-60" : ""}`}>{termine(m.tage)}</th>)}
                       {aufgaben?.map((a) => <th key={a.id} className="text-center">HA{a.number}</th>)}
                     </tr>
                   </thead>
@@ -156,10 +176,10 @@ export default async function Teilnehmende({ searchParams }: PageProps<"/team/te
                             const reg = p.registrations.find((r) => r.module_id === m.id);
                             const da = reg?.attendances.length ?? 0;
                             const vorbei = m.tage[m.tage.length - 1].ends_at < jetzt;
-                            const farbe = !reg ? "" : da >= m.tage.length ? "bg-mint" : da > 0 ? "bg-yellow-400" : reg.status === "excused" || reg.status === "cancelled" ? "bg-yellow-200" : vorbei ? "bg-rot" : "bg-paper-deep ring-1 ring-line";
+                            const pk = punkt(reg, da, m.tage.length, vorbei);
                             return (
                               <td key={m.id} className="text-center">
-                                {reg ? <span title={`${da}/${m.tage.length} Tage · ${reg.status}`} className={`inline-block h-3 w-3 rounded-full ${farbe}`} /> : <span className="text-ink-soft/40">·</span>}
+                                {pk ? <span title={`${m.title}: ${pk.text}`} className={`inline-block h-3 w-3 rounded-full ${pk.farbe}`} /> : <span className="text-ink-soft/40">·</span>}
                               </td>
                             );
                           })}
@@ -172,11 +192,11 @@ export default async function Teilnehmende({ searchParams }: PageProps<"/team/te
               </div>
             )}
             <p className="mt-4 flex flex-wrap gap-4 text-xs text-ink-soft">
-              <span><span className="mr-1 inline-block h-2.5 w-2.5 rounded-full bg-mint" />alle Tage da</span>
-              <span><span className="mr-1 inline-block h-2.5 w-2.5 rounded-full bg-yellow-400" />teilweise</span>
-              <span><span className="mr-1 inline-block h-2.5 w-2.5 rounded-full bg-yellow-200" />entschuldigt/abgemeldet</span>
-              <span><span className="mr-1 inline-block h-2.5 w-2.5 rounded-full bg-rot" />nicht da</span>
-              <span><span className="mr-1 inline-block h-2.5 w-2.5 rounded-full bg-paper-deep ring-1 ring-line" />angemeldet, kommt noch</span>
+              <span><span className="mr-1 inline-block h-2.5 w-2.5 rounded-full bg-mint" />da (Einlass)</span>
+              <span><span className="mr-1 inline-block h-2.5 w-2.5 rounded-full bg-orange-400" />teilweise da</span>
+              <span><span className="mr-1 inline-block h-2.5 w-2.5 rounded-full bg-yellow-300" />zugesagt</span>
+              <span><span className="mr-1 inline-block h-2.5 w-2.5 rounded-full bg-rot" />noch keine Zusage / nicht gekommen</span>
+              <span><span className="mr-1 inline-block h-2.5 w-2.5 rounded-full bg-zinc-300" />abgesagt / entschuldigt</span>
             </p>
           </>
         )}

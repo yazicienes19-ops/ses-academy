@@ -2,12 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { requireStaff } from "@/lib/auth";
+import { istToken } from "@/lib/codes";
 import { importiere, type Bericht, type ImportArt } from "@/lib/import/importe";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export type ImportZustand = { bericht?: Bericht; fehler?: string; dateiname?: string };
 
-const arten: ImportArt[] = ["teilnehmerliste", "hausaufgaben", "bewertungsbogen", "emails"];
+const arten: ImportArt[] = ["teilnehmerliste", "hausaufgaben", "bewertungsbogen", "emails", "zusagen"];
 
 /**
  * Excel-/CSV-Import. Nur admin/vorstand. Läuft mit Dienstschlüssel, weil historische Anwesenheiten
@@ -28,6 +29,7 @@ export async function importieren(_: ImportZustand, formData: FormData): Promise
       fehlendeAnlegen: formData.get("anlegen") === "on",
       ueberschreiben: formData.get("ueberschreiben") === "on",
       hausaufgabeNr: Number(formData.get("hausaufgabe_nr")) || 1,
+      modulId: istToken(String(formData.get("modul_id") ?? "")) ? String(formData.get("modul_id")) : undefined,
     });
     if (bericht.angewendet) revalidatePath("/team/", "layout");
     return { bericht, dateiname: datei.name };

@@ -6,11 +6,11 @@ import { ladeZimmerplan, probeplan, zimmerArt } from "@/lib/zimmerplan-daten";
 const datum = new Intl.DateTimeFormat("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC" });
 const tag = (iso: string, plus = 0) => datum.format(new Date(Date.parse(`${iso}T12:00:00Z`) + plus * 86_400_000));
 
-/** Ein Feld für Excel: Semikolon/Anführungszeichen maskieren, Formeln (=, +, -, @) entschärfen. */
+/** Ein Feld für Excel: Zeilenumbrüche/Tabs raus, Formeln (=, +, -, @) entschärfen, immer in Anführungszeichen. */
 function feld(wert: string | number): string {
-  let text = String(wert);
-  if (/^[=+\-@]/.test(text)) text = `'${text}`;
-  return /[;"\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+  let text = String(wert).replace(/[\r\n\t]+/g, " ");
+  if (/^\s*[=+\-@]/.test(text)) text = `'${text}`;
+  return `"${text.replace(/"/g, '""')}"`;
 }
 
 /**
