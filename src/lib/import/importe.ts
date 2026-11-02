@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/database.types";
 import { kriterien, type KriteriumFeld } from "@/lib/bewertung";
 import { texte } from "@/i18n";
+import { anmeldestatus } from "@/lib/einlass";
 import { modulplan } from "@/i18n/daten";
 import { excelDatum, klein, kopfzeile, leseTabelle, text, type Zeile } from "./excel";
 import { faltName, finde, landAusText, regionName, type Person, type Treffer } from "./namen";
@@ -491,12 +492,15 @@ async function zusagen(sb: Db, blaetter: { name: string; zeilen: Zeile[] }[], o:
 
   const d = await lade(sb);
   const [{ data: anmeldungen }, { data: telefone }] = await Promise.all([
-    sb.from("registrations").select("id, participant_id, status, rsvp").eq("module_id", modul.id),
+    sb.from("registrations").select("id, participant_id, status, rsvp, rsvp_source").eq("module_id", modul.id),
     sb.from("participants").select("id, phone"),
   ]);
   const anmeldung = new Map((anmeldungen ?? []).map((r) => [r.participant_id, r]));
   const telefon = new Map((telefone ?? []).map((t) => [t.id, t.phone]));
-  const schon = new Set<string>();
+
+  // 1. Durchgang: Namen zuordnen; steht jemand mehrfach in der Datei, gilt die letzte Antwort (Formulare hängen neue
+  //    Antworten unten an). So kippt ein erneuter Import derselben Datei nichts hin und her.
+  const antworten = new Map<string, { person: P | Person; rsvp: "zugesagt" | "abgesagt"; tel: string; zeilenNr: number }>();
   for (const [zi, z] of gefunden.zeilen.slice(gefunden.kopf + 1).entries()) {
     const name = gefunden.namen.map((c) => text(z[c])).join(" ").trim();
     if (!name) continue;
@@ -505,15 +509,20 @@ async function zusagen(sb: Db, blaetter: { name: string; zeilen: Zeile[] }[], o:
     const roh = gefunden.antwort >= 0 ? text(z[gefunden.antwort]).trim() : "Evet";
     const rsvp = JA.test(roh) ? "zugesagt" : NEIN.test(roh) ? "abgesagt" : null;
     if (!rsvp) { p.warn(`Zeile ${zeilenNr} (${name}): Antwort „${roh || "leer"}“ nicht verstanden, übersprungen.`); p.zaehle("Antwort unklar"); continue; }
-    let person = zuordnen(name, d.personen, o, p, `Zeile ${zeilenNr}`);
+    let person: P | Person | null = zuordnen(name, d.personen, o, p, `Zeile ${zeilenNr}`);
     if (!person) {
       if (finde(name, d.personen).art !== "keiner") continue;
       if (!o.fehlendeAnlegen) { p.warn(`Zeile ${zeilenNr}: „${name}“ ist nicht in der Teilnehmerliste.`); p.zaehle("Nicht gefunden"); continue; }
-      person = await personAnlegen(sb, d, name, {}, o);
-      p.zaehle("Neue Teilnehmende");
+      person = await personAnlegen(sb, d, name, { affiliation_status: "guest" }, o);
+      p.zaehle("Neue Personen (als Gast)");
     }
-    if (schon.has(person.id)) { p.info(`Zeile ${zeilenNr}: „${person.name}“ steht mehrfach in der Datei, die letzte Antwort gilt.`); }
-    schon.add(person.id);
+    const vorher = antworten.get(person.id);
+    if (vorher) p.info(`Zeile ${zeilenNr}: „${person.name}“ steht mehrfach in der Datei (auch Zeile ${vorher.zeilenNr}); die untere Antwort gilt.`);
+    antworten.set(person.id, { person, rsvp, tel: gefunden.tel >= 0 ? text(z[gefunden.tel]).trim() : "", zeilenNr });
+  }
+
+  // 2. Durchgang: je Person genau einmal schreiben
+  for (const { person, rsvp, tel } of antworten.values()) {
     const reg = anmeldung.get(person.id);
     if (!reg) {
       p.zaehle("Neu angemeldet");
@@ -522,20 +531,24 @@ async function zusagen(sb: Db, blaetter: { name: string; zeilen: Zeile[] }[], o:
       }
     } else if (reg.rsvp === rsvp) {
       p.zaehle("Schon eingetragen");
+    } else if (reg.rsvp && reg.rsvp_source === "team") {
+      // Nach einem Anruf vom Team gesetzt: nicht still mit der Formular-Antwort überschreiben
+      p.warn(`„${person.name}“: im Portal vom Team auf „${reg.rsvp}“ gesetzt, in der Datei „${rsvp}“ – nicht geändert, bitte bei der Person prüfen.`);
+      p.zaehle("Vom Team gesetzt, nicht geändert");
+      continue;
     } else {
-      if (reg.status !== "confirmed" && rsvp === "zugesagt") p.info(`„${person.name}“ sagt zu, ist aber „${reg.status}“ (z. B. Warteliste): Status bitte prüfen.`);
+      if (reg.status !== "confirmed" && rsvp === "zugesagt") p.info(`„${person.name}“ sagt zu, steht aber auf „${anmeldestatus[reg.status as keyof typeof anmeldestatus] ?? reg.status}“: Status bitte prüfen.`);
       if (o.anwenden) pruefe(await sb.from("registrations").update({ rsvp, rsvp_at: new Date().toISOString(), rsvp_source: "import" }).eq("id", reg.id), `Zusage für „${person.name}“`);
     }
     p.zaehle(rsvp === "zugesagt" ? "Zusagen" : "Absagen");
-    const tel = gefunden.tel >= 0 ? text(z[gefunden.tel]).trim() : "";
     if (tel && !telefon.get(person.id) && !person.id.startsWith("neu-")) {
       p.zaehle("Telefon ergänzt");
       if (o.anwenden) pruefe(await sb.from("participants").update({ phone: tel }).eq("id", person.id), `Telefon für „${person.name}“`);
       telefon.set(person.id, tel);
     }
   }
-  const ohne = (anmeldungen ?? []).filter((r) => r.status === "confirmed" && !r.rsvp && !schon.has(r.participant_id)).length;
-  p.info(`${modul.title}: ${ohne} Angemeldete haben danach noch keine Rückmeldung. Sie stehen in der Anrufliste unter „Zusage: offen“.`);
+  const ohne = (anmeldungen ?? []).filter((r) => r.status === "confirmed" && !r.rsvp && !antworten.has(r.participant_id)).length;
+  p.info(`${modul.title}: ${ohne} Angemeldete haben danach noch keine Rückmeldung. Sie stehen unter Teilnehmende → „Noch keine Zusage“.`);
 }
 
 // ── Einstieg ──────────────────────────────────────────────────────────────────

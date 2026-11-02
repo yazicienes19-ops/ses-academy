@@ -479,6 +479,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"info_mail_claims": {
+                  Row: {
+                    "claimed_at": string,"module_id": string,"participant_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "claimed_at"?: string,"module_id": string,"participant_id": string
+                  }
+                  Update: {
+                    "claimed_at"?: string,"module_id"?: string,"participant_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "info_mail_claims_module_id_fkey"
+      columns: ["module_id"]
+isOneToOne: false
+      referencedRelation: "modules"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "info_mail_claims_participant_id_fkey"
+      columns: ["participant_id"]
+isOneToOne: false
+      referencedRelation: "participants"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"meeting_decisions": {
                   Row: {
                     "created_at": string,"id": string,"meeting_id": string,"text": string
@@ -1134,6 +1160,9 @@ isOneToOne: false
 "claim_approval":
 { Args: { "p_action": string,"p_id": string }; Returns: Json
                            },
+"claim_info_mail":
+{ Args: { "p_module_id": string,"p_participant_id": string }; Returns: boolean
+                           },
 "create_approval":
 { Args: { "p_action": string,"p_payload": Json }; Returns: string
                            },
@@ -1340,6 +1369,9 @@ isOneToOne: false
                            },
 "register_public":
 { Args: { "p_email": string,"p_first_name": string,"p_language"?: string,"p_last_name": string,"p_module_slug": string,"p_phone"?: string }; Returns: Json
+                           },
+"release_info_mail":
+{ Args: { "p_module_id": string,"p_participant_id": string }; Returns: undefined
                            },
 "save_my_stay":
 { Args: { "p_arrival_at": string,"p_arrival_by": string,"p_departure_at": string,"p_module_id": string,"p_nights": (string)[],"p_notes": string,"p_room_wish": string }; Returns: string

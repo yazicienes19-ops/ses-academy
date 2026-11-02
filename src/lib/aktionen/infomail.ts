@@ -33,9 +33,15 @@ export async function infoMailAnAlle(formData: FormData) {
   const warteschlange = [...offen];
   async function arbeiter() {
     for (let z = warteschlange.shift(); z; z = warteschlange.shift()) {
+      // Reservieren: drückt jemand anderes gleichzeitig „senden“, verschickt nur eine Sitzung
+      const { data: meins } = await supabase.rpc("claim_info_mail", { p_module_id: modulId, p_participant_id: z.participant_id });
+      if (!meins) continue;
       const e = await sendeInfoMail(z.participant_id, modulId, staff.userId);
       if (e.ok) gesendet++;
-      else fehler++;
+      else {
+        fehler++;
+        await supabase.rpc("release_info_mail", { p_module_id: modulId, p_participant_id: z.participant_id });
+      }
     }
   }
   await Promise.all(Array.from({ length: 3 }, arbeiter));

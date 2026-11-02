@@ -121,10 +121,15 @@ export default async function Teilnehmende({ searchParams }: PageProps<"/team/te
   const ueb = wahl(uebernachtungen, s("uebernachtung"));
   const gruppe = s("gruppe") === "alle" ? "alle" : "jahrgang";
   const qf = faltName(s("q"));
+  const ziffern = s("q").replace(/\D/g, "");
   // Grundmenge: alles außer dem Zusage-Filter; die Zusage-Knöpfe zählen darin
   const grundmenge = alle.filter((p) => {
     if (gruppe === "jahrgang" && p.affiliation_status !== "academy_student") return false;
-    if (qf && !faltName(`${p.name} ${p.email ?? ""} ${p.phone ?? ""}`).includes(qf)) return false;
+    // Suche: Name/E-Mail, oder bei Ziffern die Telefonnummer (faltName behält keine Ziffern),
+    // z. B. „0176 123“ findet „+49 176 123…“
+    const telefonTreffer = ziffern.length >= 3 && (p.phone ?? "").replace(/\D/g, "").replace(/^(49|90|43|41)/, "0").includes(ziffern.replace(/^(00)?(49|90|43|41)/, "0"));
+    const nameTreffer = Boolean(qf) && faltName(`${p.name} ${p.email ?? ""}`).includes(qf);
+    if ((qf || ziffern.length >= 3) && !telefonTreffer && !nameTreffer) return false;
     if (s("region") && (p.region ?? "-") !== s("region")) return false;
     if (s("verantwortlich") && (p.mentor_name ?? "-") !== s("verantwortlich")) return false;
     if (s("gt") && p.branch !== s("gt")) return false;
@@ -201,7 +206,7 @@ export default async function Teilnehmende({ searchParams }: PageProps<"/team/te
           </section>
         ) : (
           <>
-            <form className="mb-4 grid gap-3 rounded-3xl bg-weiss p-4 ring-1 ring-line sm:grid-cols-2 lg:grid-cols-5" action="/team/teilnehmende/">
+            <form key={JSON.stringify(sp)} className="mb-4 grid gap-3 rounded-3xl bg-weiss p-4 ring-1 ring-line sm:grid-cols-2 lg:grid-cols-5" action="/team/teilnehmende/">
               <select name="modul" defaultValue={modul?.id} className="feld lg:col-span-2" aria-label="Modul">
                 {modulListe.map((m) => <option key={m.id} value={m.id}>{m.title} · {termine(m.tage)}{m.cancelled_at ? " (abgesagt)" : ""}</option>)}
               </select>

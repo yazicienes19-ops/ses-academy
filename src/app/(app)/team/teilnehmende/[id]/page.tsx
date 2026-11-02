@@ -12,6 +12,7 @@ import { auswerten, zusammenfassen } from "@/lib/bewertung";
 import { istToken, kurzcodeAnzeige } from "@/lib/codes";
 import { mailBereit } from "@/lib/mail";
 import { createClient } from "@/lib/supabase/server";
+import { telLink } from "@/lib/telefon";
 import { jetztMs } from "@/lib/zeit";
 
 export const metadata: Metadata = { title: "Teilnehmer:in | SES Academy" };
@@ -107,7 +108,7 @@ export default async function Person({ params, searchParams }: PageProps<"/team/
                 {p.email
                   ? <a href={`mailto:${p.email}`} className="inline-flex items-center gap-1.5 font-semibold hover:underline"><Mail aria-hidden className="h-4 w-4 text-ink-soft" />{p.email}</a>
                   : <span className="inline-flex items-center gap-1.5 text-rot"><Mail aria-hidden className="h-4 w-4" />keine E-Mail-Adresse</span>}
-                {p.phone && <a href={`tel:${p.phone.replace(/[^\d+]/g, "")}`} className="inline-flex items-center gap-1.5 font-semibold hover:underline"><Phone aria-hidden className="h-4 w-4 text-ink-soft" />{p.phone}</a>}
+                {p.phone && <a href={telLink(p.phone)} className="inline-flex items-center gap-1.5 font-semibold hover:underline"><Phone aria-hidden className="h-4 w-4 text-ink-soft" />{p.phone}</a>}
               </div>
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {p.active ? <Hinweis ton="gut">Aktiv</Hinweis> : <Hinweis ton="neutral">Ausgeschieden</Hinweis>}
@@ -212,7 +213,7 @@ export default async function Person({ params, searchParams }: PageProps<"/team/
               </ul>
             </section>
 
-            <Verlauf id={p.id} name={name} phone={p.phone} modulId={modulAusLink} kontakte={(kontakte ?? []) as Kontakt[]} />
+            <Verlauf id={p.id} name={name} phone={p.phone} modulId={modulAusLink ?? anmeldungen.find((r) => !r.modules.cancelled_at && r.tage.some((t) => Date.parse(t.ends_at) > jetzt))?.modules.id ?? null} kontakte={(kontakte ?? []) as Kontakt[]} />
 
             {(zimmer ?? []).length > 0 && (
               <section className="karte">
@@ -418,7 +419,7 @@ async function OrgaKarte({ staff, id, modulId, hinweis }: { staff: Staff; id: st
             {kommend.length === 0 && <li className="py-3 text-ink-soft">Für kein Modul angemeldet.</li>}
           </ul>
         </section>
-        <Verlauf id={id} name={p.name} phone={p.phone} modulId={modulId} kontakte={(kontakte ?? []) as Kontakt[]} />
+        <Verlauf id={id} name={p.name} phone={p.phone} modulId={modulId ?? kommend.find((m) => Date.parse(m.ende) > jetzt)?.id ?? null} kontakte={(kontakte ?? []) as Kontakt[]} />
       </main>
     </>
   );

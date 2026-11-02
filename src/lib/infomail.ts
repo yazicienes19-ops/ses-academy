@@ -30,6 +30,7 @@ const texte = {
     zimmerFolgt: "Die Zimmereinteilung bekommst du vor Ort.",
     keineUebernachtung: "Du hast keine Übernachtung angegeben. Falls du doch eine brauchst, melde dich bitte bei uns.",
     keineAngabe: "Du hast noch nicht angegeben, ob du übernachtest. Bitte trag es in „Mein Bereich“ ein.",
+    keineAngabeZu: "Du hast keine Übernachtung angegeben. Falls du doch eine brauchst, melde dich bitte bei uns.",
     programm: "Tagesordnung",
     programmFolgt: "Das Programm für diesen Tag folgt.",
     abmelden: "Falls du nicht teilnehmen kannst, melde dich bitte vorher über dein Ticket ab.",
@@ -52,6 +53,7 @@ const texte = {
     zimmerFolgt: "Oda dağılımını yerinde öğreneceksin.",
     keineUebernachtung: "Konaklama ihtiyacı belirtmedin. Yine de ihtiyacın olursa lütfen bize yaz.",
     keineAngabe: "Konaklayıp konaklamayacağını henüz belirtmedin. Lütfen „Mein Bereich“ sayfasında bildir.",
+    keineAngabeZu: "Konaklama ihtiyacı belirtmedin. Yine de ihtiyacın olursa lütfen bize yaz.",
     programm: "Program",
     programmFolgt: "Bu günün programı daha sonra bildirilecek.",
     abmelden: "Katılamayacaksan lütfen önceden biletin üzerinden bildir.",
@@ -68,7 +70,7 @@ export async function ladeInfoMail(participantId: string, modulId: string) {
   const admin = createAdminClient();
   const [{ data: p }, { data: modul }, { data: reg }, { data: hotels }, { data: zuteilung }] = await Promise.all([
     admin.from("participants").select("id, first_name, last_name, email, preferred_language, checkin_token, short_code").eq("id", participantId).maybeSingle(),
-    admin.from("modules").select("id, title, subtitle, location, ticket_required, module_days(id, starts_at, ends_at, program_items(starts_at, ends_at, title, status))").eq("id", modulId).maybeSingle(),
+    admin.from("modules").select("id, title, subtitle, location, ticket_required, stay_form_open, module_days(id, starts_at, ends_at, program_items(starts_at, ends_at, title, status))").eq("id", modulId).maybeSingle(),
     admin.from("registrations").select("id, status, rsvp, stay_requests(nights)").eq("module_id", modulId).eq("participant_id", participantId).maybeSingle(),
     admin.from("hotels").select("id, name, address, rooms_visible").eq("module_id", modulId).order("created_at").limit(1),
     admin.from("room_assignments").select("hotel_id, rooms(label)").eq("participant_id", participantId),
@@ -99,7 +101,9 @@ export function infoMailInhalt(d: InfoDaten, ticketLink: string) {
   const termine = d.tage.map((x) => `${tagLang.format(new Date(x.starts_at))}, ${zeit(x.starts_at, x.ends_at)}`);
 
   const uebernachtung: { text: string[]; html: string } = (() => {
-    if (d.naechte === null) return { text: [t.keineAngabe], html: `<p style="margin:0">${esc(t.keineAngabe)}</p>` };
+    // Ohne Angabe: in „Mein Bereich“ nachtragen geht nur, solange die Abfrage offen ist
+    const ohne = d.modul.stay_form_open ? t.keineAngabe : t.keineAngabeZu;
+    if (d.naechte === null) return { text: [ohne], html: `<p style="margin:0">${esc(ohne)}</p>` };
     if (d.naechte.length === 0) return { text: [t.keineUebernachtung], html: `<p style="margin:0">${esc(t.keineUebernachtung)}</p>` };
     const zeilen: [string, string][] = [];
     if (d.hotel) zeilen.push([t.hotel, [d.hotel.name, d.hotel.address].filter(Boolean).join(", ")]);
