@@ -4,12 +4,12 @@ import { notFound } from "next/navigation";
 import { Hinweis } from "@/components/team/Hinweis";
 import { ModulReiter } from "@/components/team/ModulReiter";
 import { TeamKopf } from "@/components/team/TeamKopf";
-import { planUebernehmen, vorschlagZuruecksetzen, wunschKorrigieren, zuteilungFestlegen } from "@/lib/aktionen/zimmerplan";
+import { planUebernehmen, probeUebernehmen, vorschlagZuruecksetzen, wunschKorrigieren, zuteilungFestlegen } from "@/lib/aktionen/zimmerplan";
 import { requireStaff } from "@/lib/auth";
 import { istToken } from "@/lib/codes";
 import { nachtName } from "@/lib/uebernachtung";
 import { wuenschtEinzelzimmer, type Grund, type Teil } from "@/lib/zimmerplan";
-import { ladeZimmerplan, vorschlag } from "@/lib/zimmerplan-daten";
+import { ladeZimmerplan, probeplan, vorschlag, zimmerArt } from "@/lib/zimmerplan-daten";
 
 export const metadata: Metadata = { title: "Zimmerplan | SES Academy" };
 
@@ -19,6 +19,7 @@ const hinweise: Record<string, { text: string; gut: boolean }> = {
   festgelegt: { text: "Bleibt jetzt fest in diesem Zimmer, auch bei neuen Vorschlägen.", gut: true },
   freigegeben: { text: "Freigegeben: Ein neuer Vorschlag darf die Person umsetzen.", gut: true },
   "kein-hotel": { text: "Zuerst unter Logistik das Hotel und die Zimmer anlegen.", gut: false },
+  "schon-zimmer": { text: "Es sind schon Zimmer angelegt. Bitte den Vorschlag unten nutzen.", gut: false },
   eingabe: { text: "Bitte die Angaben prüfen.", gut: false },
   fehler: { text: "Das hat nicht geklappt. Ist ein Zimmer schon voll? Dann bleibt alles beim alten Stand.", gut: false },
 };
@@ -56,6 +57,11 @@ export default async function ZimmerplanSeite({ params, searchParams }: PageProp
   if (!d.modul) notFound();
 
   const plan = vorschlag(d);
+  // Noch keine Zimmer: automatische Einteilung mit 2er- oder 3er-Zimmern zeigen (Hinweise dann auch von dort)
+  const ohneZimmerAngelegt = d.zimmer.length === 0;
+  const groesse = sp.groesse === "3" ? 3 : 2;
+  const varianten = ohneZimmerAngelegt ? { 2: probeplan(d, 2), 3: probeplan(d, 3) } : null;
+  const probe = varianten?.[groesse] ?? null;
   const zeigeVorschlag = sp.vorschlag === "1";
   const korrigieren = typeof sp.korrigieren === "string" ? sp.korrigieren : "";
   const plancode = typeof sp.hinweis === "string" && sp.hinweis.startsWith("plan-") ? Number(sp.hinweis.slice(5)) : null;
@@ -67,7 +73,7 @@ export default async function ZimmerplanSeite({ params, searchParams }: PageProp
   const eingeteilt = d.personen.filter((p) => p.room_id);
   const ohneZimmer = uebernachten.filter((p) => !p.room_id);
   const hinweiseJePerson = new Map<string, string[]>();
-  for (const h of plan.hinweise) hinweiseJePerson.set(h.personId, [...(hinweiseJePerson.get(h.personId) ?? []), h.text]);
+  for (const h of probe?.hinweise ?? plan.hinweise) hinweiseJePerson.set(h.personId, [...(hinweiseJePerson.get(h.personId) ?? []), h.text]);
   const mitWunsch = d.personen.filter((p) => p.room_wish.trim())
     .map((p) => ({ p, teile: d.teile.get(p.participant_id) ?? [], probleme: hinweiseJePerson.get(p.participant_id) ?? [] }))
     .map((x) => ({ ...x, offen: x.teile.some((t) => t.art === "unbekannt" || t.art === "mehrdeutig" || t.art === "aehnlich") || x.probleme.length > 0 }))
@@ -98,7 +104,57 @@ export default async function ZimmerplanSeite({ params, searchParams }: PageProp
         </section>
 
         {!d.hotel || d.zimmer.length === 0 ? (
-          <p className="karte mt-6">Für einen Vorschlag braucht es das Hotel und seine Zimmer mit Bettenzahl. <Link href={`/team/module/${id}/hotel/`} className="link font-semibold">Unter Logistik anlegen</Link>.</p>
+          <section id="einteilung" className="karte mt-6 scroll-mt-4">
+            <h2 className="font-display text-2xl font-bold">Automatische Einteilung</h2>
+            <p className="mt-1 max-w-3xl text-sm text-ink-soft">
+              Noch sind keine Zimmer angelegt. So verteilen sich die {uebernachten.length} Übernachtenden: Frauen und Männer getrennt,
+              gegenseitige Wünsche zusammen, sonst gemischt nach Region und ohne frühere Zimmerpartner. Die Liste könnt ihr so ans Hotel
+              schicken, die Zimmernummern vergibt das Hotel.
+            </p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {([2, 3] as const).map((g) => {
+                const v = varianten![g];
+                const zahl = (b: string) => v.zimmer.filter((z) => z.bereich === b).length;
+                const aktiv = g === groesse;
+                return (
+                  <Link key={g} href={`/team/module/${id}/zimmerplan/?groesse=${g}#einteilung`} aria-current={aktiv ? "true" : undefined}
+                    className={`rounded-3xl p-5 ring-1 transition ${aktiv ? "bg-ink text-paper ring-ink" : "bg-white ring-line hover:ring-ink"}`}>
+                    <span className="block font-semibold">mit {zimmerArt[g]}n ({g} Betten)</span>
+                    <span className="font-display mt-1 block text-3xl font-extrabold">{v.zimmer.length} Zimmer</span>
+                    <span className={`mt-1 block text-sm ${aktiv ? "text-paper/75" : "text-ink-soft"}`}>
+                      {zahl("Frauen")} für Frauen · {zahl("Männer")} für Männer{zahl("ohne Angabe") ? ` · ${zahl("ohne Angabe")} ohne Angabe zum Geschlecht` : ""}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <a href={`/team/module/${id}/zimmerplan/liste/?groesse=${groesse}`} className="knopf">Liste fürs Hotel herunterladen (Excel)</a>
+              <form action={probeUebernehmen}>
+                <input type="hidden" name="module_id" value={id} /><input type="hidden" name="groesse" value={groesse} />
+                <button className="knopf-hell">So übernehmen und von Hand anpassen</button>
+              </form>
+            </div>
+            <p className="mt-2 max-w-3xl text-xs text-ink-soft">
+              „Übernehmen“ legt die {probe!.zimmer.length} Zimmer unter Logistik an (dort den Hotelnamen eintragen) und teilt alle ein. Danach lässt sich
+              jede Person einzeln umsetzen, und es gibt die Zimmerliste auch zum Drucken. Teilnehmende sehen ihr Zimmer erst nach der Freigabe unter Logistik.
+            </p>
+            {probe!.hinweise.length > 0 && (
+              <details className="mt-4 rounded-2xl bg-gelb-hell p-4" open={probe!.hinweise.length <= 8}>
+                <summary className="cursor-pointer font-semibold">{probe!.hinweise.length} Hinweise</summary>
+                <ul className="mt-2 space-y-1 text-sm">{probe!.hinweise.map((h, i) => <li key={i}><span className="font-semibold">{name(h.personId)}</span> {h.text}</li>)}</ul>
+              </details>
+            )}
+            {(["Frauen", "Männer", "ohne Angabe"] as const).map((b) => {
+              const teil = probe!.zimmer.filter((z) => z.bereich === b);
+              return teil.length > 0 && (
+                <div key={b} className="mt-6">
+                  <h3 className="font-display text-xl font-bold">{b} · {teil.length} Zimmer, {teil.reduce((n, z) => n + z.belegung.length, 0)} Personen</h3>
+                  <ZimmerRaster zimmer={teil.map((z) => ({ ...z, leute: z.belegung.map((x) => ({ pid: x.id, grund: x.grund })) }))} personen={byId} schonZusammen={schonZusammen} zusammenfassung={false} />
+                </div>
+              );
+            })}
+          </section>
         ) : (
           <>
             {/* Vorschlag */}
@@ -255,15 +311,16 @@ function Kachel({ wert, text, ton = "neutral" }: { wert: number; text: string; t
 
 type Zeile = { name: string; gender: string | null; region: string | null; nights: string[] };
 
-function ZimmerRaster({ zimmer, personen, schonZusammen }: {
+function ZimmerRaster({ zimmer, personen, schonZusammen, zusammenfassung = true }: {
   zimmer: { id: string; label: string; capacity: number; leute: { pid: string; grund: Grund }[] }[];
   personen: Map<string, Zeile>;
   schonZusammen: (a: string, b: string) => boolean;
+  zusammenfassung?: boolean;
 }) {
   const belegt = zimmer.filter((z) => z.leute.length > 0);
   return (
     <>
-      <p className="mt-4 text-sm text-ink-soft">{belegt.length} von {zimmer.length} Zimmern belegt, {zimmer.length - belegt.length} bleiben frei.</p>
+      {zusammenfassung && <p className="mt-4 text-sm text-ink-soft">{belegt.length} von {zimmer.length} Zimmern belegt, {zimmer.length - belegt.length} bleiben frei.</p>}
       <ul className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {belegt.map((z) => {
           const nachte = new Set(z.leute.map((l) => personen.get(l.pid)?.nights.join() ?? ""));

@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { requireStaff } from "@/lib/auth";
 import { istToken } from "@/lib/codes";
 import { createClient } from "@/lib/supabase/server";
-import { ladeZimmerplan, vorschlag } from "@/lib/zimmerplan-daten";
+import { ladeZimmerplan, probeplan, vorschlag } from "@/lib/zimmerplan-daten";
 
 function zurueck(modulId: string, hinweis: string, anker?: string): never {
   const pfad = `/team/module/${modulId}/zimmerplan/`;
@@ -64,4 +64,30 @@ export async function zuteilungFestlegen(formData: FormData) {
   const supabase = await createClient();
   const { error } = await supabase.from("room_assignments").update({ source: fest ? "manual" : "auto" }).eq("hotel_id", hotel).eq("participant_id", person);
   zurueck(modulId, error ? "fehler" : fest ? "festgelegt" : "freigegeben", `z-${person}`);
+}
+
+/**
+ * Automatische Einteilung übernehmen, solange noch keine Zimmer angelegt sind: Hotel (falls nötig) und so viele 2er- oder
+ * 3er-Zimmer anlegen wie gebraucht, alle einteilen. Danach geht alles wie gewohnt (umsetzen, festhalten, Zimmerliste).
+ */
+export async function probeUebernehmen(formData: FormData) {
+  await requireStaff("orga");
+  const modulId = String(formData.get("module_id"));
+  const groesse = Number(formData.get("groesse"));
+  if (!istToken(modulId) || (groesse !== 2 && groesse !== 3)) zurueck(modulId, "eingabe");
+  const daten = await ladeZimmerplan(modulId);
+  if (daten.zimmer.length > 0) zurueck(modulId, "schon-zimmer");
+  const supabase = await createClient();
+  const hotelId = daten.hotel?.id
+    ?? (await supabase.from("hotels").insert({ module_id: modulId, name: "Hotel (Name folgt)" }).select("id").single()).data?.id;
+  if (!hotelId) zurueck(modulId, "fehler");
+  const probe = probeplan(daten, groesse);
+  const { data: angelegt, error } = await supabase.from("rooms")
+    .insert(probe.zimmer.map((z) => ({ hotel_id: hotelId, label: z.label, capacity: groesse, section: z.bereich })))
+    .select("id, label");
+  if (error || !angelegt) zurueck(modulId, "fehler");
+  const idVon = new Map(angelegt.map((r) => [r.label, r.id]));
+  const plan = probe.zimmer.flatMap((z) => z.belegung.map((b) => ({ room_id: idVon.get(z.label)!, participant_id: b.id })));
+  const { data: n, error: fehler } = await supabase.rpc("apply_room_plan", { p_hotel_id: hotelId, p_plan: plan });
+  zurueck(modulId, fehler ? "fehler" : `plan-${n ?? 0}`);
 }

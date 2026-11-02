@@ -37,3 +37,26 @@ export type Zimmerplan = Awaited<ReturnType<typeof ladeZimmerplan>>;
 export function vorschlag(d: Zimmerplan) {
   return planen(d.planPersonen, d.zimmer.map((z) => ({ id: z.id, label: z.label, capacity: z.capacity })), d.paare);
 }
+
+export const zimmerArt: Record<2 | 3, string> = { 2: "Doppelzimmer", 3: "Dreibettzimmer" };
+
+/**
+ * Einteilung ohne angelegte Zimmer: so viele gleich große Zimmer wie nötig (2er oder 3er), Frauen und Männer getrennt,
+ * Wünsche wie beim Vorschlag. Die Zimmer heißen „2er 01“ usw.; die echten Nummern vergibt das Hotel.
+ */
+export function probeplan(d: Zimmerplan, groesse: 2 | 3) {
+  const personen = d.planPersonen.map((p) => ({ ...p, zimmerId: null, quelle: null }));
+  const anzahl = personen.filter((p) => p.nights.length > 0).length;
+  const leer = Array.from({ length: anzahl }, (_, i) => ({ id: `probe-${i}`, label: String(i).padStart(4, "0"), capacity: groesse }));
+  const e = planen(personen, leer, d.paare);
+  const geschlecht = new Map(personen.map((p) => [p.id, p.gender]));
+  const reihe = (g: string | null) => (g === "w" ? 0 : g === "m" ? 1 : 2);
+  const zimmer = e.zimmer.filter((z) => z.belegung.length > 0)
+    .map((z) => ({ ...z, gender: geschlecht.get(z.belegung[0].id) ?? null }))
+    .sort((a, b) => reihe(a.gender) - reihe(b.gender))
+    .map((z, i) => ({
+      id: `probe-${i + 1}`, label: `${groesse}er ${String(i + 1).padStart(2, "0")}`, capacity: groesse, belegung: z.belegung,
+      bereich: z.gender === "w" ? "Frauen" : z.gender === "m" ? "Männer" : "ohne Angabe",
+    }));
+  return { zimmer, hinweise: e.hinweise };
+}
