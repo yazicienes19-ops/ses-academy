@@ -47,12 +47,18 @@ export async function sitzungSpeichern(formData: FormData) {
   redirect(`/team/sitzungen/${data.id}/?hinweis=angelegt`);
 }
 
+/** Das Protokoll-Feld wird beim Hinzufügen von Beschlüssen und Aufgaben mitgeschickt; sonst ginge Getipptes verloren. */
+async function protokollMitnehmen(supabase: Awaited<ReturnType<typeof createClient>>, id: string, formData: FormData) {
+  if (formData.has("protocol")) await supabase.from("meetings").update({ protocol: text(formData, "protocol", 50000) }).eq("id", id);
+}
+
 export async function beschlussHinzufuegen(formData: FormData) {
   await requireStaff("orga");
   const id = text(formData, "meeting_id");
   const beschluss = text(formData, "text", 2000);
   if (!istToken(id) || !beschluss) redirect(`/team/sitzungen/${id}/?hinweis=eingabe`);
   const supabase = await createClient();
+  await protokollMitnehmen(supabase, id, formData);
   const { error } = await supabase.from("meeting_decisions").insert({ meeting_id: id, text: beschluss });
   revalidatePath(`/team/sitzungen/${id}/`);
   redirect(`/team/sitzungen/${id}/?hinweis=${error ? "fehler" : "gespeichert"}#beschluesse`);
@@ -66,6 +72,7 @@ export async function sitzungsAufgabe(formData: FormData) {
   const zustaendig = text(formData, "assignee_user", 40);
   if (!istToken(id) || !titel || (frist && !/^\d{4}-\d{2}-\d{2}$/.test(frist))) redirect(`/team/sitzungen/${id}/?hinweis=eingabe`);
   const supabase = await createClient();
+  await protokollMitnehmen(supabase, id, formData);
   const { error } = await supabase.from("tasks").insert({
     title: titel, meeting_id: id, due_date: frist || null, assignee_user: istToken(zustaendig) ? zustaendig : null,
     assignee_name: text(formData, "assignee_name", 200) || null, created_by: staff.userId,

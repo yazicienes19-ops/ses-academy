@@ -21,7 +21,7 @@ const hinweise: Record<string, { text: string; gut: boolean }> = {
   "zimmer-voll": { text: "Das Zimmer ist schon voll. Die bisherige Zuteilung bleibt.", gut: false },
   "zimmer-sichtbar": { text: "Die Zimmer stehen jetzt bei den Teilnehmenden in „Mein Bereich“.", gut: true },
   "zimmer-verborgen": { text: "Die Zimmer sind in „Mein Bereich“ verborgen.", gut: true },
-  eingabe: { text: "Bitte die Angaben prüfen.", gut: false },
+  eingabe: { text: "Bitte die Angaben prüfen: Name, Preis als Zahl (z. B. 89,50), Kontingent als Zahl, Stornofrist als Datum.", gut: false },
   fehler: { text: "Das hat nicht geklappt.", gut: false },
 };
 

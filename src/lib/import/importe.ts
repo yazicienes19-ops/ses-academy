@@ -153,12 +153,14 @@ async function modul(sb: Db, d: Daten, nr: number, o: Optionen, p: Protokoll) {
 // ── 1. Teilnehmerliste (Bölge, İsim Soyisim, KGT/GT, Modul 1…n, Sorumlu Kişi) ──
 
 async function teilnehmerliste(sb: Db, zeilen: Zeile[], o: Optionen, p: Protokoll) {
-  const kopf = kopfzeile(zeilen, [(z) => z.includes("isim") || z === "name", (z) => z.includes("bölge")]);
-  if (!kopf) throw new Error("Kopfzeile nicht gefunden – erwartet werden Spalten wie „İsim Soyisim“ und „Bölge“.");
+  const istName = (z: string) => z.includes("isim") || z === "name" || z.includes("vor- und nachname") || z === "vollständiger name";
+  const istRegion = (z: string) => z.includes("bölge") || z === "region";
+  const kopf = kopfzeile(zeilen, [istName, istRegion]);
+  if (!kopf) throw new Error("Kopfzeile nicht gefunden – erwartet werden Spalten wie „İsim Soyisim“/„Name“ und „Bölge“/„Region“.");
   const k = kopf.zellen;
   const col = {
-    name: k.findIndex((z) => z.includes("isim") || z === "name"),
-    region: k.findIndex((z) => z.includes("bölge")),
+    name: k.findIndex(istName),
+    region: k.findIndex(istRegion),
     org: k.findIndex((z) => z.includes("kgt") || z === "gt"),
     sorumlu: k.findIndex((z) => z.includes("sorumlu") || z.includes("verantwort")),
   };
@@ -180,6 +182,7 @@ async function teilnehmerliste(sb: Db, zeilen: Zeile[], o: Optionen, p: Protokol
   for (const m of modulSpalten) moduleNachNr.set(m.nr, await modul(sb, d, m.nr, o, p));
 
   const anmeldungen: { personId: string; modulNr: number; da: boolean }[] = [];
+  const ausDatei = new Map<string, { person: Person; zeile: number }>();
   for (const [zi, z] of zeilen.slice(kopf.index + 1).entries()) {
     const name = text(z[col.name]);
     if (!name) continue;
@@ -199,17 +202,22 @@ async function teilnehmerliste(sb: Db, zeilen: Zeile[], o: Optionen, p: Protokol
       ...(s ? { mentor_id: mentorId.get(faltName(s)) } : {}),
     };
 
-    // Nur mit dem Bestand vor dem Import abgleichen: Zeilen derselben Liste sind immer verschiedene Personen.
-    let person = zuordnen(name, bestand, o, p, `Zeile ${zeilenNr}`);
+    // Mit dem Bestand vor dem Import abgleichen; derselbe Name zweimal in der Datei wird nur einmal angelegt
+    const schonInDatei = ausDatei.get(faltName(name));
+    if (schonInDatei) p.warn(`Zeile ${zeilenNr}: „${name}“ steht doppelt in der Datei (auch Zeile ${schonInDatei.zeile}) – nur einmal angelegt. Sind es zwei Personen, bitte die zweite von Hand anlegen.`);
+    let person = schonInDatei?.person ?? zuordnen(name, bestand, o, p, `Zeile ${zeilenNr}`);
     if (!person) {
       if (finde(name, bestand).art !== "keiner") continue;
       person = await personAnlegen(sb, d, name, werte, o);
       p.zaehle("Neue Teilnehmende");
+    } else if (schonInDatei) {
+      // zweite Zeile derselben Person: nur die Module übernehmen
     } else {
       p.zaehle("Bereits vorhanden, aktualisiert");
       if (o.anwenden) pruefe(await sb.from("participants").update({ ...werte, affiliation_status: "academy_student", cohort_id: d.jahrgang.id }).eq("id", person.id), `„${name}“ aktualisieren`);
     }
 
+    if (!schonInDatei) ausDatei.set(faltName(name), { person, zeile: zeilenNr });
     for (const m of modulSpalten) {
       const w = text(z[m.i]);
       const da = w === "+" ? true : w === "-" || w === "–" ? false : null;

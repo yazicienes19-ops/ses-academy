@@ -56,11 +56,13 @@ export default async function Sitzung({ params, searchParams }: PageProps<"/team
           </form>
         </section>
 
+        <script dangerouslySetInnerHTML={{ __html: "document.addEventListener('submit',function(e){var f=e.target;if(!f.hasAttribute||!f.hasAttribute('data-mit-protokoll'))return;var t=document.getElementById('protocol');var h=f.querySelector('input[name=protocol]');if(t&&h)h.value=t.value;},true)" }} />
         <section id="beschluesse" className="karte mt-6">
           <h2 className="font-display text-xl font-bold">Beschlüsse</h2>
           <ol className="mt-3 list-decimal space-y-1 pl-5">{beschluesse.map((b) => <li key={b.id}>{b.text}</li>)}</ol>
           {beschluesse.length === 0 && <p className="mt-2 text-ink-soft">Noch keine Beschlüsse.</p>}
-          <form action={beschlussHinzufuegen} className="mt-3 flex gap-2">
+          <form action={beschlussHinzufuegen} data-mit-protokoll className="mt-3 flex gap-2">
+            <input type="hidden" name="protocol" defaultValue={s.protocol} />
             <input type="hidden" name="meeting_id" value={id} />
             <input name="text" required placeholder="Beschluss" className="feld" aria-label="Beschluss" />
             <button type="submit" className="knopf-hell">Hinzufügen</button>
@@ -82,7 +84,8 @@ export default async function Sitzung({ params, searchParams }: PageProps<"/team
               </li>
             ))}
           </ul>
-          <form action={sitzungsAufgabe} className="mt-4 grid gap-2 sm:grid-cols-4">
+          <form action={sitzungsAufgabe} data-mit-protokoll className="mt-4 grid gap-2 sm:grid-cols-4">
+            <input type="hidden" name="protocol" defaultValue={s.protocol} />
             <input type="hidden" name="meeting_id" value={id} />
             <input name="title" required placeholder="Was ist zu tun?" className="feld sm:col-span-2" aria-label="Aufgabe" />
             <input name="due_date" type="date" className="feld" aria-label="Frist" />

@@ -37,7 +37,10 @@ export async function hotelSpeichern(formData: FormData) {
   await requireStaff("orga");
   const modulId = String(formData.get("module_id"));
   const id = String(formData.get("id") ?? "");
-  const d = hotelSchema.safeParse(Object.fromEntries(["name", "address", "contact", "quota_rooms", "price_per_night", "cancellation_deadline", "notes"].map((k) => [k, formData.get(k) ?? ""])));
+  const roh = Object.fromEntries(["name", "address", "contact", "quota_rooms", "price_per_night", "cancellation_deadline", "notes"].map((k) => [k, String(formData.get(k) ?? "")]));
+  roh.price_per_night = roh.price_per_night.replace(/\s|€|eur(o)?/gi, "");
+  roh.quota_rooms = roh.quota_rooms.replace(/\s|zimmer/gi, "");
+  const d = hotelSchema.safeParse(roh);
   if (!istToken(modulId) || !d.success) zurueck(modulId, "eingabe");
   const werte = {
     module_id: modulId,
