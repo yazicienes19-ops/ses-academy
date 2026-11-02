@@ -173,8 +173,24 @@ export function Einlass({ tagId, modulTitel, ticketNoetig, zaehler: start, offli
     return !s || p.display_name.toLowerCase().includes(s) || p.short_code.toLowerCase().startsWith(normalisiereCode(s).toLowerCase());
   });
 
+  const liveStand = zaehler && (
+    <section aria-label="Live-Stand" className="rounded-3xl bg-white/80 p-6 text-center ring-1 ring-line">
+      <p className="font-display text-6xl font-bold tabular-nums">
+        {zaehler.checked_in}
+        <span className="text-3xl text-ink-soft"> von {zaehler.expected}</span>
+      </p>
+      <p className="mt-1 font-semibold">eingecheckt{offen > 0 ? ` (+${offen} offline vorgemerkt)` : ""}</p>
+      <div className="mx-auto mt-3 h-2 max-w-sm overflow-hidden rounded-full bg-paper-deep" aria-hidden>
+        <div className="h-full rounded-full bg-forest" style={{ width: `${zaehler.expected ? Math.min(100, (zaehler.checked_in / zaehler.expected) * 100) : 0}%` }} />
+      </div>
+      <p className="mt-2 text-sm text-ink-soft">{zaehler.waitlist} auf der Warteliste · {zaehler.excused} entschuldigt oder abgemeldet</p>
+    </section>
+  );
+
+  // Am Laptop zweispaltig: links Scanner, Kurzcode und Walk-in, rechts Stand und Liste. Am Handy eine Spalte, Stand oben.
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
+    <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
       {(!online || offen > 0 || syncMeldung) && (
         <section role="status" className={`rounded-3xl p-4 ring-1 ${online ? "bg-white/80 ring-line" : "bg-amber-100 text-amber-950 ring-amber-500"}`}>
           {!online && <p className="font-semibold">Offline: Scans werden auf diesem Gerät geprüft und vorgemerkt.</p>}
@@ -190,16 +206,7 @@ export function Einlass({ tagId, modulTitel, ticketNoetig, zaehler: start, offli
         </section>
       )}
 
-      {zaehler && (
-        <section aria-label="Live-Stand" className="rounded-3xl bg-white/80 p-6 text-center ring-1 ring-line">
-          <p className="font-display text-6xl font-bold tabular-nums">
-            {zaehler.checked_in}
-            <span className="text-3xl text-ink-soft"> von {zaehler.expected}</span>
-          </p>
-          <p className="mt-1 font-semibold">eingecheckt{offen > 0 ? ` (+${offen} offline vorgemerkt)` : ""}</p>
-          <p className="mt-2 text-sm text-ink-soft">{zaehler.waitlist} auf der Warteliste · {zaehler.excused} entschuldigt oder abgemeldet</p>
-        </section>
-      )}
+      {liveStand && <div className="lg:hidden">{liveStand}</div>}
 
       {ergebnis && <Ergebniskarte ergebnis={ergebnis} />}
 
@@ -257,15 +264,18 @@ export function Einlass({ tagId, modulTitel, ticketNoetig, zaehler: start, offli
           </form>
         </details>
       )}
+      </div>
 
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:sticky lg:top-6">
+      {liveStand && <div className="hidden lg:block">{liveStand}</div>}
       {gefiltert && (
-        <section className="rounded-3xl bg-white/60 p-5 ring-1 ring-line">
+        <section className="rounded-3xl bg-white/60 p-5 ring-1 ring-line lg:flex lg:max-h-[calc(100vh-15rem)] lg:flex-col">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <h2 className="font-display text-xl font-bold">Anwesenheitsliste</h2>
             <input value={suche} onChange={(e) => setSuche(e.target.value)} placeholder="Name oder Code suchen"
               className="rounded-full bg-white px-4 py-2 ring-1 ring-line outline-none focus:ring-2 focus:ring-ink" />
           </div>
-          <ul className="mt-4 divide-y divide-line">
+          <ul className="mt-4 divide-y divide-line lg:-mr-2 lg:min-h-0 lg:overflow-y-auto lg:pr-2">
             {gefiltert.map((p) => (
               <li key={p.participant_id} className="flex flex-wrap items-center gap-3 py-3">
                 <div className="mr-auto min-w-0">
@@ -297,6 +307,7 @@ export function Einlass({ tagId, modulTitel, ticketNoetig, zaehler: start, offli
           {gefiltert.length === 0 && <p className="mt-4 text-ink-soft">Keine Einträge.</p>}
         </section>
       )}
+      </div>
     </div>
   );
 }

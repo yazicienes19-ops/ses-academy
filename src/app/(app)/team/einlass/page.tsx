@@ -52,7 +52,7 @@ export default async function EinlassSeite({ searchParams }: PageProps<"/team/ei
   return (
     <>
       <TeamKopf staff={staff} aktiv="einlass" />
-      <main className="mx-auto max-w-3xl px-4 py-6">
+      <main className="mx-auto max-w-3xl px-4 py-6 lg:max-w-7xl">
         <h1 className="font-display text-3xl font-bold">Einlass</h1>
         {!tag ? (
           <p className="mt-6 rounded-3xl bg-white/80 p-6 ring-1 ring-line">
