@@ -52,7 +52,7 @@ export default async function Person({ params, searchParams }: PageProps<"/team/
   const { id } = await params;
   const sp = await searchParams;
   const supabase = await createClient();
-  const [{ data: p }, { data: notiz }, { data: regionen }, { data: mentoren }, { data: regs }, { data: abg }, { data: beitraege }, { data: kennzahlen }, { data: kontakte }] = await Promise.all([
+  const [{ data: p }, { data: notiz }, { data: regionen }, { data: mentoren }, { data: regs }, { data: abg }, { data: beitraege }, { data: kennzahlen }, { data: kontakte }, { data: zimmer }] = await Promise.all([
     supabase.from("participants").select("*").eq("id", id).maybeSingle(),
     supabase.from("participant_notes").select("body").eq("participant_id", id).maybeSingle(),
     supabase.from("regions").select("id,name").order("name"),
@@ -62,6 +62,7 @@ export default async function Person({ params, searchParams }: PageProps<"/team/
     supabase.from("contributions").select("*").eq("participant_id", id).order("published_on", { ascending: false }),
     supabase.rpc("get_participant_analytics"),
     supabase.rpc("get_contacts", { p_participant_id: id }),
+    supabase.rpc("get_person_rooms", { p_participant_id: id }),
   ]);
   if (!p) notFound();
   const jetzt = jetztMs();
@@ -214,6 +215,20 @@ export default async function Person({ params, searchParams }: PageProps<"/team/
                 <div className="mt-3"><KontaktFormular participantId={p.id} moduleId={null} zurueck={`/team/teilnehmende/${p.id}/`} /></div>
               </details>
             </section>
+
+            {(zimmer ?? []).length > 0 && (
+              <section className="karte">
+                <h2 className="font-display mb-3 text-2xl font-bold">Zimmer</h2>
+                <ul className="divide-y divide-line text-sm">
+                  {(zimmer ?? []).map((z) => (
+                    <li key={z.module_id} className="py-2">
+                      <span className="font-semibold">{z.module_title}</span>{z.module_start && <span className="text-ink-soft"> · {kurzDatum(z.module_start)}</span>} · Zimmer {z.room_label}
+                      <span className="block text-ink-soft">{z.mates.length ? `mit ${z.mates.join(", ")}` : "allein"}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
 
             <section className="karte">
               <h2 className="font-display mb-3 text-2xl font-bold">Hausaufgaben</h2>

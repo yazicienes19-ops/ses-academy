@@ -865,14 +865,14 @@ isOneToOne: false
                   ]
                 },"room_assignments": {
                   Row: {
-                    "hotel_id": string,"participant_id": string,"room_id": string
+                    "hotel_id": string,"participant_id": string,"room_id": string,"source": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "hotel_id": string,"participant_id": string,"room_id": string
+                    "hotel_id": string,"participant_id": string,"room_id": string,"source"?: string
                   }
                   Update: {
-                    "hotel_id"?: string,"participant_id"?: string,"room_id"?: string
+                    "hotel_id"?: string,"participant_id"?: string,"room_id"?: string,"source"?: string
                   }
                   Relationships: [
                     {
@@ -892,6 +892,38 @@ isOneToOne: false
       columns: ["room_id"]
 isOneToOne: false
       referencedRelation: "rooms"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"room_wish_overrides": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"module_id": string,"participant_id": string,"token": string,"wished_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"module_id": string,"participant_id": string,"token": string,"wished_id"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"module_id"?: string,"participant_id"?: string,"token"?: string,"wished_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "room_wish_overrides_module_id_fkey"
+      columns: ["module_id"]
+isOneToOne: false
+      referencedRelation: "modules"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "room_wish_overrides_participant_id_fkey"
+      columns: ["participant_id"]
+isOneToOne: false
+      referencedRelation: "participants"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "room_wish_overrides_wished_id_fkey"
+      columns: ["wished_id"]
+isOneToOne: false
+      referencedRelation: "participants"
       referencedColumns: ["id"]
     }
                   ]
@@ -1067,6 +1099,9 @@ isOneToOne: false
 "add_document_version":
 { Args: { "p_document_id": string,"p_file_name": string,"p_mime": string,"p_note"?: string,"p_storage_path": string }; Returns: number
                            },
+"apply_room_plan":
+{ Args: { "p_hotel_id": string,"p_plan": Json }; Returns: number
+                           },
 "ask_question":
 { Args: { "p_code": string,"p_device": string,"p_ip": string,"p_name": string,"p_text": string }; Returns: string
                            },
@@ -1200,8 +1235,23 @@ isOneToOne: false
               "engagement_count": number,"grade_avg": number,"homework_rate": number,"hw_excused": number,"hw_expected": number,"hw_late": number,"hw_missing": number,"hw_on_time": number,"hw_open": number
             }[]
                            },
+"get_person_rooms":
+{ Args: { "p_participant_id": string }; Returns: {
+              "mates": (string)[],"module_id": string,"module_start": string,"module_title": string,"room_label": string
+            }[]
+                           },
 "get_question_round":
 { Args: { "p_code": string,"p_device": string }; Returns: Json
+                           },
+"get_room_history":
+{ Args: { "p_module_id": string }; Returns: {
+              "mate_id": string,"mate_name": string,"module_start": string,"module_title": string,"participant_id": string
+            }[]
+                           },
+"get_room_planning":
+{ Args: { "p_module_id": string }; Returns: {
+              "answered": boolean,"gender": string,"name": string,"nights": (string)[],"participant_id": string,"region": string,"registration_status": Database["public"]['Enums']["registration_status"],"room_id": string,"room_label": string,"room_wish": string,"source": string
+            }[]
                            },
 "get_stay_overview":
 { Args: { "p_module_id": string }; Returns: {
