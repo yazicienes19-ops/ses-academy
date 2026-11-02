@@ -33,15 +33,19 @@ type Person = {
   last_at: string | null; last_channel: string | null; last_outcome: string | null; last_note: string | null; last_by: string | null;
 };
 
-/** Punkt je Modul: da (grün), teilweise (orange), zugesagt (gelb), keine Zusage bzw. nicht gekommen (rot), abgesagt (grau). */
-function punkt(reg: ModulStand | undefined, tage: number, vorbei: boolean) {
+/**
+ * Punkt je Modul: da (grün), teilweise (orange), zugesagt (gelb), keine Zusage bzw. nicht gekommen (rot), abgesagt (grau).
+ * Rot für „keine Zusage“ erst, wenn für das Modul Zusagen eingesammelt werden; sonst nur „angemeldet“ (hell).
+ */
+function punkt(reg: ModulStand | undefined, tage: number, vorbei: boolean, zusagenLaufen: boolean) {
   if (!reg) return null;
   if (reg.d >= tage) return { farbe: "bg-mint", text: "alle Tage da" };
   if (reg.d > 0) return { farbe: "bg-orange-400", text: `${reg.d} von ${tage} Tagen da` };
   if (reg.s === "excused" || reg.s === "cancelled" || reg.r === "abgesagt") return { farbe: "bg-zinc-300", text: "abgesagt oder entschuldigt" };
   if (vorbei) return { farbe: "bg-rot", text: "nicht da" };
   if (reg.s === "waitlist") return { farbe: "bg-paper-deep ring-1 ring-line", text: "Warteliste" };
-  return reg.r === "zugesagt" ? { farbe: "bg-yellow-300", text: "zugesagt" } : { farbe: "bg-rot", text: "noch keine Zusage" };
+  if (reg.r === "zugesagt") return { farbe: "bg-yellow-300", text: "zugesagt" };
+  return zusagenLaufen ? { farbe: "bg-rot", text: "noch keine Zusage" } : { farbe: "bg-paper-deep ring-1 ring-line", text: "angemeldet, Zusagen noch nicht abgefragt" };
 }
 
 // Filter für das gewählte Modul (wie früher in der Anrufliste)
@@ -111,6 +115,7 @@ export default async function Teilnehmende({ searchParams }: PageProps<"/team/te
   }
 
   const alle = (personen ?? []) as unknown as Person[];
+  const mitZusagen = new Set(alle.flatMap((p) => p.modules.filter((r) => r.r).map((r) => r.m)));
   const zusage = wahl(zusagen, s("zusage"));
   const kontakt = wahl(kontakte, s("kontakt"));
   const ueb = wahl(uebernachtungen, s("uebernachtung"));
@@ -277,7 +282,7 @@ export default async function Teilnehmende({ searchParams }: PageProps<"/team/te
                         <td className="whitespace-nowrap">{p.mentor_name ?? "–"}</td>
                         {modul && <td className="text-sm whitespace-nowrap">{!p.registration_status ? "–" : !p.stay_answered ? <span className="text-ink-soft">keine Angabe</span> : p.nights?.length ? p.nights.map(nachtName).join(", ") : "nein"}</td>}
                         {modulListe.map((m) => {
-                          const pk = punkt(p.modules.find((r) => r.m === m.id), m.tage.length, m.tage[m.tage.length - 1].ends_at < jetzt);
+                          const pk = punkt(p.modules.find((r) => r.m === m.id), m.tage.length, m.tage[m.tage.length - 1].ends_at < jetzt, mitZusagen.has(m.id));
                           return (
                             <td key={m.id} className={`text-center ${m.id === modul?.id ? "bg-gelb-hell/30" : ""}`}>
                               {pk ? <span title={`${m.title}: ${pk.text}`} className={`inline-block h-3 w-3 rounded-full ${pk.farbe}`} /> : <span className="text-ink-soft/40">·</span>}
@@ -307,6 +312,7 @@ export default async function Teilnehmende({ searchParams }: PageProps<"/team/te
               <span><span className="mr-1 inline-block h-2.5 w-2.5 rounded-full bg-yellow-300" />zugesagt</span>
               <span><span className="mr-1 inline-block h-2.5 w-2.5 rounded-full bg-rot" />noch keine Zusage / nicht gekommen</span>
               <span><span className="mr-1 inline-block h-2.5 w-2.5 rounded-full bg-zinc-300" />abgesagt / entschuldigt</span>
+              <span><span className="mr-1 inline-block h-2.5 w-2.5 rounded-full bg-paper-deep ring-1 ring-line" />angemeldet, Zusagen noch nicht abgefragt</span>
               <span>Name anklicken: Anrufe, Notizen und Zusagen der Person</span>
             </p>
           </>
