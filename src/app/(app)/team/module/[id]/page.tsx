@@ -25,6 +25,7 @@ const hinweise: Record<string, { text: string; gut: boolean }> = {
   "tag-entfernt": { text: "Termin entfernt.", gut: true },
   "tag-hat-checkins": { text: "An diesem Tag wurde schon eingecheckt. Der Termin bleibt deshalb bestehen.", gut: false },
   abgesagt: { text: "Modul abgesagt. Der Einlass ist gesperrt, Tickets gelten für dieses Modul nicht mehr.", gut: true },
+  "absage-bestaetigen": { text: "Bitte das Absagen ausdrücklich bestätigen. Es wurde nichts geändert.", gut: false },
   reaktiviert: { text: "Absage zurückgenommen.", gut: true },
   "feedback-angelegt": { text: "Umfrage mit Standardfragen angelegt. Fragen prüfen, dann nach dem Modul die Einladung senden.", gut: true },
   "feedback-ohne-termin": { text: "Zuerst Termine eintragen, die Umfrage öffnet am letzten Modultag.", gut: false },
@@ -61,7 +62,8 @@ export default async function ModulDetail({ params, searchParams }: PageProps<"/
   const feedbackVersand = typeof hinweis === "string" && /^feedback-\d+-\d+$/.test(hinweis) ? hinweis.split("-").slice(1).map(Number) : null;
   const antworten = Math.max(0, ...(ergebnisse ?? []).map((e) => e.answers));
 
-  const code = typeof hinweis === "string" && hinweis.startsWith("gespeichert-") ? "gespeichert" : hinweis;
+  const code = typeof hinweis === "string" && hinweis.startsWith("gespeichert-") ? "gespeichert" : typeof hinweis === "string" && hinweis.startsWith("abgesagt-") ? "abgesagt" : hinweis;
+  const absageInformiert = typeof hinweis === "string" && hinweis.startsWith("abgesagt-") ? Number(hinweis.split("-")[1]) : null;
   const neuAngemeldet = typeof hinweis === "string" && hinweis.startsWith("gespeichert-") ? Number(hinweis.split("-")[1]) : 0;
   const tage = [...m.module_days].sort((a, b) => a.starts_at.localeCompare(b.starts_at));
   const zaehlung = Object.entries(anmeldestatus)
@@ -76,6 +78,7 @@ export default async function ModulDetail({ params, searchParams }: PageProps<"/
         <ModulReiter id={m.id} titel={m.title} aktiv="" />
         {m.cancelled_at && <p className="mt-2 font-semibold text-red-900">Abgesagt{m.cancellation_reason ? `: ${m.cancellation_reason}` : ""}</p>}
         <Hinweis code={code} texte={hinweise} />
+        {absageInformiert !== null && absageInformiert > 0 && <p role="status" className="mt-2 rounded-2xl bg-emerald-100 p-4 text-emerald-950">{absageInformiert} Angemeldete per Mail informiert.</p>}
         {neuAngemeldet > 0 && <p role="status" className="mt-2 rounded-2xl bg-emerald-100 p-4 text-emerald-950">{neuAngemeldet} angenommene Teilnehmende wurden automatisch angemeldet.</p>}
 
         <p className="mt-4 text-ink-soft">
@@ -232,6 +235,10 @@ export default async function ModulDetail({ params, searchParams }: PageProps<"/
             <form action={modulAbsagen} className="mt-3 flex flex-wrap items-end gap-2">
               <input type="hidden" name="id" value={m.id} />
               <div className="min-w-60 flex-1"><label htmlFor="grund" className="mb-1 block text-sm font-semibold">Grund (intern)</label><input id="grund" name="grund" className={`${feld} w-full`} /></div>
+              <div className="w-full space-y-1.5 text-sm">
+                <label className="flex gap-2"><input type="checkbox" name="benachrichtigen" value="ja" defaultChecked className="mt-0.5" /> Alle Angemeldeten und die Warteliste per Mail informieren</label>
+                <label className="flex gap-2 rounded-2xl bg-rot-hell p-3 text-rot"><input type="checkbox" name="bestaetigt" value="ja" required className="mt-0.5" /> Ja, das Modul wirklich absagen. Der Einlass wird gesperrt.</label>
+              </div>
               <button type="submit" className="rounded-full bg-red-800 px-5 py-3 font-semibold text-white">Absagen</button>
             </form>
           )}

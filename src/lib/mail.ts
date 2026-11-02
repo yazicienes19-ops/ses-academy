@@ -263,3 +263,17 @@ export async function sendeInfoMail(participantId: string, moduleId: string, aus
   }
   return ergebnis;
 }
+
+/** Absage eines Moduls an eine angemeldete Person (Deutsch/Türkisch nach Profil). */
+export async function sendeAbsageMail(participantId: string, modulTitel: string, ausgeloestVon?: string, moduleId?: string): Promise<Ergebnis> {
+  const { data: p } = await createAdminClient().from("participants").select("id, first_name, email, preferred_language").eq("id", participantId).maybeSingle();
+  if (!p?.email) return { ok: false, fehler: "Keine E-Mail-Adresse hinterlegt." };
+  const tr = p.preferred_language === "tr";
+  const betreff = tr ? `${modulTitel}: program iptal edildi` : `${modulTitel} fällt aus`;
+  const text = tr
+    ? `Merhaba ${p.first_name},\n\nmaalesef „${modulTitel}“ programı iptal edildi. Biletin bu program için geçerli değil. Yeni bir tarih belli olunca sana haber vereceğiz.\n\nSorun olursa bu e-postayı yanıtlaman yeterli.\n\nSelamlarımızla\nSES Academy ekibi`
+    : `Hallo ${p.first_name},\n\nleider müssen wir „${modulTitel}“ absagen. Dein Ticket gilt für dieses Modul nicht mehr. Sobald es einen neuen Termin gibt, melden wir uns.\n\nBei Fragen antworte einfach auf diese Mail.\n\nViele Grüße\nDein Team der SES Academy`;
+  const ergebnis = await senden({ to: p.email, subject: betreff, text, html: `<!doctype html><html><body style="font-family:Arial,Helvetica,sans-serif;color:#13201a;background:#f3efe4;margin:0"><div style="max-width:560px;margin:0 auto;padding:28px 20px;font-size:16px;line-height:1.6;white-space:pre-line">${html(text)}</div></body></html>` });
+  await protokolliere({ participantId: p.id, art: "absage", an: p.email, ergebnis, von: ausgeloestVon, moduleId });
+  return ergebnis;
+}

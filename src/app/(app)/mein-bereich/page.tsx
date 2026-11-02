@@ -10,7 +10,7 @@ import { jetztMs } from "@/lib/zeit";
 
 export const metadata: Metadata = { title: "Mein Bereich | SES Academy", robots: { index: false, follow: false } };
 
-type Reg = { id: string; status: string; modules: { id: string; title: string; location: string | null; stay_form_open: boolean; module_days: { id: string; day: string; starts_at: string; ends_at: string }[] }; attendances: { module_day_id: string }[] };
+type Reg = { id: string; status: string; modules: { id: string; title: string; location: string | null; stay_form_open: boolean; cancelled_at: string | null; module_days: { id: string; day: string; starts_at: string; ends_at: string }[] }; attendances: { module_day_id: string }[] };
 type Sub = { id: string; label: string; assignment_id: string; file_name: string | null; link: string | null; submitted_on: string | null; submitted_at: string | null };
 
 const typen: Record<string, string> = { kommentar: "Kommentar", video: "Video", grafik: "Grafik", podcast: "Podcast", rede: "Rede", artikel: "Artikel" };
@@ -66,7 +66,7 @@ export default async function MeinBereich({ searchParams }: PageProps<"/mein-ber
     );
 
   const [{ data: regs }, { data: aufgaben }, { data: subs }, { data: beitraege }] = await Promise.all([
-    supabase.from("registrations").select("id,status,modules(id,title,location,stay_form_open,module_days(id,day,starts_at,ends_at)),attendances(module_day_id)"),
+    supabase.from("registrations").select("id,status,modules(id,title,location,stay_form_open,cancelled_at,module_days(id,day,starts_at,ends_at)),attendances(module_day_id)"),
     supabase.from("assignments").select("id,number,title,description,due_date,due_at").order("number"),
     supabase.from("submissions").select("id,label,assignment_id,file_name,link,submitted_on,submitted_at"),
     supabase.from("contributions").select("*").order("published_on", { ascending: false }),
@@ -76,7 +76,8 @@ export default async function MeinBereich({ searchParams }: PageProps<"/mein-ber
     .filter((r) => r.modules)
     .map((r) => ({ ...r, tage: [...r.modules.module_days].sort((a, b) => a.starts_at.localeCompare(b.starts_at)) }))
     .sort((a, b) => (a.tage[0]?.starts_at ?? "").localeCompare(b.tage[0]?.starts_at ?? ""));
-  const kommend = meineModule.filter((m) => m.tage.some((t) => t.ends_at >= jetzt) && m.status === "confirmed");
+  // Auch Warteliste zeigen (mit Vermerk), sonst heißt es fälschlich „für kein Modul angemeldet“
+  const kommend = meineModule.filter((m) => m.tage.some((t) => t.ends_at >= jetzt) && (m.status === "confirmed" || m.status === "waitlist"));
   const vorbei = meineModule.filter((m) => m.tage.length && m.tage.every((t) => t.ends_at < jetzt)).reverse();
   const abgaben = (subs ?? []) as unknown as Sub[];
   const mitAbfrage = meineModule.filter((m) => m.modules.stay_form_open && (m.status === "confirmed" || m.status === "waitlist") && m.tage.some((t) => t.ends_at >= jetzt));
@@ -116,6 +117,8 @@ export default async function MeinBereich({ searchParams }: PageProps<"/mein-ber
                   <li key={m.modules.id} className="karte">
                     <p className="font-display text-xl font-bold">{m.modules.title}</p>
                     <p className="text-sm text-ink-soft">{zeitraum(m.tage)}{m.modules.location ? ` · ${m.modules.location}` : ""}</p>
+                    {m.modules.cancelled_at && <p className="mt-2 chip bg-rot-hell text-rot">Dieses Modul wurde abgesagt.</p>}
+                    {!m.modules.cancelled_at && m.status === "waitlist" && <p className="mt-2 chip bg-gelb-hell">Warteliste: Wir melden uns, sobald ein Platz frei ist.</p>}
                     {m.attendances.length > 0 && <p className="mt-2 chip bg-gruen-hell">✓ eingecheckt</p>}
                   </li>
                 ))}

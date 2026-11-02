@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireStaff } from "@/lib/auth";
+import { sendeAbsageMail } from "@/lib/mail";
 import { berlinerZeit } from "@/lib/zeit";
 import { createClient } from "@/lib/supabase/server";
 
@@ -118,15 +119,23 @@ export async function tagEntfernen(formData: FormData) {
   zurueck(pfad, error ? "fehler" : "tag-entfernt");
 }
 
+/** Modul absagen: nur mit ausdrücklicher Bestätigung; auf Wunsch alle Angemeldeten (und Warteliste) per Mail informieren. */
 export async function modulAbsagen(formData: FormData) {
-  await requireStaff("alles");
+  const staff = await requireStaff("alles");
   const id = String(formData.get("id"));
+  if (formData.get("bestaetigt") !== "ja") zurueck(`/team/module/${id}/`, "absage-bestaetigen");
   const grund = String(formData.get("grund") ?? "").trim().slice(0, 500);
   const supabase = await createClient();
-  const { error } = await supabase.from("modules")
+  const { data: abgesagt, error } = await supabase.from("modules")
     .update({ cancelled_at: new Date().toISOString(), cancellation_reason: grund || null })
-    .eq("id", id).is("cancelled_at", null);
-  zurueck(`/team/module/${id}/`, error ? "fehler" : "abgesagt");
+    .eq("id", id).is("cancelled_at", null).select("title").maybeSingle();
+  if (error || !abgesagt) zurueck(`/team/module/${id}/`, "fehler");
+  let informiert = 0;
+  if (formData.get("benachrichtigen") === "ja") {
+    const { data: regs } = await supabase.from("registrations").select("participant_id").eq("module_id", id).in("status", ["confirmed", "waitlist"]);
+    for (const r of regs ?? []) if ((await sendeAbsageMail(r.participant_id, abgesagt.title, staff.userId, id)).ok) informiert++;
+  }
+  zurueck(`/team/module/${id}/`, `abgesagt-${informiert}`);
 }
 
 export async function absageZuruecknehmen(formData: FormData) {
