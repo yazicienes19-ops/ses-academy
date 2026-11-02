@@ -106,7 +106,7 @@ export function infoMailInhalt(d: InfoDaten, ticketLink: string) {
     if (d.naechte === null) return { text: [ohne], html: `<p style="margin:0">${esc(ohne)}</p>` };
     if (d.naechte.length === 0) return { text: [t.keineUebernachtung], html: `<p style="margin:0">${esc(t.keineUebernachtung)}</p>` };
     const zeilen: [string, string][] = [];
-    if (d.hotel) zeilen.push([t.hotel, [d.hotel.name, d.hotel.address].filter(Boolean).join(", ")]);
+    if (d.hotel && d.hotel.name !== "Hotel (Name folgt)") zeilen.push([t.hotel, [d.hotel.name, d.hotel.address].filter(Boolean).join(", ")]);
     zeilen.push([t.naechte, d.naechte.map(nachtName).join(", ")]);
     zeilen.push([t.zimmer, d.zimmer ?? t.zimmerFolgt]);
     return {

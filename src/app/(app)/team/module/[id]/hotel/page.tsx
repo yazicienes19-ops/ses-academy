@@ -75,6 +75,7 @@ export default async function HotelSeite({ params, searchParams }: PageProps<"/t
               <p className="mr-auto">
                 <span className="font-semibold">Zimmer in „Mein Bereich“:</span>{" "}
                 {hotel.rooms_visible ? "sichtbar, alle Zugeteilten sehen ihr Zimmer" : "verborgen, erst nach Prüfung des Zimmerplans freigeben"}
+                {hotel.name === "Hotel (Name folgt)" && <span className="mt-1 block text-sm text-amber-900">Vor dem Freigeben bitte oben den Hotelnamen und die Adresse eintragen.</span>}
               </p>
               <form action={zimmerSichtbarUmschalten}>
                 <input type="hidden" name="module_id" value={id} /><input type="hidden" name="hotel_id" value={hotel.id} />

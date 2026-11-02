@@ -134,7 +134,7 @@ export default async function MeinBereich({ searchParams }: PageProps<"/mein-ber
                 return (
                   <div key={z.module_id} className="karte bg-gruen-hell">
                     <p className="font-semibold">{m?.modules.title ?? "Modul"}: Zimmer {z.room_label}</p>
-                    <p className="text-sm text-ink-soft">{z.hotel_name}{z.hotel_address ? ` · ${z.hotel_address}` : ""}</p>
+                    <p className="text-sm text-ink-soft">{z.hotel_name === "Hotel (Name folgt)" ? "" : z.hotel_name}{z.hotel_address ? ` · ${z.hotel_address}` : ""}</p>
                   </div>
                 );
               })}

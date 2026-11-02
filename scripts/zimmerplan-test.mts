@@ -69,5 +69,16 @@ ok("Einzelzimmer-Wunsch erfüllt", wo(e, "a") === "e1" && wo(e, "b") === wo(e, "
 const pers = Array.from({ length: 30 }, (_, i) => p(`p${i}`, i % 2 ? "m" : "w", { region: `R${i % 5}` }));
 ok("gleiche Angaben, gleicher Vorschlag", JSON.stringify(planen(pers, zimmer(16), new Set())) === JSON.stringify(planen([...pers].reverse(), zimmer(16), new Set())));
 
+// Beschriftete Zimmer: „Männer“-Zimmer zuerst in der Liste, trotzdem kommen Frauen nur in „Frauen“-Zimmer
+const beschriftet = [
+  { id: "m1", label: "01", capacity: 2, vorgabe: "m" as const }, { id: "m2", label: "02", capacity: 2, vorgabe: "m" as const },
+  { id: "w1", label: "03", capacity: 2, vorgabe: "w" as const }, { id: "w2", label: "04", capacity: 2, vorgabe: "w" as const },
+];
+e = planen([p("f1", "w"), p("f2", "w"), p("f3", "w", { wuensche: ["f4"] }), p("f4", "w", { wuensche: ["f3"] }), p("m1x", "m"), p("m2x", "m")], beschriftet, new Set());
+ok("Frauen nur in Frauen-Zimmern", ["f1", "f2", "f3", "f4"].every((id) => ["w1", "w2"].includes(wo(e, id) ?? "")));
+ok("Männer nur in Männer-Zimmern", ["m1x", "m2x"].every((id) => ["m1", "m2"].includes(wo(e, id) ?? "")));
+e = planen([p("f1", "w"), p("f2", "w"), p("f3", "w")], [{ id: "m1", label: "01", capacity: 2, vorgabe: "m" as const }, { id: "w1", label: "02", capacity: 2, vorgabe: "w" as const }], new Set());
+ok("kein Frauen-Bett frei: ohne Zimmer statt ins Männer-Zimmer", e.ohneZimmer.length === 1 && !e.zimmer.find((z) => z.id === "m1")!.belegung.length);
+
 console.log(fehler ? `${fehler} Fehler` : "alle ok");
 process.exit(fehler ? 1 : 0);

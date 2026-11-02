@@ -25,18 +25,22 @@ export async function GET(request: Request, { params }: RouteContext<"/team/modu
   const groesse = new URL(request.url).searchParams.get("groesse") === "3" ? 3 : 2;
   const d = await ladeZimmerplan(id);
   if (!d.modul) notFound();
-  const probe = probeplan(d, groesse);
   const personen = new Map(d.personen.map((p) => [p.participant_id, p]));
+  // Sind Zimmer angelegt, gilt die echte Zuteilung; sonst die automatische Einteilung
+  const art = (kap: number) => (kap === 2 || kap === 3 ? zimmerArt[kap] : `${kap}-Bett-Zimmer`);
+  const liste = d.zimmer.length
+    ? d.zimmer.map((z) => ({ label: z.label, art: art(z.capacity), bereich: z.section ?? "", ids: d.personen.filter((p) => p.room_id === z.id).map((p) => p.participant_id) }))
+    : probeplan(d, groesse).zimmer.map((z) => ({ label: z.label, art: zimmerArt[groesse], bereich: z.bereich, ids: z.belegung.map((b) => b.id) }));
 
   const alleNaechte = [...new Set(d.personen.flatMap((p) => p.nights))].sort();
   const anreise = alleNaechte[0] ? tag(alleNaechte[0]) : "";
   const abreise = alleNaechte.length ? tag(alleNaechte.at(-1)!, 1) : "";
   const zeilen = [["Zimmer", "Zimmerart", "Bereich", "Name", "Anreise", "Abreise", "Nächte"]];
-  for (const z of probe.zimmer) {
-    for (const b of z.belegung) zeilen.push([z.label, zimmerArt[groesse], z.bereich, personen.get(b.id)?.name ?? "", anreise, abreise, String(alleNaechte.length)]);
+  for (const z of liste) {
+    for (const id of z.ids) zeilen.push([z.label, z.art, z.bereich, personen.get(id)?.name ?? "", anreise, abreise, String(alleNaechte.length)]);
   }
   const csv = "﻿" + zeilen.map((z) => z.map(feld).join(";")).join("\r\n") + "\r\n";
-  const datei = `Zimmerliste ${d.modul.title} ${groesse}er-Zimmer.csv`;
+  const datei = `Zimmerliste ${d.modul.title}${d.zimmer.length ? "" : ` ${groesse}er-Zimmer`}.csv`;
   return new Response(csv, {
     headers: {
       "content-type": "text/csv; charset=utf-8",

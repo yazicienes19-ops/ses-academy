@@ -103,7 +103,9 @@ export default async function ZimmerplanSeite({ params, searchParams }: PageProp
           <Kachel wert={ohneZimmer.length} text="übernachten, noch ohne Zimmer" ton={ohneZimmer.length ? "warnung" : "neutral"} />
         </section>
 
-        {!d.hotel || d.zimmer.length === 0 ? (
+        {(!d.hotel || d.zimmer.length === 0) && uebernachten.length === 0 ? (
+          <p className="karte mt-6">Noch hat niemand eine Übernachtung angegeben. Die automatische Einteilung erscheint, sobald Angaben da sind (Übernachtungs-Abfrage unter Logistik oder Import).</p>
+        ) : !d.hotel || d.zimmer.length === 0 ? (
           <section id="einteilung" className="karte mt-6 scroll-mt-4">
             <h2 className="font-display text-2xl font-bold">Automatische Einteilung</h2>
             <p className="mt-1 max-w-3xl text-sm text-ink-soft">

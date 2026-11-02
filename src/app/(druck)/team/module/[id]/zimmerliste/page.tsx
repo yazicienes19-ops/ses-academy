@@ -96,7 +96,7 @@ export default async function Zimmerliste({ params, searchParams }: PageProps<"/
         </div>
         <div className="band">
           <h1 className="serif">{d.modul.title} · Zimmerliste</h1>
-          <p>{[d.hotel && d.hotel.name !== "Hotel (Name folgt)" ? d.hotel.name : null, d.modul.location].filter(Boolean).join(" · ")}</p>
+          <p>{d.hotel && d.hotel.name !== "Hotel (Name folgt)" ? [d.hotel.name, d.hotel.address].filter(Boolean).join(", ") : `Veranstaltung: ${d.modul.location ?? "Ort folgt"}`}</p>
         </div>
         <div className="eckdaten">
           <div><b>{anreise ? tagLang.format(anreise) : "–"}</b><span>Anreise (alle Zimmer)</span></div>

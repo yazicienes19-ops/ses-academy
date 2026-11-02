@@ -66,7 +66,8 @@ export type PlanPerson = {
   wuensche: string[];                                     // aufgelöste Wunsch-Personen (ids)
   einzelzimmer: boolean;
 };
-export type PlanZimmer = { id: string; label: string; capacity: number };
+/** vorgabe: Zimmer ist als „Frauen“ (w) oder „Männer“ (m) beschriftet und bekommt nur dieses Geschlecht. */
+export type PlanZimmer = { id: string; label: string; capacity: number; vorgabe?: "w" | "m" | null };
 export type Grund = "fest" | "wunsch_gegenseitig" | "wunsch" | "gemischt" | "einzelzimmer";
 export type Belegung = { id: string; grund: Grund };
 export type Hinweis = { personId: string; text: string };
@@ -93,7 +94,7 @@ export function planen(personen: PlanPerson[], zimmerListe: PlanZimmer[], verlau
   const name = (id: string) => byId.get(id)?.name ?? "?";
   const hinweise: Hinweis[] = [];
   const zimmer = [...zimmerListe].sort((a, b) => a.label.localeCompare(b.label, "de", { numeric: true }))
-    .map((z) => ({ ...z, belegung: [] as Belegung[], gender: null as string | null }));
+    .map((z) => ({ ...z, belegung: [] as Belegung[], gender: (z.vorgabe ?? null) as string | null }));
   const zimmerVon = new Map<string, (typeof zimmer)[number]>();
   const frei = (z: (typeof zimmer)[number]) => z.capacity - z.belegung.length;
   const legeAb = (z: (typeof zimmer)[number], id: string, grund: Grund) => {
@@ -156,8 +157,9 @@ export function planen(personen: PlanPerson[], zimmerListe: PlanZimmer[], verlau
 
   const konflikte = (ids: string[], z: (typeof zimmer)[number]) =>
     z.belegung.reduce((s, b) => s + ids.filter((i) => verlauf.has(`${i}|${b.id}`)).length, 0);
+  // Beschriftete Zimmer (Frauen/Männer) nur für dieses Geschlecht; sonst bestimmt die erste Person das Zimmer
   const passtGeschlecht = (gender: string | null, z: (typeof zimmer)[number]) =>
-    z.belegung.length === 0 || (z.gender ?? null) === (gender ?? null);
+    z.vorgabe ? z.vorgabe === gender : z.belegung.length === 0 || (z.gender ?? null) === (gender ?? null);
 
   // Gruppen: größte zuerst, ins engste passende Zimmer (bei festen Mitgliedern in deren Zimmer)
   gruppenListe.sort((a, b) => b.length - a.length || a[0].localeCompare(b[0]));
@@ -193,8 +195,8 @@ export function planen(personen: PlanPerson[], zimmerListe: PlanZimmer[], verlau
       + 10 * z.belegung.filter((b) => p.region && byId.get(b.id)!.region === p.region).length;
     const teilweise = zimmer.filter((z) => z.belegung.length > 0 && frei(z) > 0 && passtGeschlecht(p.gender, z) && p.gender)
       .sort((a, b) => punkte(a) - punkte(b) || frei(a) - frei(b));
-    const leer = zimmer.filter((z) => z.belegung.length === 0 && z.capacity > 1).sort((a, b) => b.capacity - a.capacity)[0]
-      ?? zimmer.find((z) => z.belegung.length === 0);
+    const leer = zimmer.filter((z) => z.belegung.length === 0 && z.capacity > 1 && passtGeschlecht(p.gender, z)).sort((a, b) => b.capacity - a.capacity)[0]
+      ?? zimmer.find((z) => z.belegung.length === 0 && passtGeschlecht(p.gender, z));
     // Lieber ein neues Zimmer öffnen als Leute zusammenlegen, die schon einmal zusammen waren
     const ziel = teilweise[0] && (punkte(teilweise[0]) < 100 || !leer) ? teilweise[0] : leer;
     if (ziel) legeAb(ziel, p.id, "gemischt");
@@ -205,5 +207,5 @@ export function planen(personen: PlanPerson[], zimmerListe: PlanZimmer[], verlau
   const wiederholungen = zimmer.flatMap((z) => z.belegung.flatMap((a, i) => z.belegung.slice(i + 1)
     .filter((b) => verlauf.has(`${a.id}|${b.id}`)).map((b) => ({ zimmerId: z.id, a: a.id, b: b.id }))));
 
-  return { zimmer: zimmer.map((z) => ({ id: z.id, label: z.label, capacity: z.capacity, belegung: z.belegung })), ohneZimmer, hinweise, wiederholungen };
+  return { zimmer: zimmer.map((z) => ({ id: z.id, label: z.label, capacity: z.capacity, vorgabe: z.vorgabe, belegung: z.belegung })), ohneZimmer, hinweise, wiederholungen };
 }

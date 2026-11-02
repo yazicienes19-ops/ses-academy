@@ -11,7 +11,7 @@ export async function ladeZimmerplan(modulId: string) {
   const supabase = await createClient();
   const [{ data: modul }, { data: hotels }, { data: zeilen }, { data: verlauf }, { data: korrekturen }] = await Promise.all([
     supabase.from("modules").select("id, title, location").eq("id", modulId).maybeSingle(),
-    supabase.from("hotels").select("id, name, rooms_visible, rooms(id, label, capacity, section)").eq("module_id", modulId).order("created_at"),
+    supabase.from("hotels").select("id, name, address, rooms_visible, rooms(id, label, capacity, section)").eq("module_id", modulId).order("created_at"),
     supabase.rpc("get_room_planning", { p_module_id: modulId }),
     supabase.rpc("get_room_history", { p_module_id: modulId }),
     supabase.from("room_wish_overrides").select("participant_id, token, wished_id").eq("module_id", modulId),
@@ -22,7 +22,8 @@ export async function ladeZimmerplan(modulId: string) {
   const namen = personen.map((p) => ({ id: p.participant_id, name: p.name }));
   const teile = new Map<string, Teil[]>(personen.map((p) => [p.participant_id, wunschAufloesen({ id: p.participant_id, room_wish: p.room_wish }, namen, korrekturen ?? [])]));
   const paare = new Set((verlauf ?? []).flatMap((v) => [`${v.participant_id}|${v.mate_id}`, `${v.mate_id}|${v.participant_id}`]));
-  const planPersonen: PlanPerson[] = personen.map((p) => ({
+  // Warteliste bekommt kein Bett: geplant wird nur, wer bestätigt angemeldet ist
+  const planPersonen: PlanPerson[] = personen.filter((p) => p.registration_status === "confirmed").map((p) => ({
     id: p.participant_id, name: p.name, gender: p.gender, region: p.region, nights: p.nights,
     zimmerId: p.room_id, quelle: p.source,
     wuensche: (teile.get(p.participant_id) ?? []).flatMap((t) => (t.ziel ? [t.ziel.id] : [])),
@@ -35,7 +36,12 @@ export type Zimmerplan = Awaited<ReturnType<typeof ladeZimmerplan>>;
 
 /** Vorschlag aus den geladenen Daten. */
 export function vorschlag(d: Zimmerplan) {
-  return planen(d.planPersonen, d.zimmer.map((z) => ({ id: z.id, label: z.label, capacity: z.capacity })), d.paare);
+  return planen(d.planPersonen, d.zimmer.map((z) => ({ id: z.id, label: z.label, capacity: z.capacity, vorgabe: vorgabeAus(z.section) })), d.paare);
+}
+
+/** „Frauen“/„Männer“ als Bereich eines Zimmers heißt: nur dieses Geschlecht. */
+export function vorgabeAus(bereich: string | null): "w" | "m" | null {
+  return bereich === "Frauen" ? "w" : bereich === "Männer" ? "m" : null;
 }
 
 export const zimmerArt: Record<2 | 3, string> = { 2: "Doppelzimmer", 3: "Dreibettzimmer" };
