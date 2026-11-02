@@ -7,7 +7,7 @@ import { TagWahl } from "@/components/team/TagWahl";
 import { TeamKopf } from "@/components/team/TeamKopf";
 import { punktEnde, punktZustand, telLink, zustaendigWaehrend } from "@/lib/ablauf";
 import {
-  einsaetzeUebernehmen, einsatzAnlegen, einsatzEntfernen, programmpunktAnlegen, programmpunktEntfernen, programmpunktStatus, programmVerschieben,
+  einsaetzeUebernehmen, einsatzAnlegen, einsatzEntfernen, programmpunktAnlegen, programmpunktEntfernen, programmpunktStatus, programmVerschieben, regieplanPdfSetzen,
 } from "@/lib/aktionen/eventtag";
 import { darf, requireStaff } from "@/lib/auth";
 import { uhrzeit } from "@/lib/einlass";
@@ -25,6 +25,8 @@ const hinweise: Record<string, { text: string; gut: boolean }> = {
   "einsatz-angelegt": { text: "Einsatz eingetragen.", gut: true },
   "einsatz-entfernt": { text: "Einsatz entfernt.", gut: true },
   nichts: { text: "Am gewählten Tag gibt es keine Einsätze zum Übernehmen.", gut: false },
+  pdf: { text: "PDF als Regieplan für diesen Tag festgelegt.", gut: true },
+  "pdf-entfernt": { text: "PDF entfernt. Der Regieplan zeigt wieder die Programmliste.", gut: true },
   eingabe: { text: "Bitte die Angaben prüfen (Ende nach Beginn).", gut: false },
   fehler: { text: "Das hat nicht geklappt.", gut: false },
 };
@@ -43,14 +45,23 @@ export default async function Regieplan({ searchParams }: PageProps<"/team/regie
   const darfPflegen = darf.orga(staff.role);
 
   const supabase = await createClient();
-  const [{ data: punkte }, { data: einsaetzeRoh }] = tag
+  const [{ data: punkte }, { data: einsaetzeRoh }, { data: dokumente }] = tag
     ? await Promise.all([
         supabase.from("program_items").select("*").eq("module_day_id", tag.id).order("starts_at"),
         darfPflegen
           ? supabase.from("duty_assignments").select("*").eq("module_day_id", tag.id).order("is_lead", { ascending: false }).order("starts_at", { nullsFirst: true }).order("person_name")
           : Promise.resolve({ data: [] }),
+        // PDFs aus der Ablage zur Auswahl (nur Orga-Team sieht die Ablage); das Modul des Tages zuerst
+        darfPflegen
+          ? supabase.from("documents").select("id, title, status, module_id, document_versions(version, mime_type, uploaded_at)").order("updated_at", { ascending: false })
+          : Promise.resolve({ data: [] }),
       ])
-    : [{ data: [] }, { data: [] }];
+    : [{ data: [] }, { data: [] }, { data: [] }];
+  const pdfs = (dokumente ?? [])
+    .map((d) => ({ ...d, aktuell: [...d.document_versions].sort((a, b) => b.version - a.version)[0] }))
+    .filter((d) => d.aktuell?.mime_type === "application/pdf" && (d.status !== "archiv" || d.id === tag?.regieplan_document_id))
+    .sort((a, b) => Number(b.module_id === tag?.module_id) - Number(a.module_id === tag?.module_id));
+  const pdf = darfPflegen && tag?.regieplan_document_id ? pdfs.find((d) => d.id === tag.regieplan_document_id) ?? null : null;
   const liste = punkte ?? [];
   const einsaetze = einsaetzeRoh ?? [];
   const leitung = einsaetze.filter((e) => e.is_lead);
@@ -87,8 +98,40 @@ export default async function Regieplan({ searchParams }: PageProps<"/team/regie
             <TagWahl tage={tage} aktiv={tag.id} pfad="/team/regieplan/" jetzt={jetzt} />
 
             <div className={`mt-4 grid items-start gap-6 ${darfPflegen ? "lg:grid-cols-[minmax(0,1fr)_22rem]" : ""}`}>
-              {/* Programm */}
+              {/* Programm: als PDF, wenn für den Tag festgelegt; die Liste ist dann aufklappbar */}
               <div className="min-w-0">
+                {pdf && (
+                  <section aria-label="Regieplan als PDF" className="karte overflow-hidden !p-0">
+                    <div className="flex flex-wrap items-center gap-2 px-5 py-4">
+                      <div className="mr-auto min-w-0">
+                        <p className="font-display truncate text-xl font-bold">{pdf.title}</p>
+                        <p className="text-sm text-ink-soft">Stand {new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeZone: "Europe/Berlin" }).format(new Date(pdf.aktuell.uploaded_at))} · Version {pdf.aktuell.version}</p>
+                      </div>
+                      <a href={`/team/regieplan/pdf/${tag.id}/`} target="_blank" rel="noopener" className="knopf-hell">In neuem Tab öffnen</a>
+                      <Link href={`/team/dokumente/${pdf.id}/`} className="knopf-hell">Neue Fassung hochladen</Link>
+                    </div>
+                    <iframe src={`/team/regieplan/pdf/${tag.id}/`} title={pdf.title} className="block h-[80vh] w-full border-t border-line bg-paper-deep" />
+                  </section>
+                )}
+                {darfPflegen && (
+                  <details className={`rounded-3xl bg-paper-deep/60 px-4 py-3 text-sm ${pdf ? "mt-3" : "mb-4"}`}>
+                    <summary className="cursor-pointer font-semibold">{pdf ? "Andere PDF wählen oder entfernen" : "PDF als Regieplan für diesen Tag festlegen"}</summary>
+                    {pdfs.length === 0 ? (
+                      <p className="mt-2 text-ink-soft">Noch keine PDF in der Ablage. Unter <Link href="/team/dokumente/" className="link">Dokumente</Link> hochladen, dann hier auswählen.</p>
+                    ) : (
+                      <form action={regieplanPdfSetzen} className="mt-3 flex flex-wrap items-center gap-2">
+                        <input type="hidden" name="tag" value={tag.id} />
+                        <label className="sr-only" htmlFor="document_id">PDF</label>
+                        <select id="document_id" name="document_id" defaultValue={pdf?.id ?? pdfs[0].id} className="feld !w-auto min-w-64 flex-1">
+                          {pdf && <option value="">keine PDF, wieder die Programmliste zeigen</option>}
+                          {pdfs.map((d) => <option key={d.id} value={d.id}>{d.title}{d.module_id === tag.module_id ? " (dieses Modul)" : ""}</option>)}
+                        </select>
+                        <button className="knopf">Übernehmen</button>
+                      </form>
+                    )}
+                  </details>
+                )}
+                <ProgrammHuelle eingeklappt={Boolean(pdf)} anzahl={liste.length}>
                 {(laufend || naechster) && (
                   <section aria-label="Jetzt und als Nächstes" className="grid gap-3 sm:grid-cols-2">
                     {laufend && (
@@ -196,6 +239,7 @@ export default async function Regieplan({ searchParams }: PageProps<"/team/regie
                     </form>
                   </details>
                 )}
+                </ProgrammHuelle>
               </div>
 
               {/* Team des Tages (früher Rollenplan) */}
@@ -268,5 +312,16 @@ export default async function Regieplan({ searchParams }: PageProps<"/team/regie
         )}
       </main>
     </>
+  );
+}
+
+/** Ist eine PDF festgelegt, steht die Programmliste (mit Zeitplan verschieben, Punkte eintragen) aufklappbar darunter. */
+function ProgrammHuelle({ eingeklappt, anzahl, children }: { eingeklappt: boolean; anzahl: number; children: React.ReactNode }) {
+  if (!eingeklappt) return <>{children}</>;
+  return (
+    <details className="mt-4 rounded-3xl bg-weiss p-4 ring-1 ring-line">
+      <summary className="cursor-pointer font-semibold">Programmliste und Zeitplan ({anzahl} Punkte)</summary>
+      <div className="mt-4">{children}</div>
+    </details>
   );
 }

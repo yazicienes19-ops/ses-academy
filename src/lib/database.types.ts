@@ -581,14 +581,14 @@ isOneToOne: false
                   ]
                 },"module_days": {
                   Row: {
-                    "day": string,"ends_at": string,"id": string,"label": string | null,"module_id": string,"starts_at": string
+                    "day": string,"ends_at": string,"id": string,"label": string | null,"module_id": string,"regieplan_document_id": string | null,"starts_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "day": string,"ends_at": string,"id"?: string,"label"?: string | null,"module_id": string,"starts_at": string
+                    "day": string,"ends_at": string,"id"?: string,"label"?: string | null,"module_id": string,"regieplan_document_id"?: string | null,"starts_at": string
                   }
                   Update: {
-                    "day"?: string,"ends_at"?: string,"id"?: string,"label"?: string | null,"module_id"?: string,"starts_at"?: string
+                    "day"?: string,"ends_at"?: string,"id"?: string,"label"?: string | null,"module_id"?: string,"regieplan_document_id"?: string | null,"starts_at"?: string
                   }
                   Relationships: [
                     {
@@ -596,6 +596,12 @@ isOneToOne: false
       columns: ["module_id"]
 isOneToOne: false
       referencedRelation: "modules"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "module_days_regieplan_document_id_fkey"
+      columns: ["regieplan_document_id"]
+isOneToOne: false
+      referencedRelation: "documents"
       referencedColumns: ["id"]
     }
                   ]
@@ -1318,6 +1324,9 @@ isOneToOne: false
                            },
 "save_my_stay":
 { Args: { "p_arrival_at": string,"p_arrival_by": string,"p_departure_at": string,"p_module_id": string,"p_nights": (string)[],"p_notes": string,"p_room_wish": string }; Returns: string
+                           },
+"set_day_document":
+{ Args: { "p_day_id": string,"p_document_id": string }; Returns: undefined
                            },
 "staff_role_name":
 { Args: { "r": Database["public"]['Enums']["staff_role"] }; Returns: string

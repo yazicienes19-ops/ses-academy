@@ -16,6 +16,18 @@ function zurueck(pfad: string, hinweis: string): never {
   redirect(`${pfad}${pfad.includes("?") ? "&" : "?"}hinweis=${hinweis}`);
 }
 
+/** PDF aus der Dokumentenablage als Regieplan dieses Tages festlegen (leer = wieder die Programmliste zeigen). */
+export async function regieplanPdfSetzen(formData: FormData) {
+  await requireStaff("orga");
+  const tag = String(formData.get("tag") ?? "");
+  const dokument = String(formData.get("document_id") ?? "");
+  const pfad = `/team/regieplan/?tag=${istToken(tag) ? tag : ""}`;
+  if (!istToken(tag) || (dokument && !istToken(dokument))) zurueck(pfad, "eingabe");
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("set_day_document", { p_day_id: tag, p_document_id: dokument || null! });
+  zurueck(pfad, error ? "fehler" : dokument ? "pdf" : "pdf-entfernt");
+}
+
 /** Modultag laden und prüfen, dass er existiert. Liefert das Datum für die Uhrzeit-Felder. */
 async function ladeTag(tagId: string) {
   if (!istToken(tagId)) return null;
