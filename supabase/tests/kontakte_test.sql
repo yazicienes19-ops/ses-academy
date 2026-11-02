@@ -104,4 +104,18 @@ SELECT pg_temp.login('admin@ses.test');
 DELETE FROM public.contact_log WHERE note = 'Mailbox';
 SELECT pg_temp.ok('Admin entfernt alten fremden Eintrag', (SELECT count(*)::text FROM public.contact_log), '0');
 
+-- Notizen im selben Verlauf; Teilnehmendenliste für das Orga-Team ohne E-Mail
+SELECT pg_temp.login('orga@ses.test');
+INSERT INTO public.contact_log (participant_id, channel, outcome, note) SELECT amina, 'notiz', NULL, 'Kommt mit dem Zug' FROM t;
+SELECT pg_temp.ok('Orga schreibt eine Notiz', (SELECT count(*)::text FROM public.contact_log WHERE channel = 'notiz'), '1');
+DO $$ BEGIN
+  INSERT INTO public.contact_log (participant_id, channel, outcome, note) SELECT amina, 'notiz', 'erreicht', 'x' FROM t;
+  RAISE EXCEPTION 'FEHLER Notiz mit Ergebnis';
+EXCEPTION WHEN check_violation THEN RAISE NOTICE 'ok  Notiz hat kein Ergebnis';
+END $$;
+SELECT pg_temp.ok('Orga sieht in der Liste keine E-Mail', (SELECT count(email)::text FROM public.get_people((SELECT demo FROM t))), '0');
+SELECT pg_temp.ok('Liste zeigt die letzte Notiz', (SELECT last_note FROM public.get_people((SELECT demo FROM t)) WHERE participant_id = (SELECT amina FROM t)), 'Kommt mit dem Zug');
+SELECT pg_temp.login('admin@ses.test');
+SELECT pg_temp.ok('Admin sieht E-Mail', (SELECT email FROM public.get_people(NULL, (SELECT amina FROM t))), 'amina@example.test');
+
 ROLLBACK;

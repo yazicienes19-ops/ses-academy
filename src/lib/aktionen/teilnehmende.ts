@@ -48,7 +48,8 @@ export async function personSpeichern(formData: FormData) {
   }
   const { error } = await supabase.from("participants").update(daten.data).eq("id", id);
   // Interne Notiz getrennt speichern (Teilnehmende dürfen ihre participants-Zeile lesen)
-  if (!error) await supabase.from("participant_notes").upsert({ participant_id: id, body: String(formData.get("notes") ?? "") });
+  // Die Einzelnotiz ist jetzt ein Verlauf (contact_log); nur alte Formulare schicken das Feld noch
+  if (!error && formData.has("notes")) await supabase.from("participant_notes").upsert({ participant_id: id, body: String(formData.get("notes") ?? "") });
   if (error) redirect(`${ziel}?fehler=${encodeURIComponent(error.code === "23505" ? "Diese E-Mail-Adresse gehört schon zu einer anderen Person." : error.message)}`);
   revalidatePath("/team/", "layout");
   redirect(`${ziel}?hinweis=gespeichert`);

@@ -3,13 +3,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Mail, Phone, QrCode, Send } from "lucide-react";
 import { Hinweis as Meldung } from "@/components/team/Hinweis";
-import { KontaktFormular, KontaktKnoepfe, KontaktVerlauf, kontaktHinweise, type Kontakt } from "@/components/team/Kontakt";
+import { KontaktFormular, KontaktKnoepfe, KontaktVerlauf, NotizFormular, ZusageKnoepfe, kontaktHinweise, type Kontakt } from "@/components/team/Kontakt";
 import { TeamKopf } from "@/components/team/TeamKopf";
 import { Rueckmeldung, laender } from "@/components/team/Ui";
-import { requireStaff } from "@/lib/auth";
+import { darf, requireStaff, type Staff } from "@/lib/auth";
 import { anwesenheitSetzen, beitragEntfernen, beitragHinzufuegen, personSpeichern, ticketSenden } from "@/lib/aktionen/teilnehmende";
 import { auswerten, zusammenfassen } from "@/lib/bewertung";
-import { kurzcodeAnzeige } from "@/lib/codes";
+import { istToken, kurzcodeAnzeige } from "@/lib/codes";
 import { mailBereit } from "@/lib/mail";
 import { createClient } from "@/lib/supabase/server";
 import { jetztMs } from "@/lib/zeit";
@@ -22,7 +22,7 @@ const datum = (d: string) => new Intl.DateTimeFormat("de-DE", { day: "numeric", 
 const kurzDatum = (d: string) => new Intl.DateTimeFormat("de-DE", { day: "numeric", month: "short", year: "numeric", timeZone: "Europe/Berlin" }).format(new Date(d));
 
 type Reg = {
-  id: string; status: string;
+  id: string; status: string; rsvp: string | null;
   modules: { id: string; title: string; cancelled_at: string | null; module_days: { id: string; starts_at: string; ends_at: string }[] };
   attendances: { id: string; module_day_id: string; method: string }[];
 };
@@ -48,16 +48,18 @@ function Hinweis({ ton, children }: { ton: "gut" | "warnung" | "neutral"; childr
 }
 
 export default async function Person({ params, searchParams }: PageProps<"/team/teilnehmende/[id]">) {
-  const staff = await requireStaff("alles");
+  const staff = await requireStaff("orga");
   const { id } = await params;
   const sp = await searchParams;
+  if (!istToken(id)) notFound();
+  const modulAusLink = typeof sp.modul === "string" && istToken(sp.modul) ? sp.modul : null;
+  if (!darf.alles(staff.role)) return <OrgaKarte staff={staff} id={id} modulId={modulAusLink} hinweis={sp.hinweis} />;
   const supabase = await createClient();
-  const [{ data: p }, { data: notiz }, { data: regionen }, { data: mentoren }, { data: regs }, { data: abg }, { data: beitraege }, { data: kennzahlen }, { data: kontakte }, { data: zimmer }] = await Promise.all([
+  const [{ data: p }, { data: regionen }, { data: mentoren }, { data: regs }, { data: abg }, { data: beitraege }, { data: kennzahlen }, { data: kontakte }, { data: zimmer }] = await Promise.all([
     supabase.from("participants").select("*").eq("id", id).maybeSingle(),
-    supabase.from("participant_notes").select("body").eq("participant_id", id).maybeSingle(),
     supabase.from("regions").select("id,name").order("name"),
     supabase.from("mentors").select("id,name").order("name"),
-    supabase.from("registrations").select("id,status,modules(id,title,cancelled_at,module_days(id,starts_at,ends_at)),attendances(id,module_day_id,method)").eq("participant_id", id),
+    supabase.from("registrations").select("id,status,rsvp,modules(id,title,cancelled_at,module_days(id,starts_at,ends_at)),attendances(id,module_day_id,method)").eq("participant_id", id),
     supabase.from("submission_participants").select("submissions(id,label,assignments(number,title),reviews(*))").eq("participant_id", id),
     supabase.from("contributions").select("*").eq("participant_id", id).order("published_on", { ascending: false }),
     supabase.rpc("get_participant_analytics"),
@@ -85,7 +87,7 @@ export default async function Person({ params, searchParams }: PageProps<"/team/
     <>
       <TeamKopf staff={staff} aktiv="teilnehmende" breit />
       <main className="mx-auto max-w-7xl px-4 py-8">
-        <Link href="/team/teilnehmende/" className="text-sm font-semibold text-ink-soft hover:text-ink">← Alle Teilnehmenden</Link>
+        <Link href={`/team/teilnehmende/${modulAusLink ? `?modul=${modulAusLink}` : ""}`} className="text-sm font-semibold text-ink-soft hover:text-ink">← Alle Teilnehmenden</Link>
 
         {/* Kopf: wer ist das, wie erreiche ich die Person, was ist offen */}
         <header className="karte mt-3 mb-6">
@@ -179,6 +181,12 @@ export default async function Person({ params, searchParams }: PageProps<"/team/
                         <p><span className="font-semibold">{r.modules.title}</span>{r.tage[0] && <span className="text-sm text-ink-soft"> · {datum(r.tage[0].starts_at)}</span>}</p>
                         <span className={`chip ${s.klasse}`}>{s.text}</span>
                       </div>
+                      {r.status === "confirmed" && !r.modules.cancelled_at && r.tage.some((t) => Date.parse(t.ends_at) > jetzt) && (
+                        <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+                          <span className="text-ink-soft">Zusage:</span>
+                          <ZusageKnoepfe participantId={p.id} moduleId={r.modules.id} rsvp={r.rsvp} zurueck={`/team/teilnehmende/${p.id}/`} />
+                        </div>
+                      )}
                       <div className="mt-2.5 flex flex-wrap gap-1.5">
                         {r.tage.map((t) => {
                           const a = r.attendances.find((x) => x.module_day_id === t.id);
@@ -204,17 +212,7 @@ export default async function Person({ params, searchParams }: PageProps<"/team/
               </ul>
             </section>
 
-            <section className="karte" id={`p-${p.id}`}>
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <h2 className="font-display text-2xl font-bold">Kontakte</h2>
-                <KontaktKnoepfe name={name} phone={p.phone} />
-              </div>
-              <KontaktVerlauf eintraege={(kontakte ?? []) as Kontakt[]} zurueck={`/team/teilnehmende/${p.id}/`} mitModul />
-              <details className="mt-3">
-                <summary className="cursor-pointer text-sm font-semibold">+ Kontakt vermerken</summary>
-                <div className="mt-3"><KontaktFormular participantId={p.id} moduleId={null} zurueck={`/team/teilnehmende/${p.id}/`} /></div>
-              </details>
-            </section>
+            <Verlauf id={p.id} name={name} phone={p.phone} modulId={modulAusLink} kontakte={(kontakte ?? []) as Kontakt[]} />
 
             {(zimmer ?? []).length > 0 && (
               <section className="karte">
@@ -337,7 +335,6 @@ export default async function Person({ params, searchParams }: PageProps<"/team/
                   {mentoren?.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
                 </select>
               </div>
-              <div className="sm:col-span-2"><label className="etikett" htmlFor="notes">Notiz <span className="font-normal text-ink-soft">(sieht nur das Team)</span></label><textarea id="notes" name="notes" rows={3} defaultValue={notiz?.body ?? ""} placeholder="z. B. Absprachen, Besonderheiten" className="feld" /></div>
               <div className="flex flex-wrap items-center justify-between gap-3 sm:col-span-2">
                 <label className="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" name="active" defaultChecked={p.active} className="h-4 w-4 accent-ink" /> Nimmt aktiv teil</label>
                 <button className="knopf">Speichern</button>
@@ -345,6 +342,83 @@ export default async function Person({ params, searchParams }: PageProps<"/team/
             </form>
           </section>
         </div>
+      </main>
+    </>
+  );
+}
+
+/** Anrufe und Notizen zur Person, neueste zuerst; darüber Notiz schreiben und Anruf eintragen. */
+function Verlauf({ id, name, phone, modulId, kontakte }: { id: string; name: string; phone: string | null; modulId: string | null; kontakte: Kontakt[] }) {
+  const zurueck = `/team/teilnehmende/${id}/${modulId ? `?modul=${modulId}` : ""}`;
+  return (
+    <section className="karte scroll-mt-4" id={`p-${id}`}>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <h2 className="font-display text-2xl font-bold">Anrufe und Notizen</h2>
+        <KontaktKnoepfe name={name} phone={phone} />
+      </div>
+      <NotizFormular participantId={id} moduleId={modulId} zurueck={zurueck} />
+      <div className="mt-3 rounded-2xl bg-paper p-3">
+        <p className="mb-2 text-xs font-semibold tracking-wide text-ink-soft uppercase">Anruf eintragen</p>
+        <KontaktFormular participantId={id} moduleId={modulId} zurueck={zurueck} />
+      </div>
+      <div className="mt-4"><KontaktVerlauf eintraege={kontakte} zurueck={zurueck} mitModul /></div>
+    </section>
+  );
+}
+
+type OrgaPerson = { name: string; phone: string | null; region: string | null; mentor_name: string | null; branch: string | null; active: boolean; modules: { m: string; s: string; r: string | null; d: number }[] };
+
+/**
+ * Ansicht für das Orga-Team: Telefon, Sorumlu, Zusagen je Modul, Anrufe und Notizen. Ohne E-Mail, Stammdaten,
+ * Hausaufgaben und Beiträge (die sieht nur Admin/Vorstand).
+ */
+async function OrgaKarte({ staff, id, modulId, hinweis }: { staff: Staff; id: string; modulId: string | null; hinweis?: string | string[] }) {
+  const supabase = await createClient();
+  const [{ data: zeilen }, { data: kontakte }, { data: module }] = await Promise.all([
+    supabase.rpc("get_people", { p_participant_id: id }),
+    supabase.rpc("get_contacts", { p_participant_id: id }),
+    supabase.from("modules").select("id, title, cancelled_at, module_days(starts_at, ends_at)").neq("status", "draft"),
+  ]);
+  const p = (zeilen ?? [])[0] as unknown as OrgaPerson | undefined;
+  if (!p) notFound();
+  const jetzt = jetztMs();
+  const kommend = (module ?? [])
+    .map((m) => ({ ...m, beginn: m.module_days.map((t) => t.starts_at).sort()[0] ?? "", ende: m.module_days.map((t) => t.ends_at).sort().at(-1) ?? "", reg: p.modules.find((r) => r.m === m.id) }))
+    .filter((m) => m.reg && m.beginn && !m.cancelled_at)
+    .sort((a, b) => a.beginn.localeCompare(b.beginn));
+  return (
+    <>
+      <TeamKopf staff={staff} aktiv="teilnehmende" breit />
+      <main className="mx-auto max-w-4xl px-4 py-8">
+        <Link href={`/team/teilnehmende/${modulId ? `?modul=${modulId}` : ""}`} className="text-sm font-semibold text-ink-soft hover:text-ink">← Alle Teilnehmenden</Link>
+        <header className="karte mt-3 mb-6">
+          <h1 className="font-display text-3xl font-extrabold">{p.name}</h1>
+          <p className="mt-1 text-ink-soft">
+            {[p.region, p.branch, p.mentor_name && `Sorumlu ${p.mentor_name}`, !p.active && "ausgeschieden"].filter(Boolean).join(" · ") || "Keine Region eingetragen"}
+          </p>
+          {p.phone && <p className="mt-2 inline-flex items-center gap-1.5 font-semibold"><Phone aria-hidden className="h-4 w-4 text-ink-soft" />{p.phone}</p>}
+        </header>
+        <Meldung code={hinweis} texte={kontaktHinweise} />
+        <section className="karte mb-6">
+          <h2 className="font-display mb-3 text-2xl font-bold">Module und Zusagen</h2>
+          <ul className="divide-y divide-line">
+            {kommend.map((m) => {
+              const vorbei = Date.parse(m.ende) < jetzt;
+              return (
+                <li key={m.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
+                  <p><span className="font-semibold">{m.title}</span><span className="text-sm text-ink-soft"> · {datum(m.beginn)}</span></p>
+                  {vorbei
+                    ? <span className="chip bg-paper-deep">{m.reg!.d > 0 ? `da · ${m.reg!.d} ${m.reg!.d === 1 ? "Tag" : "Tage"}` : m.reg!.s === "confirmed" ? "nicht gekommen" : "entschuldigt"}</span>
+                    : m.reg!.s === "confirmed"
+                      ? <ZusageKnoepfe participantId={id} moduleId={m.id} rsvp={m.reg!.r} zurueck={`/team/teilnehmende/${id}/${modulId ? `?modul=${modulId}` : ""}`} />
+                      : <span className="chip bg-paper-deep">{m.reg!.s === "waitlist" ? "Warteliste" : "abgemeldet"}</span>}
+                </li>
+              );
+            })}
+            {kommend.length === 0 && <li className="py-3 text-ink-soft">Für kein Modul angemeldet.</li>}
+          </ul>
+        </section>
+        <Verlauf id={id} name={p.name} phone={p.phone} modulId={modulId} kontakte={(kontakte ?? []) as Kontakt[]} />
       </main>
     </>
   );

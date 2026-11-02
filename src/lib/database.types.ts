@@ -211,14 +211,14 @@ isOneToOne: false
                   ]
                 },"contact_log": {
                   Row: {
-                    "channel": string,"created_at": string,"created_by": string | null,"id": string,"module_id": string | null,"note": string,"outcome": string,"participant_id": string
+                    "channel": string,"created_at": string,"created_by": string | null,"id": string,"module_id": string | null,"note": string,"outcome": string | null,"participant_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "channel"?: string,"created_at"?: string,"created_by"?: string | null,"id"?: string,"module_id"?: string | null,"note"?: string,"outcome": string,"participant_id": string
+                    "channel"?: string,"created_at"?: string,"created_by"?: string | null,"id"?: string,"module_id"?: string | null,"note"?: string,"outcome"?: string | null,"participant_id": string
                   }
                   Update: {
-                    "channel"?: string,"created_at"?: string,"created_by"?: string | null,"id"?: string,"module_id"?: string | null,"note"?: string,"outcome"?: string,"participant_id"?: string
+                    "channel"?: string,"created_at"?: string,"created_by"?: string | null,"id"?: string,"module_id"?: string | null,"note"?: string,"outcome"?: string | null,"participant_id"?: string
                   }
                   Relationships: [
                     {
@@ -1239,6 +1239,11 @@ isOneToOne: false
 "get_participant_homework_analytics":
 { Args: { "p_participant_id": string }; Returns: {
               "engagement_count": number,"grade_avg": number,"homework_rate": number,"hw_excused": number,"hw_expected": number,"hw_late": number,"hw_missing": number,"hw_on_time": number,"hw_open": number
+            }[]
+                           },
+"get_people":
+{ Args: { "p_module_id"?: string,"p_participant_id"?: string }; Returns: {
+              "active": boolean,"affiliation_status": Database["public"]['Enums']["affiliation_status"],"branch": string,"email": string,"gender": string,"last_at": string,"last_by": string,"last_channel": string,"last_note": string,"last_outcome": string,"mentor_name": string,"module_contacts": number,"modules": Json,"name": string,"nights": (string)[],"participant_id": string,"phone": string,"region": string,"registration_status": Database["public"]['Enums']["registration_status"],"rsvp": string,"stay_answered": boolean
             }[]
                            },
 "get_person_rooms":
