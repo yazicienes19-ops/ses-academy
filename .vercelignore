@@ -1,0 +1,9 @@
+.env*
+/.next
+/out
+/node_modules
+/betrieb
+/supabase
+/scripts
+*.tsbuildinfo
+/.git
