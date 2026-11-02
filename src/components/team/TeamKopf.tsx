@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {
   BookOpen, CalendarClock, ChartColumn, Contact, FolderOpen, House, Inbox, KeyRound, Layers, LogOut,
-  MessagesSquare, PhoneCall, ScanLine, Send, ShieldCheck, Upload, UserCog, Users, UserX, type LucideIcon,
+  MessagesSquare, PhoneCall, ScanLine, Send, ShieldCheck, Upload, UserCog, Users, type LucideIcon,
 } from "lucide-react";
 import { HandyMenue } from "@/components/team/HandyMenue";
 import { abmelden } from "@/lib/aktionen/team";
@@ -21,7 +21,6 @@ const gruppen: { titel: string; eintraege: Eintrag[] }[] = [
     eintraege: [
       { id: "einlass", name: "Einlass", href: "/team/einlass/", icon: ScanLine, recht: alle },
       { id: "regieplan", name: "Regieplan", href: "/team/regieplan/", icon: CalendarClock, recht: alle },
-      { id: "gruppen", name: "Fehlt noch", href: "/team/gruppen/", icon: UserX, recht: darf.orga },
     ],
   },
   {
