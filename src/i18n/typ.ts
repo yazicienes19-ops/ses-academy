@@ -39,6 +39,9 @@ export type Texte = {
     intro: string;
     ctaProgramm: string;
     ctaFaq: string;
+    /** Hauptknopf, solange keine Bewerbungsphase läuft (siehe `bewerbungOffen` in daten.ts). */
+    ctaVormerken: string;
+    status: string;
     laufzeitLabel: string;
     laufzeit: string;
     ortLabel: string;
@@ -67,7 +70,7 @@ export type Texte = {
     art: Record<"auftakt" | "seminar" | "workshop" | "winterschool", string>;
   };
   kompetenzen: { kicker: string; titel: string; intro: string; liste: { name: string; kurz: string; text: string }[] };
-  rueckblick: { kicker: string; titel: string; text: string; gaesteTitel: string; alle: string };
+  rueckblick: { kicker: string; titel: string; text: string; gaesteTitel: string; alle: string; /** {n} = Anzahl */ alleZeigen: string };
   ueber: {
     kicker: string;
     titel: string;
@@ -133,6 +136,7 @@ export type Texte = {
     muster: string;
     startseiteTitel: string;
     startseiteText: string;
+    startseiteAlle: string;
   };
   presse: {
     nav: string;

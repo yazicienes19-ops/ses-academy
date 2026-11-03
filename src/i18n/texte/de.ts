@@ -16,6 +16,8 @@ export const de: Texte = {
       "Die SES Academy (Abk. von „Sosyal ve Siyasal Eğitim Semineri“ – Seminar für soziale und politische Bildung) ist ein zweijähriges Bildungsprogramm, das junge Muslime in Europa dabei unterstützt, politische und gesellschaftliche Entwicklungen zu verstehen und sich verantwortungsbewusst sowie gemeinwohlorientiert einzubringen.",
     ctaProgramm: "Zum Programm",
     ctaFaq: "Häufige Fragen",
+    ctaVormerken: "Für nächsten Jahrgang vormerken",
+    status: "Der aktuelle Jahrgang läuft. Die nächste Bewerbungsphase kündigen wir rechtzeitig an.",
     laufzeitLabel: "Programmlaufzeit",
     laufzeit: "April 2026 – Juni 2028 (vorauss.)",
     ortLabel: "Ort",
@@ -67,6 +69,7 @@ export const de: Texte = {
     text: "Zum Auftakt im April 2026 kamen junge Musliminnen und Muslime aus mehreren Ländern Europas nach Köln – mit Keynotes, Panels und vielen Fragen aus dem Saal.",
     gaesteTitel: "Bisher zu Gast",
     alle: "Alle Gäste dieses Moduls",
+    alleZeigen: "Alle {n} Gäste anzeigen",
   },
   ueber: {
     kicker: "Über die Seminarreihe",
@@ -254,7 +257,8 @@ export const de: Texte = {
     "hinweis": "Die Beiträge geben die persönliche Meinung der Autorinnen und Autoren wieder.",
     "muster": "Muster",
     "startseiteTitel": "Stimmen aus der Academy",
-    "startseiteText": "Was Teilnehmende denken, schreiben und produzieren."
+    "startseiteText": "Was Teilnehmende denken, schreiben und produzieren.",
+    "startseiteAlle": "Alle Stimmen"
   },
   presse: {
     "nav": "Presse & Referent:innen",

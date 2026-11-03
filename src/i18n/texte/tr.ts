@@ -16,6 +16,8 @@ export const tr: Texte = {
       "SES Akademisi (Sosyal ve Siyasal Eğitim Seminerleri), Avrupa’daki genç Müslümanların siyasi ve toplumsal gelişmeleri derinlemesine tahlil etmelerine, sorumluluk bilinci ve kamu yararı odaklı bir şekilde katkıda bulunmalarına destek olan iki yıllık bir eğitim programıdır.",
     ctaProgramm: "Programa göz at",
     ctaFaq: "Sıkça sorulanlar",
+    ctaVormerken: "Sonraki dönem için ön kayıt",
+    status: "Mevcut dönem devam ediyor. Bir sonraki başvuru dönemini zamanında duyuracağız.",
     laufzeitLabel: "Program süresi",
     laufzeit: "Nisan 2026 – (tahminî) Haziran 2028",
     ortLabel: "Yer",
@@ -65,6 +67,7 @@ export const tr: Texte = {
     text: "Nisan 2026’daki açılışa Avrupa’nın birçok ülkesinden genç Müslümanlar Köln’e geldi – ana konuşmalar, paneller ve salondan gelen pek çok soruyla.",
     gaesteTitel: "Şimdiye kadarki konuklarımız",
     alle: "Bu modülün tüm konukları",
+    alleZeigen: "{n} konuğun tümünü göster",
   },
   ueber: {
     kicker: "Seminer Serisi Hakkında",
@@ -251,7 +254,8 @@ export const tr: Texte = {
     "hinweis": "Katkılar yazarlarının kişisel görüşlerini yansıtır.",
     "muster": "Örnek",
     "startseiteTitel": "Akademiden sesler",
-    "startseiteText": "Katılımcıların düşündükleri, yazdıkları ve ürettikleri."
+    "startseiteText": "Katılımcıların düşündükleri, yazdıkları ve ürettikleri.",
+    "startseiteAlle": "Tüm sesler"
   },
   presse: {
     "nav": "Basın ve konuşmacılar",

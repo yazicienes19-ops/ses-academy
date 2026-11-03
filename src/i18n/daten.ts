@@ -13,6 +13,9 @@ export type Modul = {
   ort: string | null; // null = Ort noch in Planung
 };
 
+/** Läuft gerade eine Bewerbungsphase? Steuert den Hauptknopf auf der Startseite ("Bewerben" vs. "Für nächsten Jahrgang vormerken"). */
+export const bewerbungOffen = false;
+
 // [WEB] Veranstaltungsplan
 export const modulplan: Modul[] = [
   {
@@ -72,6 +75,20 @@ export const gaeste: Gast[] = [
   { name: "Burhan Kesici", modul: "skills-workshop", format: "eroeffnung", rolle: { de: "Vorsitzender des Islamrats", tr: "İslam Konseyi Başkanı", en: "Chairman of the Islamrat", fr: "Président de l’Islamrat", nl: "Voorzitter van de Islamrat" } },
   { name: "Zehra Karataş", modul: "skills-workshop", format: "eroeffnung", rolle: { de: "Vorsitzende der IGMG-Frauenjugend", tr: "IGMG Kadın Gençlik Teşkilatı Başkanı", en: "Chair of IGMG Women’s Youth", fr: "Présidente de la jeunesse féminine de la CIMG", nl: "Voorzitter IGMG Vrouwenjongeren" } },
 ];
+
+/** Hervorgehobene Gäste auf der Startseite (Name muss exakt in `gaeste` stehen); `pos` = Bildausschnitt (object-position), `zoom` vergrößert um den Punkt `um` (Position im sichtbaren Ausschnitt). */
+export const gaesteHervorgehoben: { name: string; foto: string; pos: string; zoom?: { faktor: number; um: string } }[] = [
+  { name: "Humza Yousaf", foto: "/fotos/yousaf.jpg", pos: "38% 30%" },
+  { name: "Prof. Dr. Mathias Rohe", foto: "/fotos/yousaf-rohe.jpg", pos: "100% 45%", zoom: { faktor: 2, um: "95% 45%" } },
+  { name: "Dr. Mustafa Cerić", foto: "/fotos/juni-ceric.jpg", pos: "58% 25%" },
+  { name: "Farid Hafez, Ph.D.", foto: "/fotos/juni-hafez-keynote.jpg", pos: "40% 40%", zoom: { faktor: 1.3, um: "50% 35%" } },
+];
+
+/** Jede Person nur einmal (z. B. eröffnet Burhan Kesici mehrere Module); es zählt der erste Auftritt. */
+export function eindeutigeGaeste(liste: Gast[]): Gast[] {
+  const gesehen = new Set<string>();
+  return liste.filter((g) => !gesehen.has(g.name) && gesehen.add(g.name));
+}
 
 // Fotos je Modul; Auftakt [PR], Urheber: Islamrat
 export type Foto = { src: string; alt: Record<Sprache, string>; breit?: boolean };

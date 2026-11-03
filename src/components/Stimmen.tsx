@@ -77,28 +77,34 @@ export function StimmenListe({ karten, t }: { karten: Karte[]; t: Texte["stimmen
       <ul className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {sichtbar.map((k) => (
           <li key={k.slug}>
-            <Link href={k.href} className="group flex h-full flex-col rounded-3xl bg-white/60 p-7 ring-1 ring-line transition hover:-translate-y-1 hover:bg-white">
-              <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
-                {k.muster && <span className="rounded-full bg-signal px-2.5 py-1 uppercase">{t.muster}</span>}
-                <span className="rounded-full bg-ink px-2.5 py-1 text-paper">{t.typ[k.typ]}</span>
-                <span className="text-ink-soft">{t.laender[k.land]}</span>
-                <span className="text-ink-soft uppercase">· {k.sprache}</span>
-              </div>
-              <p lang={k.sprache} className="font-display mt-6 text-2xl leading-tight font-bold">{k.titel}</p>
-              <p lang={k.sprache} className="mt-3 text-ink-soft">{k.teaser}</p>
-              <p className="mt-auto pt-6 text-sm">
-                <span className="font-semibold">{k.autor.name}</span>
-                {k.autor.alter ? `, ${k.autor.alter}` : ""}
-                {k.autor.stadt ? ` · ${k.autor.stadt}` : ""}
-              </p>
-              <p className="text-sm text-ink-soft">
-                {[k.extern?.medium ?? k.anlass ?? k.modulTitel?.split(/[–:]/)[0].trim(), k.datumText].filter(Boolean).join(" · ")}
-              </p>
-            </Link>
+            <StimmenKarte k={k} t={t} />
           </li>
         ))}
       </ul>
     </div>
+  );
+}
+
+export function StimmenKarte({ k, t }: { k: Karte; t: Texte["stimmen"] }) {
+  return (
+    <Link href={k.href} className="group flex h-full flex-col rounded-3xl bg-white/60 p-7 ring-1 ring-line transition hover:-translate-y-1 hover:bg-white">
+      <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
+        {k.muster && <span className="rounded-full bg-signal px-2.5 py-1 uppercase">{t.muster}</span>}
+        <span className="rounded-full bg-ink px-2.5 py-1 text-paper">{t.typ[k.typ]}</span>
+        <span className="text-ink-soft">{t.laender[k.land]}</span>
+        <span className="text-ink-soft uppercase">· {k.sprache}</span>
+      </div>
+      <p lang={k.sprache} className="font-display mt-6 text-2xl leading-tight font-bold">{k.titel}</p>
+      <p lang={k.sprache} className="mt-3 text-ink-soft">{k.teaser}</p>
+      <p className="mt-auto pt-6 text-sm">
+        <span className="font-semibold">{k.autor.name}</span>
+        {k.autor.alter ? `, ${k.autor.alter}` : ""}
+        {k.autor.stadt ? ` · ${k.autor.stadt}` : ""}
+      </p>
+      <p className="text-sm text-ink-soft">
+        {[k.extern?.medium ?? k.anlass ?? k.modulTitel?.split(/[–:]/)[0].trim(), k.datumText].filter(Boolean).join(" · ")}
+      </p>
+    </Link>
   );
 }
 

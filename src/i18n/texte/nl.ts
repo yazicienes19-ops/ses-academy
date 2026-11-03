@@ -16,6 +16,8 @@ export const nl: Texte = {
       "De SES Academy (afk. van „Sosyal ve Siyasal Eğitim Semineri“ – seminar voor sociale en politieke educatie) is een tweejarig onderwijsprogramma dat jonge moslims in Europa helpt politieke en maatschappelijke ontwikkelingen te begrijpen en zich op een verantwoordelijke manier in te zetten.",
     ctaProgramm: "Bekijk het programma",
     ctaFaq: "Veelgestelde vragen",
+    ctaVormerken: "Aanmelden voor de volgende lichting",
+    status: "De huidige lichting loopt. We kondigen de volgende aanmeldingsronde tijdig aan.",
     laufzeitLabel: "Programmaduur",
     laufzeit: "april 2026 – juni 2028 (verwacht)",
     ortLabel: "Locatie",
@@ -65,6 +67,7 @@ export const nl: Texte = {
     text: "Voor de aftrap in april 2026 kwamen jonge moslims uit meerdere Europese landen naar Keulen – voor keynotes, panels en veel vragen uit de zaal.",
     gaesteTitel: "Onze gasten tot nu toe",
     alle: "Alle gasten van deze module",
+    alleZeigen: "Alle {n} gasten tonen",
   },
   ueber: {
     kicker: "Over de seminarreeks",
@@ -251,7 +254,8 @@ export const nl: Texte = {
     "hinweis": "De bijdragen geven de persoonlijke mening van de auteurs weer.",
     "muster": "Voorbeeld",
     "startseiteTitel": "Stemmen uit de Academy",
-    "startseiteText": "Wat deelnemers denken, schrijven en maken."
+    "startseiteText": "Wat deelnemers denken, schrijven en maken.",
+    "startseiteAlle": "Alle stemmen"
   },
   presse: {
     "nav": "Pers & sprekers",

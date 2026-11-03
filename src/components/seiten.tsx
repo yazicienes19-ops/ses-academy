@@ -3,11 +3,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { BewerbungsFormular } from "./BewerbungsFormular";
 import { ModulAnmeldung } from "./ModulAnmeldung";
-import { StimmenListe, YoutubeKlick, type Karte } from "./Stimmen";
+import { StimmenKarte, StimmenListe, YoutubeKlick, type Karte } from "./Stimmen";
 import { beitraege } from "@/i18n/stimmen";
 import { Faq } from "./Faq";
 import { Naechstes, NaechstesSticker, ProgrammListe, type Eintrag } from "./Programm";
-import { fotos, gaeste, modulplan } from "@/i18n/daten";
+import { bewerbungOffen, eindeutigeGaeste, fotos, gaeste, gaesteHervorgehoben, modulplan } from "@/i18n/daten";
 import { locale, pfad, sprachen, texte, zeitraum, zeitraumKurz, type ModulSlug, type Sprache, type Texte } from "@/i18n";
 import { Pfeil } from "./Pfeil";
 
@@ -60,7 +60,7 @@ function Kicker({ children, hell = false }: { children: React.ReactNode; hell?: 
 const h2 = "font-display mt-5 text-[clamp(2.4rem,6vw,4.8rem)] leading-[0.95] font-extrabold";
 
 function GaesteListe({ l, t, slug }: { l: Sprache; t: Texte; slug?: ModulSlug }) {
-  const liste = slug ? gaeste.filter((g) => g.modul === slug) : gaeste;
+  const liste = eindeutigeGaeste(slug ? gaeste.filter((g) => g.modul === slug) : gaeste);
   return (
     <ul className="grid gap-x-8 sm:grid-cols-2 lg:grid-cols-3">
       {liste.map((g) => (
@@ -74,6 +74,65 @@ function GaesteListe({ l, t, slug }: { l: Sprache; t: Texte; slug?: ModulSlug })
   );
 }
 
+function GaesteHervorgehoben({ l, t }: { l: Sprache; t: Texte }) {
+  const liste = gaesteHervorgehoben.flatMap((h) => {
+    const g = gaeste.find((x) => x.name === h.name);
+    return g ? [{ ...h, g }] : [];
+  });
+  return (
+    <ul className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {liste.map(({ foto, pos, zoom, g }) => (
+        <li key={g.name} className="overflow-hidden rounded-3xl bg-white/60 ring-1 ring-line">
+          <div className="relative aspect-[4/5] overflow-hidden bg-paper-deep">
+            <Image
+              src={foto}
+              alt={g.name}
+              fill
+              sizes={zoom ? "(min-width:1024px) 50vw, 100vw" : "(min-width:1024px) 25vw, 50vw"}
+              className="object-cover"
+              style={{ objectPosition: pos, transform: zoom ? `scale(${zoom.faktor})` : undefined, transformOrigin: zoom?.um }}
+            />
+          </div>
+          <div className="p-4 sm:p-5">
+            <p className="text-xs font-semibold tracking-[0.15em] text-sage uppercase">{t.formate[g.format]}</p>
+            <p className="font-display mt-1 text-lg leading-tight font-bold sm:text-xl">{g.name}</p>
+            {g.rolle && <p className="mt-1 text-sm text-ink-soft">{g.rolle[l] ?? g.rolle.de}</p>}
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function StimmenTeaser({ l }: { l: Sprache }) {
+  const t = texte[l].stimmen;
+  const karten = stimmenKarten(l).slice(0, 3);
+  if (karten.length === 0) return null;
+  return (
+    <section id="stimmen" className="scroll-mt-20 bg-paper-deep/50">
+      <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-10">
+        <div className="grid gap-6 lg:grid-cols-[1fr_1fr] lg:items-end">
+          <div>
+            <Kicker>{t.kicker}</Kicker>
+            <h2 className={h2}>{t.startseiteTitel}</h2>
+          </div>
+          <p className="text-lg text-ink-soft">{t.startseiteText}</p>
+        </div>
+        <ul className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {karten.map((k) => (
+            <li key={k.slug}>
+              <StimmenKarte k={k} t={t} />
+            </li>
+          ))}
+        </ul>
+        <Link href={pfad(l, "/stimmen/")} className="mt-8 inline-block rounded-full px-6 py-3 font-semibold ring-1 ring-ink/25 transition hover:bg-white">
+          {t.startseiteAlle} <Pfeil className="ml-1.5" />
+        </Link>
+      </div>
+    </section>
+  );
+}
+
 export function Startseite({ l }: { l: Sprache }) {
   const t = texte[l];
   const e = eintraege(l);
@@ -83,8 +142,9 @@ export function Startseite({ l }: { l: Sprache }) {
     <>
       {/* HERO */}
       <section>
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 pt-8 pb-14 sm:px-6 sm:pt-14 lg:grid-cols-[1.15fr_1fr] lg:items-center lg:gap-14 lg:px-10 lg:pb-20">
-          <div>
+        {/* Handy: Titel → Knöpfe → Foto → Einleitung (Knöpfe ohne Scrollen sichtbar). Desktop: Text links, Foto rechts. */}
+        <div className="mx-auto grid max-w-7xl gap-y-8 px-4 pt-8 pb-14 [grid-template-areas:'kopf'_'aktion'_'foto'_'intro'] sm:px-6 sm:pt-14 lg:grid-cols-[1.15fr_1fr] lg:grid-rows-[1fr_auto_auto_auto_1fr] lg:gap-x-14 lg:gap-y-0 lg:px-10 lg:pb-20 lg:[grid-template-areas:'._foto'_'kopf_foto'_'intro_foto'_'aktion_foto'_'._foto']">
+          <div className="[grid-area:kopf]">
             <h1 className="ohne-trennung font-display text-[clamp(3.1rem,6.2vw,5rem)] leading-[0.88] font-extrabold">
               <span className="sr-only">SES Academy – </span>
               {h.zeilen[0]}
@@ -93,19 +153,32 @@ export function Startseite({ l }: { l: Sprache }) {
               <br />
               <span className="marker">{h.zeilen[2]}</span>
             </h1>
-            <p className="font-serif mt-8 text-2xl italic">{h.claim}</p>
-            <p className="mt-4 max-w-xl text-lg text-ink-soft">{h.intro}</p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <p className="font-serif mt-6 text-2xl italic sm:mt-8">{h.claim}</p>
+          </div>
+          <p className="max-w-xl text-lg text-ink-soft [grid-area:intro] lg:mt-4">{h.intro}</p>
+          <div className="[grid-area:aktion] lg:mt-8">
+            <ul className="mb-5 flex flex-wrap gap-2 text-sm font-semibold lg:hidden">
+              {[h.alter, h.kosten].map((x) => (
+                <li key={x} className="rounded-full bg-paper-deep px-3 py-1.5">{x}</li>
+              ))}
+            </ul>
+            <div className="flex flex-wrap gap-3">
               <a href={pfad(l, "/bewerbung/")} className="rounded-full bg-ink px-7 py-4 font-semibold text-paper transition hover:bg-forest">
-                {t.bewerbungSeite.nav} <Pfeil className="ml-1.5" />
+                {bewerbungOffen ? t.bewerbungSeite.nav : h.ctaVormerken} <Pfeil className="ml-1.5" />
               </a>
               <a href="#programm" className="rounded-full px-7 py-4 font-semibold ring-1 ring-ink/25 transition hover:bg-paper-deep">
                 {h.ctaProgramm}
               </a>
             </div>
+            {!bewerbungOffen && (
+              <p className="mt-4 flex max-w-md items-start gap-2 text-sm text-ink-soft">
+                <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-sage" aria-hidden />
+                {h.status}
+              </p>
+            )}
           </div>
 
-          <div className="relative">
+          <div className="relative [grid-area:foto]">
             <div className="relative aspect-[4/5] overflow-hidden rounded-[2rem] bg-paper-deep sm:aspect-[5/4] lg:aspect-[4/5]">
               <Image src="/fotos/hero.jpg" alt={h.fotoAlt} fill priority sizes="(min-width:1024px) 45vw, 100vw" className="object-cover object-[72%_50%]" />
               <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-ink/70 to-transparent" />
@@ -269,11 +342,20 @@ export function Startseite({ l }: { l: Sprache }) {
               })}
           </ul>
           <p className="font-display mt-16 text-2xl font-bold">{t.rueckblick.gaesteTitel}</p>
-          <div className="mt-6">
-            <GaesteListe l={l} t={t} />
-          </div>
+          <GaesteHervorgehoben l={l} t={t} />
+          <details className="group mt-8">
+            <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-full px-6 py-3 font-semibold ring-1 ring-ink/25 transition hover:bg-paper-deep [&::-webkit-details-marker]:hidden">
+              {t.rueckblick.alleZeigen.replace("{n}", String(eindeutigeGaeste(gaeste).length))}
+              <span className="transition group-open:rotate-45" aria-hidden>+</span>
+            </summary>
+            <div className="mt-6">
+              <GaesteListe l={l} t={t} />
+            </div>
+          </details>
         </div>
       </section>
+
+      <StimmenTeaser l={l} />
 
       {/* FAQ */}
       <section id="faq" className="scroll-mt-20 border-t border-line">
