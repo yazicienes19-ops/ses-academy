@@ -3,10 +3,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { BewerbungsFormular } from "./BewerbungsFormular";
 import { ModulAnmeldung } from "./ModulAnmeldung";
-import { StimmenKarte, StimmenListe, YoutubeKlick, type Karte } from "./Stimmen";
+import { StimmenListe, StimmenTeaserListe, YoutubeKlick, type Karte } from "./Stimmen";
 import { beitraege } from "@/i18n/stimmen";
 import { Faq } from "./Faq";
-import { Naechstes, NaechstesBadge, ProgrammListe, type Eintrag } from "./Programm";
+import { NaechstesBadge, ProgrammListe, type Eintrag } from "./Programm";
+import { KompetenzenAkkordeon } from "./Kompetenzen";
 import { bewerbungOffen, eindeutigeGaeste, fotos, gaeste, gaesteHervorgehoben, modulplan } from "@/i18n/daten";
 import { locale, pfad, sprachen, texte, zeitraum, zeitraumKurz, type ModulSlug, type Sprache, type Texte } from "@/i18n";
 import { Pfeil } from "./Pfeil";
@@ -85,22 +86,24 @@ function GaesteHervorgehoben({ l, t }: { l: Sprache; t: Texte }) {
     return g ? [{ ...h, g }] : [];
   });
   return (
-    <ul className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 lg:grid-cols-4 lg:gap-x-6">
+    <ul className="mt-6 grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 lg:grid-cols-4 lg:gap-5">
       {liste.map(({ foto, pos, zoom, g }) => (
         <li key={g.name}>
-          <div className="relative aspect-[4/5] overflow-hidden bg-paper-deep">
+          <figure className="relative aspect-[3/4] overflow-hidden rounded-[6px] bg-forest">
             <Image
               src={foto}
               alt={g.name}
               fill
-              sizes={zoom ? "(min-width:1024px) 50vw, 100vw" : "(min-width:1024px) 25vw, 50vw"}
+              sizes={zoom ? "(min-width:1024px) 50vw, 100vw" : "(min-width:1024px) 25vw, (min-width:480px) 50vw, 100vw"}
               className="object-cover"
               style={{ objectPosition: pos, transform: zoom ? `scale(${zoom.faktor})` : undefined, transformOrigin: zoom?.um }}
             />
-          </div>
-          <p className="mono mt-4 border-t border-ink pt-3 text-[11px] tracking-[0.14em] text-sage uppercase">{t.formate[g.format]}</p>
-          <p className="font-display mt-1 text-lg leading-tight font-bold sm:text-xl">{g.name}</p>
-          {g.rolle && <p className="mt-1 text-sm text-ink-soft">{g.rolle[l] ?? g.rolle.de}</p>}
+            <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/95 via-ink/70 to-transparent px-5 pt-20 pb-5 text-paper">
+              <p className="mono text-[11px] tracking-[0.14em] text-signal uppercase">{t.formate[g.format]}</p>
+              <p className="font-display mt-1.5 text-xl leading-tight font-bold">{g.name}</p>
+              {g.rolle && <p className="mt-1 text-sm leading-snug text-paper/80">{g.rolle[l] ?? g.rolle.de}</p>}
+            </figcaption>
+          </figure>
         </li>
       ))}
     </ul>
@@ -109,26 +112,23 @@ function GaesteHervorgehoben({ l, t }: { l: Sprache; t: Texte }) {
 
 function StimmenTeaser({ l }: { l: Sprache }) {
   const t = texte[l].stimmen;
-  const karten = stimmenKarten(l).slice(0, 3);
+  const karten = stimmenKarten(l);
   if (karten.length === 0) return null;
   return (
     <section id="stimmen" className="scroll-mt-20 border-t border-line bg-paper-deep/50">
       <div className={abschnitt}>
-        <div className="grid gap-6 lg:grid-cols-[1fr_1fr] lg:items-end">
-          <div>
-            <Kicker>{t.kicker}</Kicker>
-            <h2 className={h2}>{t.startseiteTitel}</h2>
-          </div>
-          <p className="text-lg text-ink-soft">{t.startseiteText}</p>
-        </div>
-        <ul className="mt-12 grid gap-x-8 gap-y-10 md:grid-cols-2 lg:grid-cols-3">
-          {karten.map((k) => (
-            <li key={k.slug}>
-              <StimmenKarte k={k} t={t} />
-            </li>
-          ))}
-        </ul>
-        <Link href={pfad(l, "/stimmen/")} className={`mt-10 ${knopfRahmen}`}>
+        <StimmenTeaserListe
+          karten={karten}
+          t={t}
+          kopf={
+            <div>
+              <Kicker>{t.kicker}</Kicker>
+              <h2 className={h2}>{t.startseiteTitel}</h2>
+              <p className="mt-4 max-w-xl text-lg text-ink-soft">{t.startseiteText}</p>
+            </div>
+          }
+        />
+        <Link href={pfad(l, "/stimmen/")} className={`mt-12 ${knopfRahmen}`}>
           {t.startseiteAlle} <Pfeil className="ml-2" />
         </Link>
       </div>
@@ -236,32 +236,19 @@ export function Startseite({ l }: { l: Sprache }) {
         </div>
       </section>
 
-      <Naechstes eintraege={e} t={t} />
-
-      {/* KOMPETENZEN */}
-      <section id="kompetenzen" className="scroll-mt-20">
+      {/* KOMPETENZEN – links feststehend, rechts Akkordeon (passt auf eine Bildschirmhöhe) */}
+      <section id="kompetenzen" className="scroll-mt-20 border-t border-line">
         <div className={abschnitt}>
-          <div className="grid gap-12 lg:grid-cols-[1fr_1.35fr]">
-            <div>
+          <div className="grid gap-10 lg:grid-cols-[1fr_1.35fr] lg:gap-16">
+            <div className="lg:sticky lg:top-24 lg:self-start">
               <Kicker>{t.kompetenzen.kicker}</Kicker>
               <h2 className={h2}>{t.kompetenzen.titel}</h2>
-              <p className="mt-6 max-w-md text-lg text-ink-soft">{t.kompetenzen.intro}</p>
-              <div className="relative mt-10 hidden aspect-[4/3] w-full max-w-xs lg:block">
-                <Image src="/brand/megafon.png" alt="" fill sizes="320px" className="object-contain" />
+              <p className="mt-5 max-w-md text-lg text-ink-soft">{t.kompetenzen.intro}</p>
+              <div className="relative mt-8 hidden aspect-[4/3] w-full max-w-[15rem] lg:block">
+                <Image src="/brand/megafon.png" alt="" fill sizes="240px" className="object-contain" />
               </div>
             </div>
-            <ol className="divide-y divide-line border-y border-ink">
-              {t.kompetenzen.liste.map((k, i) => (
-                <li key={k.name} className="group grid grid-cols-[3rem_1fr] gap-x-4 py-6">
-                  <span className="mono pt-3 text-xs text-ink-soft">{String(i + 1).padStart(2, "0")}</span>
-                  <div>
-                    <p className="font-display text-4xl font-extrabold transition-colors group-hover:text-sage sm:text-5xl">{k.name}</p>
-                    <p className="mt-3 text-lg font-semibold">{k.kurz}</p>
-                    <p className="mt-1 text-ink-soft">{k.text}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
+            <KompetenzenAkkordeon liste={t.kompetenzen.liste} />
           </div>
         </div>
       </section>
@@ -297,13 +284,13 @@ export function Startseite({ l }: { l: Sprache }) {
               <p className="akzent mt-6 text-2xl">{t.ueber.fuerWenZusatz}</p>
             </div>
           </div>
-          <p className="mono mt-16 text-xs tracking-[0.14em] text-signal uppercase">{t.ueber.ablaufTitel}</p>
-          <ol className="mt-5 grid border-t border-paper/25 sm:grid-cols-2 lg:grid-cols-4">
+          <p className="mono mt-14 text-xs tracking-[0.14em] text-signal uppercase">{t.ueber.ablaufTitel}</p>
+          <ol className="mt-5 grid grid-cols-2 border-t border-white/15 lg:grid-cols-4 lg:pt-6">
             {t.ueber.ablauf.map((a, i) => (
-              <li key={a.titel} className="border-b border-paper/15 py-6 sm:pr-8 lg:border-b-0 lg:border-l lg:px-6 lg:first:border-l-0 lg:first:pl-0">
+              <li key={a.titel} className="border-b border-white/15 py-5 pr-4 even:border-l even:pl-4 lg:border-b-0 lg:border-l lg:px-6 lg:py-1 lg:first:border-l-0 lg:first:pl-0">
                 <p className="mono text-xs text-signal">{String(i + 1).padStart(2, "0")}</p>
-                <p className="font-display mt-4 text-2xl font-bold">{a.titel}</p>
-                <p className="mt-2 text-paper/75">{a.text}</p>
+                <p className="font-display mt-3 text-xl font-bold text-white">{a.titel}</p>
+                <p className="mt-1.5 text-sm leading-relaxed text-paper/70">{a.text}</p>
               </li>
             ))}
           </ol>
@@ -320,14 +307,7 @@ export function Startseite({ l }: { l: Sprache }) {
             </div>
             <p className="text-lg text-ink-soft">{t.rueckblick.text}</p>
           </div>
-          <div className="mt-12 grid grid-cols-2 gap-2 md:grid-cols-4">
-            {auftakt.slice(0, 6).map((f) => (
-              <figure key={f.src} className={`relative overflow-hidden bg-paper-deep ${f.breit ? "col-span-2 aspect-[16/10]" : "aspect-square md:aspect-auto"}`}>
-                <Image src={f.src} alt={f.alt[l]} fill sizes="(min-width:768px) 50vw, 100vw" className="object-cover transition duration-700 hover:scale-105" />
-              </figure>
-            ))}
-          </div>
-          <ul className="mt-10 grid gap-x-8 gap-y-10 md:grid-cols-3">
+          <ul className="mt-12 grid gap-x-8 gap-y-10 md:grid-cols-3">
             {e
               .filter((m) => m.bis < heute())
               .map((m) => {
@@ -335,14 +315,14 @@ export function Startseite({ l }: { l: Sprache }) {
                 return (
                   <li key={m.slug}>
                     <Link href={m.href} className="group flex h-full flex-col">
-                      <div className="relative aspect-[16/9] overflow-hidden bg-forest">
+                      <div className="relative aspect-[4/3] overflow-hidden rounded-[6px] bg-forest">
                         {cover ? (
                           <Image src={cover.src} alt="" fill sizes="(min-width:768px) 33vw, 100vw" className="object-cover transition duration-700 group-hover:scale-105" />
                         ) : (
                           <div className="muster absolute inset-0 opacity-25" aria-hidden />
                         )}
                       </div>
-                      <p className="mono mt-4 flex justify-between gap-4 border-t border-ink pt-3 text-[11px] tracking-[0.12em] text-ink-soft uppercase">
+                      <p className="mono mt-4 flex justify-between gap-4 text-[11px] tracking-[0.12em] text-ink-soft uppercase">
                         <span>{m.artText}</span>
                         <span>{m.datum}</span>
                       </p>
@@ -373,12 +353,16 @@ export function Startseite({ l }: { l: Sprache }) {
 
       {/* FAQ */}
       <section id="faq" className="scroll-mt-20 border-t border-line">
-        <div className={`${abschnitt} grid gap-12 lg:grid-cols-[1fr_2fr]`}>
-          <div>
-            <Kicker>{t.faq.kicker}</Kicker>
-            <h2 className={h2}>{t.faq.titel}</h2>
+        <div className={abschnitt}>
+          <div className="grid gap-6 lg:grid-cols-[1fr_1fr] lg:items-end">
+            <div>
+              <Kicker>{t.faq.kicker}</Kicker>
+              <h2 className={h2}>{t.faq.titel}</h2>
+            </div>
           </div>
-          <Faq t={t.faq} />
+          <div className="mt-10">
+            <Faq t={t.faq} />
+          </div>
         </div>
       </section>
 
@@ -387,30 +371,26 @@ export function Startseite({ l }: { l: Sprache }) {
   );
 }
 
+/** Pre-Footer-Aufruf: Bewerben + Kontakt. Solange keine Bewerbungsphase läuft, sagt der Knopf ehrlich „für nächsten Jahrgang“. */
 function Kontakt({ l, t }: { l: Sprache; t: Texte }) {
+  const a = t.kontakt.aufruf;
   return (
-    <section id="kontakt" className="scroll-mt-20 bg-ink text-paper">
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1.3fr_1fr] lg:items-center lg:px-10">
+    <section id="kontakt" className="scroll-mt-20 border-b border-white/10 bg-forest text-paper">
+      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-18 sm:px-6 lg:grid-cols-[1.4fr_1fr] lg:items-end lg:gap-16 lg:px-10">
         <div>
-          <p className="font-display text-[clamp(2.2rem,5vw,3.8rem)] leading-[0.95] font-extrabold">{t.kontakt.titel}</p>
-          <p className="mt-4 text-lg text-paper/75">{t.kontakt.text}</p>
-          <p className="mt-6 max-w-xl border-t border-paper/20 pt-4 text-paper/60">
-            <strong className="text-paper">{t.bewerbung.titel}</strong> {t.bewerbungSeite.status}
-          </p>
-          <a href={pfad(l, "/bewerbung/")} className="mt-6 inline-flex items-center border border-paper/40 px-5 py-3 font-semibold transition hover:bg-paper hover:text-ink">
-            {bewerbungOffen ? t.bewerbungSeite.nav : t.hero.ctaVormerken} <Pfeil className="ml-2" />
-          </a>
+          <p className="mono text-[11px] tracking-[0.14em] text-signal uppercase">[ SES Academy · Köln ]</p>
+          <h2 className="font-display mt-5 text-[clamp(2.2rem,4.8vw,3.9rem)] leading-[0.98] font-extrabold">{a.titel}</h2>
+          <p className="mt-5 max-w-xl text-lg text-paper/75">{a.text}</p>
         </div>
-        <a
-          href="mailto:ses@islamrat.de?subject=SES%20Academy"
-          className="font-display group flex items-center justify-between gap-4 bg-signal p-6 text-2xl font-bold text-ink transition hover:bg-paper sm:p-8 sm:text-3xl"
-        >
-          <span>
-            {t.kontakt.cta}
-            <span className="mono mt-2 block text-sm font-normal tracking-normal">ses@islamrat.de</span>
-          </span>
-          <Pfeil className="text-3xl" />
-        </a>
+        <div className="flex flex-col gap-3 lg:items-stretch">
+          <a href={pfad(l, "/bewerbung/")} className="inline-flex items-center justify-between gap-4 bg-signal px-6 py-4 font-semibold text-ink transition hover:bg-paper">
+            {bewerbungOffen ? a.bewerben : t.hero.ctaVormerken} <Pfeil />
+          </a>
+          <a href="mailto:ses@islamrat.de?subject=SES%20Academy" className="inline-flex items-center justify-between gap-4 border border-paper/40 px-6 py-4 font-semibold transition hover:border-paper hover:bg-paper hover:text-ink">
+            {a.kontakt} <span className="mono text-xs font-normal opacity-70">ses@islamrat.de</span>
+          </a>
+          {!bewerbungOffen && <p className="mono mt-1 text-[11px] leading-relaxed text-paper/55">{t.bewerbung.titel} {t.bewerbung.text}</p>}
+        </div>
       </div>
     </section>
   );
@@ -593,6 +573,12 @@ export function Bewerbungsseite({ l }: { l: Sprache }) {
   );
 }
 
+/** ~200 Wörter pro Minute; unter 150 Wörtern keine Angabe (sonst wirkt „1 Min.“ bei Kurzauszügen irreführend). */
+function lesezeitAusText(absaetze: string[]): number | undefined {
+  const woerter = absaetze.join(" ").split(/\s+/).filter(Boolean).length;
+  return woerter < 150 ? undefined : Math.max(1, Math.round(woerter / 200));
+}
+
 export function stimmenKarten(l: Sprache): Karte[] {
   const t = texte[l];
   const df = new Intl.DateTimeFormat(locale[l], { day: "numeric", month: "long", year: "numeric" });
@@ -601,6 +587,7 @@ export function stimmenKarten(l: Sprache): Karte[] {
     href: pfad(l, `/stimmen/${b.slug}/`),
     modulTitel: b.modul ? t.seminare[b.modul].titel : undefined,
     datumText: df.format(new Date(`${b.datum}T12:00:00Z`)),
+    lesezeitMin: b.lesezeit ?? (b.extern ? undefined : lesezeitAusText(b.text)),
   }));
 }
 

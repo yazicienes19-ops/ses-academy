@@ -24,6 +24,8 @@ export type Beitrag = {
   anlass?: string;
   /** Nur bei Artikeln: Link zum Originalbeitrag im Medium (Zeitung, Magazin, Blog). */
   extern?: { url: string; medium: string };
+  /** Lesezeit in Minuten. Bei eigenen Texten wird sie automatisch berechnet; bei externen Artikeln nur angeben, wenn der Originaltext gezählt wurde (~200 Wörter/Min.). */
+  lesezeit?: number;
   /** Fiktiver Beispielbeitrag – erscheint nur, wenn beim Build SES_MUSTER=1 gesetzt ist. */
   muster?: boolean;
 };
@@ -85,6 +87,7 @@ const alle: Beitrag[] = [
     text: [
       "Perspektif’te yayımlanan yazı, 17 Ekim eylemlerini Fransa’nın protesto geleneği, sosyal medyada yayılan görüntüler ve polis müdahalesine ilişkin tartışmalar ışığında değerlendiriyor.",
     ],
+    lesezeit: 13, // ~2.600 Wörter im Original (gezählt 03.11.2026)
     extern: { url: "https://perspektif.eu/2026/10/20/fransada-sokaklarin-ofkesi-devletin-sinavi-17-ekim-eylemlerini-nasil-okumali", medium: "Perspektif" },
     autor: { name: "Büşra D.", stadt: "Lyon" },
   },
@@ -99,6 +102,7 @@ const alle: Beitrag[] = [
     text: [
       "Perspektif’te yayımlanan portre, Miliband’ın İşçi Partisi’ndeki yükselişini, iklim politikasındaki rolünü ve İsrail-Filistin konusundaki tutumunun aile geçmişi ve kimliğiyle bağlantısını ele alıyor.",
     ],
+    lesezeit: 9, // ~1.800 Wörter im Original (gezählt 03.11.2026)
     extern: { url: "https://perspektif.eu/2026/09/24/ingilterenin-israil-politikasini-sertlestiren-yahudi-disisleri-bakani-ed-miliband-kimdir", medium: "Perspektif" },
     autor: { name: "Büşra D.", stadt: "Lyon" },
   },

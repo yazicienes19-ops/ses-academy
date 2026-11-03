@@ -55,6 +55,7 @@ export const fr: Texte = {
     weitereTitel: "D’autres modules sont en planification",
     weitereText: "Séminaires, ateliers et séjours d’hiver et d’été jusqu’en juin 2028 (prévisionnel) – à Cologne et dans d’autres villes d’Europe.",
     details: "Détails",
+    spotlightCta: "Détails et programme du séminaire",
     art: { auftakt: "Lancement", seminar: "Séminaire", workshop: "Atelier de compétences", winterschool: "Winter School" },
   },
   kompetenzen: {
@@ -127,7 +128,7 @@ export const fr: Texte = {
       { frage: "Qui porte le projet ?", antwort: ["Le projet est porté par le Conseil islamique de la République fédérale d’Allemagne (Islamrat für die BRD) et réalisé en coopération avec les associations de jeunesse de la CIMG (IGMG)."] },
     ],
   },
-  kontakt: { titel: "Tu as d’autres questions ?", text: "Nous t’aidons volontiers.", cta: "Écris-nous" },
+  kontakt: { titel: "Tu as d’autres questions ?", text: "Nous t’aidons volontiers.", cta: "Écris-nous", aufruf: { titel: "Prêt·e à faire entendre ta voix en Europe ?", text: "Postule pour la prochaine promotion de la SES Academy ou contacte notre équipe à Cologne.", bewerben: "Postuler en ligne", kontakt: "Nous contacter" } },
   footer: {
     claim: "Formation politique des jeunes musulmans en Europe.",
     traeger: "Un projet de l’Islamrat für die BRD en coopération avec les associations de jeunesse et de jeunesse féminine de la CIMG (IGMG).",
@@ -241,6 +242,7 @@ export const fr: Texte = {
     "filterModul": "Module",
     "filterLand": "Pays",
     "filterTyp": "Format",
+    "filterSprache": "Langue",
     "alle": "Tous",
     "typ": {
       "kommentar": "Tribune",
@@ -270,7 +272,9 @@ export const fr: Texte = {
     "muster": "Exemple",
     "startseiteTitel": "Des voix de l’Academy",
     "startseiteText": "Ce que les participant·e·s pensent, écrivent et créent.",
-    "startseiteAlle": "Toutes les voix"
+    "startseiteAlle": "Toutes les voix",
+    "lesezeit": "{n} min de lecture",
+    "artikelLesen": "Lire l’article"
   },
   presse: {
     "nav": "Presse & intervenant·e·s",

@@ -55,6 +55,7 @@ export const en: Texte = {
     weitereTitel: "Further modules are in planning",
     weitereText: "Seminars, workshops and winter and summer camps until June 2028 (est.) – in Cologne and other cities across Europe.",
     details: "Details",
+    spotlightCta: "Seminar details & programme",
     art: { auftakt: "Launch", seminar: "Seminar", workshop: "Skills Workshop", winterschool: "Winter School" },
   },
   kompetenzen: {
@@ -127,7 +128,7 @@ export const en: Texte = {
       { frage: "Who are the sponsors of the project?", antwort: ["The project is carried out by the Islam Council for the Federal Republic of Germany (Islamrat für die BRD) and in cooperation with the IGMG youth and women’s youth organizations."] },
     ],
   },
-  kontakt: { titel: "Do you have any other questions?", text: "We’re happy to help.", cta: "Write to us" },
+  kontakt: { titel: "Do you have any other questions?", text: "We’re happy to help.", cta: "Write to us", aufruf: { titel: "Ready to make your voice heard in Europe?", text: "Apply for the next SES Academy cohort or get in touch with our team in Cologne.", bewerben: "Apply online now", kontakt: "Get in touch" } },
   footer: {
     claim: "Political Education for Young Muslims in Europe.",
     traeger: "A project of the Islamrat für die BRD in cooperation with the IGMG youth and women’s youth organisations.",
@@ -234,6 +235,7 @@ export const en: Texte = {
     "filterModul": "Module",
     "filterLand": "Country",
     "filterTyp": "Format",
+    "filterSprache": "Language",
     "alle": "All",
     "typ": {
       "kommentar": "Commentary",
@@ -263,7 +265,9 @@ export const en: Texte = {
     "muster": "Sample",
     "startseiteTitel": "Voices from the Academy",
     "startseiteText": "What participants think, write and create.",
-    "startseiteAlle": "All voices"
+    "startseiteAlle": "All voices",
+    "lesezeit": "{n} min read",
+    "artikelLesen": "Read article"
   },
   presse: {
     "nav": "Press & speakers",

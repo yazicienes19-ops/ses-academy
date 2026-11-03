@@ -56,6 +56,7 @@ export const de: Texte = {
     weitereTitel: "Weitere Module in Planung",
     weitereText: "Seminare, Workshops sowie Winter- und Sommercamps bis voraussichtlich Juni 2028 – in Köln und weiteren Städten Europas.",
     details: "Details",
+    spotlightCta: "Seminar-Details & Programm",
     art: { auftakt: "Auftakt", seminar: "Seminar", workshop: "Skills Workshop", winterschool: "Winter School" },
   },
   kompetenzen: {
@@ -130,7 +131,7 @@ export const de: Texte = {
       { frage: "Wer sind die Träger des Projekts?", antwort: ["Das Projekt wird vom Islamrat für die Bundesrepublik Deutschland getragen. Die IGMG Jugend- und Frauenjugendorganisationen sind Kooperationspartner des Islamrats."] },
     ],
   },
-  kontakt: { titel: "Hast du weitere Fragen?", text: "Wir helfen dir gerne weiter.", cta: "Schreib uns" },
+  kontakt: { titel: "Hast du weitere Fragen?", text: "Wir helfen dir gerne weiter.", cta: "Schreib uns", aufruf: { titel: "Bereit, deine Stimme in Europa einzubringen?", text: "Bewirb dich für die nächste Kohorte der SES Academy oder nimm Kontakt mit unserem Team in Köln auf.", bewerben: "Jetzt online bewerben", kontakt: "Kontakt aufnehmen" } },
   footer: {
     claim: "Politische Bildung für junge Muslime in Europa.",
     traeger: "Ein Projekt des Islamrats für die BRD in Kooperation mit den Jugend- und Frauenjugendorganisationen der IGMG.",
@@ -237,6 +238,7 @@ export const de: Texte = {
     "filterModul": "Modul",
     "filterLand": "Land",
     "filterTyp": "Format",
+    "filterSprache": "Sprache",
     "alle": "Alle",
     "typ": {
       "kommentar": "Kommentar",
@@ -266,7 +268,9 @@ export const de: Texte = {
     "muster": "Muster",
     "startseiteTitel": "Stimmen aus der Academy",
     "startseiteText": "Was Teilnehmende denken, schreiben und produzieren.",
-    "startseiteAlle": "Alle Stimmen"
+    "startseiteAlle": "Alle Stimmen",
+    "lesezeit": "{n} Min. Lesezeit",
+    "artikelLesen": "Artikel lesen"
   },
   presse: {
     "nav": "Presse & Referent:innen",
