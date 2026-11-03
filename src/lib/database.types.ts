@@ -23,7 +23,64 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "applications": {
+            "accommodation_releases": {
+                  Row: {
+                    "module_id": string,"published": boolean,"published_at": string | null
+                  }
+                  Insert: {
+                    "module_id": string,"published"?: boolean,"published_at"?: string | null
+                  }
+                  Update: {
+                    "module_id"?: string,"published"?: boolean,"published_at"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "accommodation_releases_module_id_fkey"
+      columns: ["module_id"]
+isOneToOne: true
+      referencedRelation: "modules"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"agenda_item_internal": {
+                  Row: {
+                    "item_id": string,"note": string,"responsible": string,"updated_at": string
+                  }
+                  Insert: {
+                    "item_id": string,"note"?: string,"responsible"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "item_id"?: string,"note"?: string,"responsible"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "agenda_item_internal_item_id_fkey"
+      columns: ["item_id"]
+isOneToOne: true
+      referencedRelation: "agenda_items"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"agenda_items": {
+                  Row: {
+                    "created_at": string,"description": string,"ends_at": string | null,"id": string,"location": string | null,"module_day_id": string,"published": boolean,"starts_at": string,"title": string,"updated_at": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"description"?: string,"ends_at"?: string | null,"id"?: string,"location"?: string | null,"module_day_id": string,"published"?: boolean,"starts_at": string,"title": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"description"?: string,"ends_at"?: string | null,"id"?: string,"location"?: string | null,"module_day_id"?: string,"published"?: boolean,"starts_at"?: string,"title"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "agenda_items_module_day_id_fkey"
+      columns: ["module_day_id"]
+isOneToOne: false
+      referencedRelation: "module_days"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"applications": {
                   Row: {
                     "birth_year": number | null,"city": string | null,"cohort_id": string,"consent_at": string,"country": string | null,"created_at": string,"email": string,"first_name": string,"id": string,"language": string,"languages": (string)[],"last_name": string,"motivation": string,"participant_id": string | null,"phone": string | null,"review_note": string,"reviewed_at": string | null,"reviewed_by": string | null,"source": string | null,"status": Database["public"]['Enums']["application_status"]
                   }
@@ -75,13 +132,13 @@ isOneToOne: false
                   ]
                 },"assignments": {
                   Row: {
-                    "cohort_id": string,"created_at": string,"description": string,"due_at": string | null,"due_date": string | null,"id": string,"module_id": string | null,"number": number,"title": string
+                    "allowed_formats": (string)[],"cohort_id": string,"created_at": string,"description": string,"due_at": string | null,"due_date": string | null,"id": string,"module_id": string | null,"number": number,"title": string
                   }
                   Insert: {
-                    "cohort_id": string,"created_at"?: string,"description"?: string,"due_at"?: string | null,"due_date"?: string | null,"id"?: string,"module_id"?: string | null,"number": number,"title": string
+                    "allowed_formats"?: (string)[],"cohort_id": string,"created_at"?: string,"description"?: string,"due_at"?: string | null,"due_date"?: string | null,"id"?: string,"module_id"?: string | null,"number": number,"title": string
                   }
                   Update: {
-                    "cohort_id"?: string,"created_at"?: string,"description"?: string,"due_at"?: string | null,"due_date"?: string | null,"id"?: string,"module_id"?: string | null,"number"?: number,"title"?: string
+                    "allowed_formats"?: (string)[],"cohort_id"?: string,"created_at"?: string,"description"?: string,"due_at"?: string | null,"due_date"?: string | null,"id"?: string,"module_id"?: string | null,"number"?: number,"title"?: string
                   }
                   Relationships: [
                     {
@@ -376,6 +433,31 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"resources": {
+                  Row: {
+                    "cohort_id": string,"created_at": string,"created_by": string | null,"description": string,"file_name": string,"id": string,"module_id": string | null,"published": boolean,"size_bytes": number | null,"storage_path": string,"title": string
+                  }
+                  Insert: {
+                    "cohort_id": string,"created_at"?: string,"created_by"?: string | null,"description"?: string,"file_name": string,"id"?: string,"module_id"?: string | null,"published"?: boolean,"size_bytes"?: number | null,"storage_path": string,"title": string
+                  }
+                  Update: {
+                    "cohort_id"?: string,"created_at"?: string,"created_by"?: string | null,"description"?: string,"file_name"?: string,"id"?: string,"module_id"?: string | null,"published"?: boolean,"size_bytes"?: number | null,"storage_path"?: string,"title"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "resources_cohort_id_fkey"
+      columns: ["cohort_id"]
+isOneToOne: false
+      referencedRelation: "cohorts"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "resources_module_id_fkey"
+      columns: ["module_id"]
+isOneToOne: false
+      referencedRelation: "modules"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"reviews": {
                   Row: {
                     "body_language": number | null,"content": number | null,"created_at": string,"facial_expression": number | null,"id": string,"impact": number | null,"improvements": string | null,"language": number | null,"overall": number | null,"presence": number | null,"reviewed_on": string | null,"reviewer_id": string | null,"reviewer_name": string | null,"strengths": string | null,"structure": number | null,"submission_id": string,"tip": string | null,"updated_at": string,"voice": number | null
@@ -392,6 +474,31 @@ isOneToOne: false
       columns: ["submission_id"]
 isOneToOne: false
       referencedRelation: "submissions"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"room_assignments": {
+                  Row: {
+                    "check_in_info": string | null,"created_at": string,"hotel_name": string,"id": string,"module_id": string,"participant_id": string,"room_number": string,"room_pin_code": string | null,"updated_at": string
+                  }
+                  Insert: {
+                    "check_in_info"?: string | null,"created_at"?: string,"hotel_name": string,"id"?: string,"module_id": string,"participant_id": string,"room_number": string,"room_pin_code"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "check_in_info"?: string | null,"created_at"?: string,"hotel_name"?: string,"id"?: string,"module_id"?: string,"participant_id"?: string,"room_number"?: string,"room_pin_code"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "room_assignments_module_id_fkey"
+      columns: ["module_id"]
+isOneToOne: false
+      referencedRelation: "modules"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "room_assignments_participant_id_fkey"
+      columns: ["participant_id"]
+isOneToOne: false
+      referencedRelation: "participants"
       referencedColumns: ["id"]
     }
                   ]
@@ -435,13 +542,13 @@ isOneToOne: false
                   ]
                 },"submissions": {
                   Row: {
-                    "assignment_id": string,"created_at": string,"file_name": string | null,"id": string,"label": string,"link": string | null,"note": string | null,"source": string,"submitted_on": string | null
+                    "assignment_id": string,"content": string | null,"created_at": string,"file_name": string | null,"id": string,"label": string,"link": string | null,"note": string | null,"source": string,"submitted_at": string | null,"submitted_by": string | null,"submitted_on": string | null,"upload_name": string | null,"upload_path": string | null
                   }
                   Insert: {
-                    "assignment_id": string,"created_at"?: string,"file_name"?: string | null,"id"?: string,"label": string,"link"?: string | null,"note"?: string | null,"source"?: string,"submitted_on"?: string | null
+                    "assignment_id": string,"content"?: string | null,"created_at"?: string,"file_name"?: string | null,"id"?: string,"label": string,"link"?: string | null,"note"?: string | null,"source"?: string,"submitted_at"?: string | null,"submitted_by"?: string | null,"submitted_on"?: string | null,"upload_name"?: string | null,"upload_path"?: string | null
                   }
                   Update: {
-                    "assignment_id"?: string,"created_at"?: string,"file_name"?: string | null,"id"?: string,"label"?: string,"link"?: string | null,"note"?: string | null,"source"?: string,"submitted_on"?: string | null
+                    "assignment_id"?: string,"content"?: string | null,"created_at"?: string,"file_name"?: string | null,"id"?: string,"label"?: string,"link"?: string | null,"note"?: string | null,"source"?: string,"submitted_at"?: string | null,"submitted_by"?: string | null,"submitted_on"?: string | null,"upload_name"?: string | null,"upload_path"?: string | null
                   }
                   Relationships: [
                     {
@@ -449,6 +556,12 @@ isOneToOne: false
       columns: ["assignment_id"]
 isOneToOne: false
       referencedRelation: "assignments"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "submissions_submitted_by_fkey"
+      columns: ["submitted_by"]
+isOneToOne: false
+      referencedRelation: "participants"
       referencedColumns: ["id"]
     }
                   ]
@@ -460,6 +573,12 @@ isOneToOne: false
           Functions: {
             "accept_application":
 { Args: { "p_application_id": string,"p_note"?: string }; Returns: Json
+                           },
+"accommodation_published":
+{ Args: { "p_module_id": string }; Returns: boolean
+                           },
+"am_registered_for_module":
+{ Args: { "p_module_id": string }; Returns: boolean
                            },
 "check_in_by_code":
 { Args: { "p_allow_off_window"?: boolean,"p_code": string,"p_method"?: Database["public"]['Enums']["checkin_method"],"p_module_day_id": string,"p_scanned_at"?: string }; Returns: Json
@@ -529,8 +648,16 @@ isOneToOne: false
 "link_my_account":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
+"my_cohort_id":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
 "my_participant_id":
 { Args: Record<PropertyKey, never>; Returns: string
+                           },
+"my_rooms":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "check_in_info": string,"hotel_name": string,"module_id": string,"module_title": string,"room_number": string,"room_pin_code": string,"roommates": (string)[]
+            }[]
                            },
 "normalize_checkin_code":
 { Args: { "value": string }; Returns: string
@@ -543,6 +670,9 @@ isOneToOne: false
                            },
 "register_public":
 { Args: { "p_email": string,"p_first_name": string,"p_language"?: string,"p_last_name": string,"p_module_slug": string,"p_phone"?: string }; Returns: Json
+                           },
+"submit_assignment":
+{ Args: { "p_assignment_id": string,"p_link"?: string,"p_text"?: string,"p_upload_name"?: string,"p_upload_path"?: string }; Returns: string
                            },
 "undo_check_in":
 { Args: { "p_attendance_id": string }; Returns: Json

@@ -13,14 +13,18 @@ Fünfsprachige Website der SES Academy, dazu Bewerbung, Teilnahme und Einlass (C
 | `/team/einlass/` | alle Team-Rollen | Scanner und Kurzcode. Ab Orga-Team auch die Anwesenheitsliste (abhaken, zurücknehmen). |
 | `/team/bewerbungen/` | Admin, Vorstand | Bewerbungen annehmen (meldet für alle Module an und schickt das Ticket), ablehnen, Warteliste, Ticket erneut senden. |
 | `/team/teilnehmende/` | Admin, Vorstand | Teilnehmende mit Region, GT/KGT, Verantwortlichen; Anwesenheit je Modul und Tag (nachtragen/zurücknehmen), QR-Code per Mail, Stimmen-Beiträge verknüpfen. Ansicht „Verantwortliche“ (Sorumlu) mit E-Mail. |
-| `/team/hausaufgaben/` | ab Orga-Team | Hausaufgaben, wer abgegeben hat und wer nicht, Bewertung nach dem Rhetorik-Bogen (9 Kriterien × 1–5 Punkte, Feedback), Gruppenvideos. Namen ohne Kontaktdaten. |
+| `/team/hausaufgaben/` | ab Orga-Team | Hausaufgaben mit erlaubten Abgabeformaten (PDF, DOCX, Text, Link), wer abgegeben hat und wer nicht, selbst eingereichte Dateien herunterladen, Bewertung nach dem Rhetorik-Bogen (9 Kriterien × 1–5 Punkte, Feedback), Gruppenvideos. Namen ohne Kontaktdaten. |
+| `/team/material/` | ab Orga-Team | PDFs, Word- und PowerPoint-Dateien hochladen und für die Teilnehmenden des Jahrgangs freischalten. |
+| `/team/regieplan/` | ab Orga-Team | Regieplan je Modultag: Uhrzeit, Programmpunkt, Raum, Info für Teilnehmende, dazu intern Verantwortlich und Orga-Notiz. Sichtbare Punkte erscheinen als „Tagesordnung“ in „Mein Bereich“ (ohne die internen Felder). |
+| `/team/hotel/` | Admin, Vorstand | Hotel, Zimmer, Tür-Code und Check-in-Info je angemeldeter Person; per Schalter je Modul für die Teilnehmenden freigeben. |
 | `/team/import/` | Admin, Vorstand | Excel/CSV einlesen: Teilnehmerliste, Hausaufgabenliste, Bewertungsbogen, E-Mail-Adressen (z. B. Google-Formular). Immer erst Vorschau, dann übernehmen. |
-| `/mein-bereich/` | Teilnehmende (Login per E-Mail-Code) | Eigener QR-Code, kommende Module, Anwesenheit, Hausaufgaben mit Bewertung und Feedback, eigene Beiträge. |
+| `/mein-bereich/` | Teilnehmende (Login per E-Mail-Code) | Eigener QR-Code, Zimmer (nach Freigabe), kommende Module mit Tagesordnung, Hausaufgaben abgeben (Status Offen / Eingereicht / Feedback erhalten) mit Bewertung, freigeschaltetes Material, Anwesenheit, eigene Beiträge. |
+| `/dashboard/` | alle mit Login | Leitet je nach Rolle weiter: Team-Konto → `/team/`, Teilnehmende → `/mein-bereich/`. |
 | `/team/module/` | Admin, Vorstand | Module anlegen und bearbeiten, Termine, mit/ohne Ticket, zählt für Serien, offen für Gäste, Plätze, absagen. Beim Veröffentlichen wird der Jahrgang angemeldet. |
 | `/team/team/` | Admin | Team-Konten anlegen (mit Startpasswort), Rollen ändern, entfernen. |
 | `/team/passwort/` | alle Team-Rollen | Eigenes Passwort ändern. |
 
-Rollen: `admin`, `vorstand` (alles), `orga_team` (Einlass mit Liste), `checkin_helper` (nur Scanner und Kurzcode, keine Kontaktdaten).
+Rollen: `admin`, `vorstand` (alles), `orga_team` (Einlass mit Liste, Hausaufgaben, Material, Regieplan), `checkin_helper` (nur Scanner und Kurzcode, keine Kontaktdaten). Teilnehmende (verknüpftes Profil) landen immer in „Mein Bereich“, auch wenn sie `/team/…` aufrufen. Dateien liegen in privaten Speicher-Buckets (`abgaben`, `material`) und werden nur über kurzlebige signierte Links ausgeliefert.
 
 ## Lokal starten
 
@@ -40,11 +44,12 @@ npm run dev
 ## Tests
 
 ```bash
-npm run test:db                # 95 Datenbanktests (Check-in; Hausaufgaben/Portal; Kennzahlen; Step 2), setzt die lokale DB zurück
+npm run test:db                # 133 Datenbanktests (Check-in; Hausaufgaben/Portal; Kennzahlen; Step 2; Abgaben/Material/Regieplan/Hotel), setzt die lokale DB zurück
 npm run build && npx next start -p 3100 &
 supabase db reset && node scripts/e2e-phase1.mjs   # Ende-zu-Ende, headless
 supabase db reset && node scripts/e2e-phase2.mjs
 supabase db reset && node scripts/e2e-phase3-4.mjs # Offline-Einlass, Walk-in, Auswertung
+supabase db reset && node scripts/e2e-portal-kommission.mjs # Abgaben, Material, Regieplan, Hotel, Rollen-Weiterleitung
 ```
 
 ## Importe

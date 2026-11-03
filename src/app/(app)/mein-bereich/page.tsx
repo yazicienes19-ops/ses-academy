@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { AbgabeFormular } from "@/components/portal/AbgabeFormular";
 import { portalAbmelden } from "@/lib/aktionen/portal";
+import { getStaff } from "@/lib/auth";
+import { groesse } from "@/lib/formate";
 import { auswerten, kriterien, zusammenfassen, type KriteriumFeld } from "@/lib/bewertung";
 import { kurzcodeAnzeige, qrSvg } from "@/lib/tickets";
 import { createClient } from "@/lib/supabase/server";
@@ -11,7 +14,10 @@ export const metadata: Metadata = { title: "Mein Bereich | SES Academy", robots:
 
 type Reg = { status: string; modules: { id: string; title: string; location: string | null; module_days: { id: string; starts_at: string; ends_at: string }[] }; attendances: { module_day_id: string }[] };
 type Rev = Partial<Record<KriteriumFeld, number | null>> & { strengths: string | null; improvements: string | null; tip: string | null };
-type Sub = { id: string; label: string; assignment_id: string; reviews: Rev[] };
+type Sub = { id: string; label: string; assignment_id: string; source: string; content: string | null; link: string | null; upload_path: string | null; upload_name: string | null; submitted_at: string | null; reviews: Rev[] };
+type Punkt = { id: string; module_day_id: string; starts_at: string; ends_at: string | null; title: string; location: string | null; description: string };
+const tagName = (d: string) => new Intl.DateTimeFormat("de-DE", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Berlin" }).format(new Date(d));
+const hhmm = (t: string | null) => (t ? t.slice(0, 5) : "");
 
 const typen: Record<string, string> = { kommentar: "Kommentar", video: "Video", grafik: "Grafik", podcast: "Podcast", rede: "Rede", artikel: "Artikel" };
 const datum = (d: string) => new Intl.DateTimeFormat("de-DE", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Berlin" }).format(new Date(d));
@@ -23,6 +29,8 @@ export default async function MeinBereich() {
   if (!auth.user) redirect("/mein-bereich/login/");
   // Zugriffsregeln: jede Abfrage liefert nur die eigenen Daten
   const { data: ich } = await supabase.from("participants").select("id,first_name,checkin_token,short_code,cohort_id").eq("user_id", auth.user.id).maybeSingle();
+  // Kommission ohne Teilnehmer-Profil gehört in den Team-Bereich
+  if (!ich && (await getStaff())) redirect("/team/");
   if (!ich)
     return (
       <main className="mx-auto max-w-xl px-4 py-16">
@@ -32,12 +40,17 @@ export default async function MeinBereich() {
       </main>
     );
 
-  const [{ data: regs }, { data: aufgaben }, { data: subs }, { data: beitraege }] = await Promise.all([
+  const [{ data: regs }, { data: aufgaben }, { data: subs }, { data: beitraege }, { data: material }, { data: zimmer }, { data: agenda }] = await Promise.all([
     supabase.from("registrations").select("status,modules(id,title,location,module_days(id,starts_at,ends_at)),attendances(module_day_id)"),
-    supabase.from("assignments").select("id,number,title,description,due_date").order("number"),
-    supabase.from("submissions").select("id,label,assignment_id,reviews(*)"),
+    supabase.from("assignments").select("id,number,title,description,due_date,allowed_formats").order("number"),
+    supabase.from("submissions").select("id,label,assignment_id,source,content,link,upload_path,upload_name,submitted_at,reviews(*)"),
     supabase.from("contributions").select("*").order("published_on", { ascending: false }),
+    // RLS: nur freigeschaltetes Material des eigenen Jahrgangs, nur freigegebene eigene Zimmer, nur veröffentlichte Punkte eigener Module
+    supabase.from("resources").select("id,title,description,file_name,size_bytes,modules(title)").order("created_at", { ascending: false }),
+    supabase.rpc("my_rooms"),
+    supabase.from("agenda_items").select("id,module_day_id,starts_at,ends_at,title,location,description").order("starts_at"),
   ]);
+  const punkte = (agenda ?? []) as Punkt[];
   const jetzt = new Date(jetztMs()).toISOString();
   const meineModule = ((regs ?? []) as unknown as Reg[])
     .filter((r) => r.modules)
@@ -60,6 +73,23 @@ export default async function MeinBereich() {
         <p className="text-sm font-semibold tracking-wide text-sage uppercase">Mein Bereich</p>
         <h1 className="font-display mt-1 text-5xl leading-none font-extrabold">Salam, {ich.first_name.split(" ")[0]}!</h1>
 
+        {zimmer?.map((z) => (
+          <section key={z.module_id} className="mt-8 grid gap-4 rounded-[2rem] bg-forest p-6 text-paper sm:grid-cols-[1fr_auto] sm:items-center sm:p-8">
+            <div>
+              <p className="text-sm font-semibold tracking-wide text-signal uppercase">Dein Zimmer · {z.module_title}</p>
+              <p className="font-display mt-2 text-3xl font-extrabold">{z.hotel_name} · Zimmer {z.room_number}</p>
+              {z.check_in_info && <p className="mt-2 text-paper/80">{z.check_in_info}</p>}
+              {z.roommates.length > 0 && <p className="mt-2 text-sm text-paper/70">Du teilst das Zimmer mit {z.roommates.join(", ")}.</p>}
+            </div>
+            {z.room_pin_code && (
+              <div className="rounded-3xl bg-signal px-6 py-4 text-center text-ink">
+                <p className="text-xs font-semibold tracking-wide uppercase">Tür-Code</p>
+                <p className="font-mono text-3xl font-bold tracking-[0.2em]">{z.room_pin_code}</p>
+              </div>
+            )}
+          </section>
+        ))}
+
         <section className="mt-10 grid gap-6 md:grid-cols-[1fr_1.2fr]">
           <div className="overflow-hidden rounded-[2rem] bg-weiss text-center ring-1 ring-line">
             <div className="bg-forest p-5 text-paper"><p className="text-sm font-semibold tracking-wide text-signal uppercase">Dein Einlass-Code</p><p className="mt-1 text-sm text-paper/80">gilt für alle Module</p></div>
@@ -78,6 +108,27 @@ export default async function MeinBereich() {
                     <p className="font-display text-xl font-bold">{m.modules.title}</p>
                     <p className="text-sm text-ink-soft">{zeitraum(m.tage)}{m.modules.location ? ` · ${m.modules.location}` : ""}</p>
                     {m.attendances.length > 0 && <p className="mt-2 chip bg-gruen-hell">✓ eingecheckt</p>}
+                    {m.tage.some((t) => punkte.some((p) => p.module_day_id === t.id)) && (
+                      <details className="mt-3 border-t border-line pt-3">
+                        <summary className="cursor-pointer text-sm font-semibold">Tagesordnung ansehen</summary>
+                        {m.tage.map((t) => {
+                          const liste = punkte.filter((p) => p.module_day_id === t.id);
+                          return liste.length ? (
+                            <div key={t.id} className="mt-3">
+                              <p className="text-xs font-semibold tracking-wide text-sage uppercase">{tagName(t.starts_at)}</p>
+                              <ol className="mt-1 divide-y divide-line">
+                                {liste.map((p) => (
+                                  <li key={p.id} className="grid grid-cols-[7.5rem_1fr] gap-3 py-2 text-sm">
+                                    <span className="font-mono whitespace-nowrap text-ink-soft">{hhmm(p.starts_at)}{p.ends_at ? `–${hhmm(p.ends_at)}` : ""}</span>
+                                    <span><span className="font-semibold">{p.title}</span>{p.location && <span className="text-ink-soft"> · {p.location}</span>}{p.description && <span className="block text-ink-soft">{p.description}</span>}</span>
+                                  </li>
+                                ))}
+                              </ol>
+                            </div>
+                          ) : null;
+                        })}
+                      </details>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -91,6 +142,8 @@ export default async function MeinBereich() {
             {aufgaben?.map((h) => {
               const meine = abgaben.filter((a) => a.assignment_id === h.id);
               const e = zusammenfassen(meine.flatMap((a) => a.reviews));
+              const eigene = meine.find((a) => a.source === "participant") ?? null;
+              const feedback = meine.some((a) => a.reviews.length > 0);
               return (
                 <details key={h.id} className="karte" open={e.durchschnitt != null}>
                   <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3">
@@ -98,11 +151,23 @@ export default async function MeinBereich() {
                       <span className="font-display text-xl font-bold">Hausaufgabe {h.number}: {h.title}</span>
                       {h.due_date && <span className="block text-sm text-ink-soft">Frist: {datum(h.due_date)}</span>}
                     </span>
-                    {meine.length ? (
-                      e.durchschnitt != null ? <span className="chip bg-gruen-hell px-3 py-1 text-sm">Ø {e.durchschnitt} · {e.urteil}</span> : <span className="chip bg-paper-deep px-3 py-1 text-sm">abgegeben · Bewertung folgt</span>
-                    ) : <span className="chip bg-gelb-hell px-3 py-1 text-sm">noch nicht abgegeben</span>}
+                    {feedback ? (
+                      <span className="chip bg-gruen-hell px-3 py-1 text-sm">Feedback erhalten{e.durchschnitt != null ? ` · Ø ${e.durchschnitt}` : ""}</span>
+                    ) : meine.length ? <span className="chip bg-paper-deep px-3 py-1 text-sm">Eingereicht · Feedback folgt</span>
+                      : <span className="chip bg-gelb-hell px-3 py-1 text-sm">Offen</span>}
                   </summary>
                   {h.description && <p className="mt-4 whitespace-pre-line text-ink-soft">{h.description}</p>}
+                  {eigene && (
+                    <div className="mt-4 rounded-2xl bg-paper p-4 text-sm">
+                      <p className="font-semibold">Deine Abgabe{eigene.submitted_at ? ` vom ${new Date(eigene.submitted_at).toLocaleString("de-DE", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Berlin" })}` : ""}</p>
+                      {eigene.upload_name && <a href={`/mein-bereich/datei/?abgabe=${eigene.id}`} className="link mt-1 inline-block">⬇ {eigene.upload_name}</a>}
+                      {eigene.link && <a href={eigene.link} target="_blank" rel="noopener noreferrer" className="link mt-1 block">{eigene.link}</a>}
+                      {eigene.content && <p className="mt-1 line-clamp-4 whitespace-pre-line text-ink-soft">{eigene.content}</p>}
+                    </div>
+                  )}
+                  {!feedback && (
+                    <AbgabeFormular aufgabeId={h.id} teilnehmerId={ich.id} formate={h.allowed_formats} vorher={eigene && { content: eigene.content, link: eigene.link, upload_path: eigene.upload_path, upload_name: eigene.upload_name }} />
+                  )}
                   {meine.flatMap((a) =>
                     a.reviews.map((b, i) => {
                       const w = auswerten(b);
@@ -134,6 +199,24 @@ export default async function MeinBereich() {
             })}
             {!aufgaben?.length && <p className="karte text-ink-soft">Noch keine Hausaufgaben.</p>}
           </div>
+        </section>
+
+        <section className="mt-12">
+          <h2 className="font-display mb-4 text-2xl font-bold">Material</h2>
+          {material?.length ? (
+            <ul className="karte divide-y divide-line py-2">
+              {material.map((d) => (
+                <li key={d.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                  <span>
+                    <span className="font-semibold">{d.title}</span>
+                    <span className="block text-xs text-ink-soft">{(d.modules as { title: string } | null)?.title ? `${(d.modules as { title: string }).title} · ` : ""}{d.file_name} · {groesse(d.size_bytes)}</span>
+                    {d.description && <span className="block text-sm text-ink-soft">{d.description}</span>}
+                  </span>
+                  <a href={`/mein-bereich/datei/?material=${d.id}`} className="knopf-hell">Herunterladen</a>
+                </li>
+              ))}
+            </ul>
+          ) : <p className="karte text-ink-soft">Sobald die Kommission Reader, Präsentationen oder Handouts freischaltet, findest du sie hier.</p>}
         </section>
 
         <section className="mt-12 grid gap-8 lg:grid-cols-2">

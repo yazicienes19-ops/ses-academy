@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -46,4 +47,34 @@ export async function portalAbmelden() {
   const supabase = await createClient();
   await supabase.auth.signOut();
   redirect("/mein-bereich/login/");
+}
+
+// Hausaufgabe einreichen/nachbessern. Die Prüfung (eigener Jahrgang, erlaubte Formate, eigener Ordner,
+// noch nicht bewertet) macht die Datenbankfunktion submit_assignment.
+const abgabeFehler: Record<string, string> = {
+  empty_submission: "Bitte gib einen Text, einen Link oder eine Datei an.",
+  invalid_link: "Bitte gib einen vollständigen Link an (beginnt mit https://).",
+  already_reviewed: "Deine Abgabe wurde schon bewertet und kann nicht mehr geändert werden.",
+  invalid_upload_path: "Die Datei wurde nicht gefunden. Bitte lade sie noch einmal hoch.",
+  assignment_not_mine: "Diese Aufgabe gehört nicht zu deinem Jahrgang.",
+  participant_required: "Bitte melde dich erneut an.",
+};
+
+export async function abgabeEinreichen(e: {
+  assignment_id: string; text?: string | null; link?: string | null; upload_path?: string | null; upload_name?: string | null;
+}): Promise<{ fehler?: string }> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("submit_assignment", {
+    p_assignment_id: e.assignment_id,
+    p_text: e.text ?? undefined,
+    p_link: e.link ?? undefined,
+    p_upload_path: e.upload_path ?? undefined,
+    p_upload_name: e.upload_name ?? undefined,
+  });
+  if (error) {
+    const code = error.message.split(":")[0];
+    return { fehler: code === "format_not_allowed" ? "Dieses Format ist für die Aufgabe nicht erlaubt." : abgabeFehler[code] ?? "Das hat nicht geklappt. Bitte versuch es noch einmal." };
+  }
+  revalidatePath("/mein-bereich/");
+  return {};
 }

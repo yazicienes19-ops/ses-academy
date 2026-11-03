@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { TeamKopf } from "@/components/team/TeamKopf";
+import { FormatAuswahl } from "@/components/team/FormatAuswahl";
 import { Rueckmeldung, Titel } from "@/components/team/Ui";
 import { requireStaff } from "@/lib/auth";
 import { abgabeAnlegen, hausaufgabeSpeichern } from "@/lib/aktionen/hausaufgaben";
@@ -10,7 +11,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Hausaufgabe | SES Academy" };
 
-type A = { id: string; label: string; file_name: string | null; note: string | null; submission_participants: { participant_id: string }[]; reviews: Record<string, number | null>[] };
+type A = { id: string; label: string; file_name: string | null; note: string | null; source: string; link: string | null; content: string | null; upload_name: string | null; submitted_at: string | null; submission_participants: { participant_id: string }[]; reviews: Record<string, number | null>[] };
 
 export default async function Hausaufgabe({ params, searchParams }: PageProps<"/team/hausaufgaben/[id]">) {
   const staff = await requireStaff("orga");
@@ -20,7 +21,7 @@ export default async function Hausaufgabe({ params, searchParams }: PageProps<"/
   const supabase = await createClient();
   const [{ data: h }, { data: roh }, { data: verzeichnis }] = await Promise.all([
     supabase.from("assignments").select("*").eq("id", id).maybeSingle(),
-    supabase.from("submissions").select("id,label,file_name,note,submission_participants(participant_id),reviews(*)").eq("assignment_id", id).order("label"),
+    supabase.from("submissions").select("id,label,file_name,note,source,link,content,upload_name,submitted_at,submission_participants(participant_id),reviews(*)").eq("assignment_id", id).order("label"),
     supabase.rpc("get_participant_directory"),
   ]);
   if (!h) notFound();
@@ -56,6 +57,14 @@ export default async function Hausaufgabe({ params, searchParams }: PageProps<"/
                       <Link href={`/team/abgaben/${a.id}/`} className="font-semibold hover:underline">{a.label}</Link>
                       {a.file_name && a.file_name !== a.label && <p className="text-xs text-ink-soft">{a.file_name}</p>}
                       {a.note && <p className="text-xs text-ink-soft">{a.note}</p>}
+                      {a.source === "participant" && (
+                        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
+                          <span className="chip bg-signal">selbst eingereicht{a.submitted_at ? ` · ${new Date(a.submitted_at).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short", timeZone: "Europe/Berlin" })}` : ""}</span>
+                          {a.upload_name && <a href={`/team/datei/?abgabe=${a.id}`} className="link">⬇ {a.upload_name}</a>}
+                          {a.link && <a href={a.link} target="_blank" rel="noopener noreferrer" className="link">Link ↗</a>}
+                          {a.content && <span className="text-ink-soft">Text: {a.content.length > 80 ? `${a.content.slice(0, 80)} …` : a.content}</span>}
+                        </div>
+                      )}
                     </td>
                     <td>{a.submission_participants.length ? a.submission_participants.map((p) => namen.get(p.participant_id)?.display_name ?? "?").join(", ") : <span className="chip bg-gelb-hell">nicht zugeordnet</span>}</td>
                     <td className="font-display text-lg font-bold">{e.durchschnitt ?? "–"}</td>
@@ -101,6 +110,7 @@ export default async function Hausaufgabe({ params, searchParams }: PageProps<"/
               </div>
               <div><label className="etikett" htmlFor="due_date">Frist</label><input id="due_date" name="due_date" type="date" defaultValue={h.due_date ?? ""} className="feld" /></div>
               <div><label className="etikett" htmlFor="description">Aufgabe</label><textarea id="description" name="description" rows={4} defaultValue={h.description} className="feld" /></div>
+              <FormatAuswahl werte={h.allowed_formats} />
               <button className="knopf">Speichern</button>
             </form>
           </section>

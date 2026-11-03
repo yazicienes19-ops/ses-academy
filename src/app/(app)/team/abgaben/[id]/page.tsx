@@ -126,6 +126,8 @@ export default async function Abgabe({ params, searchParams }: PageProps<"/team/
                 <div className="flex flex-wrap items-center gap-3">
                   <button className="knopf-hell">Speichern</button>
                   {a.link && <a href={a.link} target="_blank" rel="noopener noreferrer" className="link text-sm">Video öffnen ↗</a>}
+                  {a.upload_name && <a href={`/team/datei/?abgabe=${a.id}`} className="link text-sm">⬇ {a.upload_name}</a>}
+                  {a.content && <p className="mt-2 max-h-80 w-full overflow-y-auto rounded-2xl bg-paper p-4 text-sm whitespace-pre-line">{a.content}</p>}
                 </div>
               </form>
               <form action={abgabeLoeschen} className="mt-4 border-t border-line pt-4">

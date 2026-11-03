@@ -6,4 +6,4 @@ export function proxy(request: NextRequest) {
 }
 
 // Nur Team-Bereich und „Mein Bereich“ brauchen eine Sitzung; die öffentlichen Seiten bleiben unberührt.
-export const config = { matcher: ["/team/:path*", "/mein-bereich/:path*", "/auth/:path*"] };
+export const config = { matcher: ["/team/:path*", "/mein-bereich/:path*", "/dashboard/:path*", "/auth/:path*"] };

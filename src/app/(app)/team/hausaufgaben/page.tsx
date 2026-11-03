@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { FormatAuswahl } from "@/components/team/FormatAuswahl";
 import { TeamKopf } from "@/components/team/TeamKopf";
 import { Leer, Rueckmeldung, Titel } from "@/components/team/Ui";
 import { requireStaff } from "@/lib/auth";
@@ -70,6 +71,7 @@ export default async function Hausaufgaben({ searchParams }: PageProps<"/team/ha
               </div>
               <div><label className="etikett" htmlFor="due_date">Frist</label><input id="due_date" name="due_date" type="date" className="feld" /></div>
               <div><label className="etikett" htmlFor="description">Aufgabe (sehen die Teilnehmenden)</label><textarea id="description" name="description" rows={3} className="feld" /></div>
+              <FormatAuswahl />
               <button className="knopf">Anlegen</button>
             </form>
           </section>

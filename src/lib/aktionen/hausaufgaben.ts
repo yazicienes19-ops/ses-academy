@@ -17,7 +17,12 @@ export async function hausaufgabeSpeichern(formData: FormData) {
   let cohort_id = leer(formData.get("cohort_id"));
   if (!cohort_id) cohort_id = (await supabase.from("cohorts").select("id").eq("is_current", true).maybeSingle()).data?.id ?? null;
   if (!cohort_id) redirect(`/team/hausaufgaben/?fehler=${encodeURIComponent("Kein aktueller Jahrgang angelegt.")}`);
-  const werte = { cohort_id, number: Number(formData.get("number")), title: leer(formData.get("title")) ?? "Hausaufgabe", description: String(formData.get("description") ?? ""), due_date: leer(formData.get("due_date")) };
+  const formate = formData.getAll("formate").map(String).filter((f) => ["pdf", "docx", "text", "link"].includes(f));
+  const werte = {
+    cohort_id, number: Number(formData.get("number")), title: leer(formData.get("title")) ?? "Hausaufgabe",
+    description: String(formData.get("description") ?? ""), due_date: leer(formData.get("due_date")),
+    allowed_formats: formate.length ? formate : ["pdf", "docx", "text", "link"],
+  };
   const res = id ? await supabase.from("assignments").update(werte).eq("id", id).select("id").single() : await supabase.from("assignments").insert(werte).select("id").single();
   if (res.error) redirect(`/team/hausaufgaben/${id ? `${id}/` : ""}?fehler=${encodeURIComponent(res.error.code === "23505" ? "Diese Nummer ist im Jahrgang schon vergeben." : res.error.message)}`);
   revalidatePath("/team/hausaufgaben/", "layout");
