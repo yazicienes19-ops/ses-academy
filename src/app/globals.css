@@ -1,16 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --paper: #f3efe4;
-  --paper-deep: #e9e3d3;
-  --ink: #13201a;
-  --ink-soft: #3c4a42;
-  --forest: #173226;
-  --forest-2: #1f4234;
+  /* Editorial-Palette (Redesign 11/2026) */
+  --paper: #f4f1ea;
+  --paper-deep: #e9e4d8;
+  --ink: #111613;
+  --ink-soft: #5a625d;
+  --forest: #142f22;
+  --forest-2: #1c3d2d;
   --sage: #3f6e57;
   --mint: #2fa37a;
-  --signal: #d7f36b;
-  --line: rgb(19 32 26 / 0.14);
+  --signal: #c5e86c;
+  --line: rgb(17 22 19 / 0.12);
 }
 
 @theme inline {
@@ -27,6 +28,7 @@
   --font-sans: var(--font-inter);
   --font-display: var(--font-bricolage);
   --font-serif: var(--font-newsreader);
+  --font-mono: var(--font-jetbrains);
 }
 
 html {
@@ -64,6 +66,28 @@ body::before {
   letter-spacing: -0.035em;
 }
 
+/* Metadaten: Daten, Orte, Nummern, Kicker */
+.mono {
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  letter-spacing: 0.02em;
+  font-feature-settings: "zero" 0;
+}
+
+/* Kursives Akzentwort in Display-Überschriften */
+.akzent {
+  font-family: var(--font-newsreader), Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+/* Pulsierender Punkt (z. B. „Als Nächstes“) */
+@keyframes puls {
+  0% { transform: scale(1); opacity: 0.7; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+.puls { animation: puls 1.6s ease-out infinite; }
+
 /* Textmarker-Unterstreichung */
 .marker {
   background-image: linear-gradient(transparent 58%, var(--signal) 58%, var(--signal) 92%, transparent 92%);
@@ -92,7 +116,7 @@ body::before {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .laufband, .welle { animation: none; }
+  .laufband, .welle, .puls { animation: none; }
   html { scroll-behavior: auto; }
 }
 

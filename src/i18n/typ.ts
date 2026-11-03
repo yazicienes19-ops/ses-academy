@@ -41,7 +41,8 @@ export type Texte = {
     ctaFaq: string;
     /** Hauptknopf, solange keine Bewerbungsphase läuft (siehe `bewerbungOffen` in daten.ts). */
     ctaVormerken: string;
-    status: string;
+    /** Editorial-Hero: Überschrift = vor + kursives Akzentwort + nach. */
+    editorial: { kicker: string; vor: string; akzent: string; nach: string; lead: string; ctaProgramm: string; trust: string[] };
     laufzeitLabel: string;
     laufzeit: string;
     ortLabel: string;

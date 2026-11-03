@@ -48,7 +48,7 @@ export function Header({ lang, start, nav, bewerben, stimmen }: Props) {
 
         <nav className="hidden items-center gap-1 lg:flex" aria-label="Navigation">
           {links.map((n) => (
-            <a key={n.href} href={n.href} className="rounded-full px-3.5 py-2 text-[15px] font-medium text-ink transition-colors hover:bg-paper-deep">
+            <a key={n.href} href={n.href} className="px-3 py-2 text-[15px] font-medium text-ink underline-offset-[6px] transition hover:underline">
               {n.label}
             </a>
           ))}
@@ -56,7 +56,7 @@ export function Header({ lang, start, nav, bewerben, stimmen }: Props) {
 
         <div className="ml-auto flex items-center gap-2 lg:ml-0">
           <SprachMenue lang={lang} />
-          <a href={bewerben.href} className="hidden rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-paper transition hover:bg-forest sm:block">
+          <a href={bewerben.href} className="hidden bg-forest px-5 py-2.5 text-sm font-semibold text-paper transition hover:bg-signal hover:text-ink sm:block">
             {bewerben.label}
           </a>
         </div>
@@ -86,7 +86,7 @@ export function Header({ lang, start, nav, bewerben, stimmen }: Props) {
             </li>
           ))}
           <li>
-            <a href={bewerben.href} className="font-display mt-2 block rounded-2xl bg-signal px-4 py-3 text-3xl font-bold">
+            <a href={bewerben.href} className="font-display mt-2 block bg-signal px-4 py-3 text-3xl font-bold">
               {bewerben.label} <Pfeil className="ml-2" />
             </a>
           </li>

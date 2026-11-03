@@ -21,14 +21,14 @@ export function StimmenListe({ karten, t }: { karten: Karte[]; t: Texte["stimmen
 
   if (karten.length === 0) {
     return (
-      <div className="rounded-[2rem] border-2 border-dashed border-ink/20 p-10 text-center">
+      <div className="border-2 border-dashed border-ink/20 p-10 text-center">
         <p className="font-display text-3xl font-bold">{t.leer}</p>
       </div>
     );
   }
 
   const chip = (aktiv: boolean) =>
-    `rounded-full px-4 py-2 text-sm font-semibold transition ${aktiv ? "bg-ink text-paper" : "bg-white/60 ring-1 ring-line hover:bg-white"}`;
+    ` px-4 py-2 text-sm font-semibold transition ${aktiv ? "bg-ink text-paper" : "bg-white/60 ring-1 ring-line hover:bg-white"}`;
 
   return (
     <div>
@@ -74,7 +74,7 @@ export function StimmenListe({ karten, t }: { karten: Karte[]; t: Texte["stimmen
         )}
       </div>
 
-      <ul className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <ul className="mt-10 grid gap-x-8 gap-y-10 md:grid-cols-2 lg:grid-cols-3">
         {sichtbar.map((k) => (
           <li key={k.slug}>
             <StimmenKarte k={k} t={t} />
@@ -87,21 +87,21 @@ export function StimmenListe({ karten, t }: { karten: Karte[]; t: Texte["stimmen
 
 export function StimmenKarte({ k, t }: { k: Karte; t: Texte["stimmen"] }) {
   return (
-    <Link href={k.href} className="group flex h-full flex-col rounded-3xl bg-white/60 p-7 ring-1 ring-line transition hover:-translate-y-1 hover:bg-white">
-      <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
-        {k.muster && <span className="rounded-full bg-signal px-2.5 py-1 uppercase">{t.muster}</span>}
-        <span className="rounded-full bg-ink px-2.5 py-1 text-paper">{t.typ[k.typ]}</span>
-        <span className="text-ink-soft">{t.laender[k.land]}</span>
-        <span className="text-ink-soft uppercase">· {k.sprache}</span>
-      </div>
-      <p lang={k.sprache} className="font-display mt-6 text-2xl leading-tight font-bold">{k.titel}</p>
+    <Link href={k.href} className="group flex h-full flex-col border-t border-ink pt-5">
+      <p className="mono flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] tracking-[0.12em] text-ink-soft uppercase">
+        {k.muster && <span className="bg-signal px-1.5 text-ink">{t.muster}</span>}
+        <span className="text-ink">{t.typ[k.typ]}</span>
+        <span>{t.laender[k.land]}</span>
+        <span>{k.sprache}</span>
+      </p>
+      <p lang={k.sprache} className="font-display mt-4 text-2xl leading-tight font-bold underline-offset-4 group-hover:underline">{k.titel}</p>
       <p lang={k.sprache} className="mt-3 text-ink-soft">{k.teaser}</p>
       <p className="mt-auto pt-6 text-sm">
         <span className="font-semibold">{k.autor.name}</span>
         {k.autor.alter ? `, ${k.autor.alter}` : ""}
         {k.autor.stadt ? ` · ${k.autor.stadt}` : ""}
       </p>
-      <p className="text-sm text-ink-soft">
+      <p className="mono mt-1 text-xs text-ink-soft">
         {[k.extern?.medium ?? k.anlass ?? k.modulTitel?.split(/[–:]/)[0].trim(), k.datumText].filter(Boolean).join(" · ")}
       </p>
     </Link>
@@ -112,7 +112,7 @@ export function StimmenKarte({ k, t }: { k: Karte; t: Texte["stimmen"] }) {
 export function YoutubeKlick({ id, titel, t }: { id: string; titel: string; t: Texte["stimmen"] }) {
   const [an, setAn] = useState(false);
   return (
-    <div className="relative aspect-video overflow-hidden rounded-3xl bg-ink">
+    <div className="relative aspect-video overflow-hidden bg-ink">
       {an ? (
         <iframe
           src={`https://www.youtube-nocookie.com/embed/${id}?autoplay=1`}

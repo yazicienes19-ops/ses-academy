@@ -27,7 +27,7 @@ function Eintrag({ s, lang, href }: { s: Sprache; lang: Sprache; href: string })
       hrefLang={s}
       lang={s}
       aria-current={aktiv ? "page" : undefined}
-      className={`flex items-center justify-between gap-6 rounded-xl px-3 py-2.5 transition-colors ${
+      className={`flex items-center justify-between gap-6 px-3 py-2.5 transition-colors ${
         aktiv ? "bg-ink text-paper" : "hover:bg-paper-deep"
       }`}
     >
@@ -63,7 +63,7 @@ export function SprachMenue({ lang }: { lang: Sprache }) {
         aria-expanded={offen}
         aria-haspopup="true"
         aria-label={`Sprache / Language: ${sprachNamen[lang]}`}
-        className="flex items-center gap-2 rounded-full px-3.5 py-2 text-sm font-semibold ring-1 ring-ink/15 transition hover:bg-paper-deep"
+        className="mono flex items-center gap-2 px-3 py-2 text-xs font-medium tracking-[0.1em] ring-1 ring-ink/15 transition hover:bg-paper-deep"
       >
         <Globus />
         <span className="uppercase">{lang}</span>
@@ -72,7 +72,7 @@ export function SprachMenue({ lang }: { lang: Sprache }) {
         </svg>
       </button>
       {offen && (
-        <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-paper p-2 shadow-[0_12px_40px_rgb(19_32_26/0.18)] ring-1 ring-line">
+        <div className="absolute right-0 mt-2 w-56 bg-paper p-2 shadow-[0_12px_40px_rgb(19_32_26/0.18)] ring-1 ring-line">
           {sprachen.map((s) => (
             <Eintrag key={s} s={s} lang={lang} href={gleicheSeite(pfadname, s)} />
           ))}

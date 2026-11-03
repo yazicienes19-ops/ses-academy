@@ -19,32 +19,30 @@ export function Naechstes({ eintraege, t }: { eintraege: Eintrag[]; t: Texte }) 
   if (i < 0) return null;
   const m = eintraege[i];
   return (
-    <section className="px-4 sm:px-6 lg:px-10" aria-labelledby="naechstes-titel">
-      <div className="muster relative mx-auto max-w-7xl overflow-hidden rounded-[2rem] bg-forest text-paper">
-        <div className="absolute inset-0 bg-forest/92" aria-hidden />
-        <div className="relative grid gap-10 p-8 sm:p-12 lg:grid-cols-[1.4fr_1fr] lg:p-16">
+    <section className="muster relative overflow-hidden bg-forest text-paper" aria-labelledby="naechstes-titel">
+      <div className="absolute inset-0 bg-forest/94" aria-hidden />
+      <div className="relative mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1.5fr_1fr] lg:gap-16 lg:px-10">
+        <div>
+          <p className="mono flex items-center gap-3 text-xs tracking-[0.14em] text-signal uppercase">
+            <span className="relative flex h-2 w-2" aria-hidden>
+              <span className="puls absolute inline-flex h-full w-full rounded-full bg-signal" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-signal" />
+            </span>
+            {t.naechstes.kicker} • {t.programm.modul} {String(i + 1).padStart(2, "0")} • {m.artText}
+          </p>
+          <h2 id="naechstes-titel" className="font-display mt-5 text-[clamp(2rem,4.2vw,3.4rem)] leading-[1] font-extrabold">
+            {m.titel}
+          </h2>
+          <p className="mt-5 max-w-2xl text-lg text-paper/80">{m.teaser}</p>
+        </div>
+        <div className="flex flex-col justify-end gap-6 border-t border-paper/25 pt-5 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-10">
           <div>
-            <p className="flex items-center gap-3 text-xs font-semibold tracking-[0.2em] text-signal uppercase">
-              <span className="relative flex h-2 w-2" aria-hidden>
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-signal opacity-60" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-signal" />
-              </span>
-              {t.naechstes.kicker} · {m.artText}
-            </p>
-            <h2 id="naechstes-titel" className="font-display mt-6 text-[clamp(2rem,4.6vw,3.8rem)] leading-[1] font-extrabold">
-              {m.titel}
-            </h2>
-            <p className="mt-6 max-w-2xl text-lg text-paper/80">{m.teaser}</p>
+            <p className="font-display text-3xl leading-tight font-extrabold sm:text-4xl">{m.datum}</p>
+            <p className="mono mt-2 text-sm text-paper/70">{m.ortText}</p>
           </div>
-          <div className="flex flex-col justify-between gap-8">
-            <div className="rounded-3xl bg-paper p-6 text-ink">
-              <p className="font-display text-3xl leading-tight font-extrabold sm:text-4xl">{m.datum}</p>
-              <p className="mt-2 text-ink-soft">{m.ortText}</p>
-            </div>
-            <Link href={m.href} className="self-start rounded-full bg-signal px-7 py-4 font-semibold text-ink transition hover:bg-paper">
-              {t.naechstes.mehr} <Pfeil className="ml-1.5" />
-            </Link>
-          </div>
+          <Link href={m.href} className="inline-flex items-center self-start bg-signal px-6 py-4 font-semibold text-ink transition hover:bg-paper">
+            {t.naechstes.mehr} <Pfeil className="ml-2" />
+          </Link>
         </div>
       </div>
     </section>
@@ -55,29 +53,25 @@ export function ProgrammListe({ eintraege, t }: { eintraege: Eintrag[]; t: Texte
   const status = useStatus(eintraege);
   const label: Record<Status, string> = { vorbei: `✓ ${t.programm.vorbei}`, naechstes: `● ${t.programm.naechstes}`, geplant: t.programm.geplant };
   return (
-    <ol className="grid gap-3">
+    <ol className="border-t border-ink">
       {eintraege.map((m, i) => {
         const s = status[i];
         return (
-          <li key={m.slug}>
+          <li key={m.slug} className="border-b border-line">
             <Link
               href={m.href}
-              className={`group grid gap-4 rounded-3xl p-6 transition sm:grid-cols-[5rem_1fr_auto] sm:items-center sm:gap-8 sm:p-8 ${
-                s === "naechstes"
-                  ? "bg-signal text-ink"
-                  : s === "vorbei"
-                    ? "bg-white/50 ring-1 ring-line hover:bg-white"
-                    : "bg-paper-deep/60 ring-1 ring-line hover:bg-paper-deep"
+              className={`group grid gap-3 px-1 py-6 transition sm:grid-cols-[4rem_1fr_auto] sm:items-baseline sm:gap-8 sm:px-4 ${
+                s === "naechstes" ? "bg-signal" : "hover:bg-paper"
               }`}
             >
-              <span className="font-display text-5xl font-extrabold text-ink/25">{String(i + 1).padStart(2, "0")}</span>
+              <span className="mono text-sm text-ink-soft">{String(i + 1).padStart(2, "0")}</span>
               <div>
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-                  <span className="font-semibold">{m.artText}</span>
-                  <span className={s === "naechstes" ? "font-bold" : "text-ink-soft"}>{label[s]}</span>
-                </div>
+                <p className="mono flex flex-wrap gap-x-3 gap-y-1 text-[11px] tracking-[0.12em] uppercase">
+                  <span>{m.artText}</span>
+                  <span className={s === "naechstes" ? "font-semibold" : "text-ink-soft"}>{label[s]}</span>
+                </p>
                 <h3 className="font-display mt-2 text-2xl leading-tight font-bold sm:text-3xl">{m.titel}</h3>
-                <p className="mt-2 text-ink-soft">
+                <p className="mono mt-2 text-xs text-ink-soft">
                   {m.datum} · {m.ortText}
                 </p>
               </div>
@@ -86,30 +80,54 @@ export function ProgrammListe({ eintraege, t }: { eintraege: Eintrag[]; t: Texte
           </li>
         );
       })}
-      <li className="rounded-3xl border-2 border-dashed border-ink/20 p-6 sm:p-8">
-        <p className="font-display text-2xl font-bold">{t.programm.weitereTitel}</p>
-        <p className="mt-2 max-w-2xl text-ink-soft">{t.programm.weitereText}</p>
+      <li className="grid gap-3 px-1 py-6 sm:grid-cols-[4rem_1fr] sm:gap-8 sm:px-4">
+        <span className="mono text-sm text-ink-soft">+</span>
+        <div>
+          <p className="font-display text-2xl font-bold">{t.programm.weitereTitel}</p>
+          <p className="mt-2 max-w-2xl text-ink-soft">{t.programm.weitereText}</p>
+        </div>
       </li>
     </ol>
   );
 }
 
-/** Sticker im Hero: nächstes Modul mit Datum – wechselt automatisch nach jedem Modul. */
-export function NaechstesSticker({ eintraege, kicker, kurzDaten, inKoeln }: { eintraege: Eintrag[]; kicker: string; kurzDaten: string[]; inKoeln: string }) {
+/** Live-Status im Editorial-Hero: nächstes Modul, Klick springt zum Programm. Wechselt automatisch nach jedem Modul. */
+export function NaechstesBadge({
+  eintraege,
+  kicker,
+  modulWort,
+  kurzDaten,
+  ortOffen,
+  className = "",
+}: {
+  eintraege: Eintrag[];
+  kicker: string;
+  modulWort: string;
+  kurzDaten: string[];
+  ortOffen: string;
+  className?: string;
+}) {
   const status = useStatus(eintraege);
   const i = status.indexOf("naechstes");
   if (i < 0) return null;
   const m = eintraege[i];
+  const stadt = m.ort ? m.ort.split(" ").pop() : ortOffen;
   return (
-    <Link
-      href={m.href}
-      className="absolute -top-5 -left-3 block rotate-[-6deg] rounded-2xl bg-signal px-5 py-3 shadow-lg transition hover:rotate-[-3deg] sm:-left-8"
+    <a
+      href="#programm"
+      className={`group block max-w-[19rem] bg-signal px-5 py-4 text-ink shadow-[0_18px_40px_-18px_rgb(17_22_19/0.45)] transition hover:-translate-y-0.5 hover:bg-paper ${className}`}
     >
-      <span className="block text-xs font-semibold">
-        {kicker} · {m.artText}
+      <span className="mono flex items-center gap-2.5 text-[11px] font-medium tracking-[0.12em] uppercase">
+        <span className="relative flex h-2 w-2" aria-hidden>
+          <span className="puls absolute inline-flex h-full w-full rounded-full bg-forest" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-forest" />
+        </span>
+        {kicker} • {modulWort} {String(i + 1).padStart(2, "0")}
       </span>
-      <span className="font-display block text-3xl leading-none font-extrabold">{kurzDaten[i]}</span>
-      {m.ort?.includes("Köln") && <span className="block text-xs font-semibold">{inKoeln}</span>}
-    </Link>
+      <span className="font-display mt-2 block text-lg leading-snug font-bold">{m.titel.split(/\s[–:]\s/)[0]}</span>
+      <span className="mono mt-1 block text-xs text-ink/70">
+        {kurzDaten[i]} {m.von.slice(0, 4)}, {stadt} <span className="pfeil pfeil-runter inline-block" aria-hidden>↓</span>
+      </span>
+    </a>
   );
 }

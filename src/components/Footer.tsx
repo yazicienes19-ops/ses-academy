@@ -34,7 +34,7 @@ export function Footer({ t, presse }: { t: Texte; presse: string }) {
         </div>
 
         <div className="mt-14 flex flex-wrap items-center justify-between gap-6 border-t border-paper/15 pt-8">
-          <div className="flex flex-wrap items-center gap-5 rounded-2xl bg-paper px-5 py-3">
+          <div className="flex flex-wrap items-center gap-5 bg-paper px-5 py-3">
             <Image src="/brand/ses-logo.png" alt="SES Academy" width={1196} height={593} className="h-10 w-auto" />
             <span className="h-8 w-px bg-line" aria-hidden />
             <Image src="/brand/islamrat.png" alt="Islamrat für die Bundesrepublik Deutschland" width={1798} height={435} className="h-7 w-auto" />

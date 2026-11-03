@@ -21,13 +21,13 @@ export function BewerbungsFormular({ t, l }: { t: Texte["bewerbungSeite"]; l: Sp
 
   if (zustand.status === "ok") {
     return (
-      <p role="status" className="rounded-3xl bg-white/80 p-8 text-lg ring-1 ring-line">
+      <p role="status" className="bg-white/80 p-8 text-lg ring-1 ring-line">
         {t.danke}
       </p>
     );
   }
 
-  const feld = "w-full rounded-2xl bg-white/80 px-4 py-3.5 text-lg ring-1 ring-line outline-none transition focus:ring-2 focus:ring-ink";
+  const feld = "w-full bg-white/80 px-4 py-3.5 text-lg ring-1 ring-line outline-none transition focus:ring-2 focus:ring-ink";
   const label = "mb-1.5 block text-sm font-semibold";
   const opt = <span className="font-normal text-ink-soft"> ({f.optional})</span>;
 
@@ -74,7 +74,7 @@ export function BewerbungsFormular({ t, l }: { t: Texte["bewerbungSeite"]; l: Sp
         <legend className={label}>{f.sprachen}</legend>
         <div className="flex flex-wrap gap-2">
           {[f.spracheEn, f.spracheTr, f.spracheLand].map((s) => (
-            <label key={s} className="flex cursor-pointer items-center gap-2 rounded-full bg-white/80 px-4 py-2.5 ring-1 ring-line has-[:checked]:bg-ink has-[:checked]:text-paper">
+            <label key={s} className="flex cursor-pointer items-center gap-2 bg-white/80 px-4 py-2.5 ring-1 ring-line has-[:checked]:bg-ink has-[:checked]:text-paper">
               <input type="checkbox" name="sprachen" value={s} className="accent-[var(--signal)]" />
               {s}
             </label>
@@ -98,7 +98,7 @@ export function BewerbungsFormular({ t, l }: { t: Texte["bewerbungSeite"]; l: Sp
       </label>
 
       <div className="sm:col-span-2">
-        <button type="submit" disabled={sendet} className="w-full rounded-full bg-ink px-8 py-4 text-lg font-semibold text-paper transition hover:bg-forest disabled:opacity-60 sm:w-auto">
+        <button type="submit" disabled={sendet} className="w-full bg-forest px-8 py-4 text-lg font-semibold text-paper transition hover:bg-signal hover:text-ink disabled:opacity-60 sm:w-auto">
           {t.senden} <Pfeil className="ml-2" />
         </button>
         <p className="mt-3 text-sm text-ink-soft" role="status">

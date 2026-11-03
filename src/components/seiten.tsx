@@ -6,7 +6,7 @@ import { ModulAnmeldung } from "./ModulAnmeldung";
 import { StimmenKarte, StimmenListe, YoutubeKlick, type Karte } from "./Stimmen";
 import { beitraege } from "@/i18n/stimmen";
 import { Faq } from "./Faq";
-import { Naechstes, NaechstesSticker, ProgrammListe, type Eintrag } from "./Programm";
+import { Naechstes, NaechstesBadge, ProgrammListe, type Eintrag } from "./Programm";
 import { bewerbungOffen, eindeutigeGaeste, fotos, gaeste, gaesteHervorgehoben, modulplan } from "@/i18n/daten";
 import { locale, pfad, sprachen, texte, zeitraum, zeitraumKurz, type ModulSlug, type Sprache, type Texte } from "@/i18n";
 import { Pfeil } from "./Pfeil";
@@ -50,14 +50,19 @@ export function metaFuer(l: Sprache, rest = "", titel?: string, beschreibung?: s
 
 function Kicker({ children, hell = false }: { children: React.ReactNode; hell?: boolean }) {
   return (
-    <p className={`flex items-center gap-3 text-xs font-semibold tracking-[0.2em] uppercase ${hell ? "text-signal" : "text-sage"}`}>
+    <p className={`mono flex items-center gap-3 text-xs tracking-[0.14em] uppercase ${hell ? "text-signal" : "text-sage"}`}>
       <span className={`h-px w-8 ${hell ? "bg-signal" : "bg-sage"}`} aria-hidden />
       {children}
     </p>
   );
 }
 
-const h2 = "font-display mt-5 text-[clamp(2.4rem,6vw,4.8rem)] leading-[0.95] font-extrabold";
+const h2 = "font-display mt-5 text-[clamp(2.2rem,5.2vw,4.2rem)] leading-[0.95] font-extrabold";
+/** Editorial-Knöpfe: rechteckig, kein Pillen-Look. */
+const knopfPrimaer = "inline-flex items-center bg-forest px-6 py-4 font-semibold text-paper transition hover:bg-signal hover:text-ink";
+const knopfRahmen = "inline-flex items-center border border-ink/30 px-5 py-3 font-semibold transition hover:border-ink hover:bg-ink hover:text-paper";
+/** Abstand zwischen Abschnitten (vorher py-24, jetzt ~25 % kompakter). */
+const abschnitt = "mx-auto max-w-7xl px-4 py-18 sm:px-6 lg:px-10";
 
 function GaesteListe({ l, t, slug }: { l: Sprache; t: Texte; slug?: ModulSlug }) {
   const liste = eindeutigeGaeste(slug ? gaeste.filter((g) => g.modul === slug) : gaeste);
@@ -65,7 +70,7 @@ function GaesteListe({ l, t, slug }: { l: Sprache; t: Texte; slug?: ModulSlug })
     <ul className="grid gap-x-8 sm:grid-cols-2 lg:grid-cols-3">
       {liste.map((g) => (
         <li key={g.name + g.modul} className="border-t border-line py-4">
-          <p className="text-xs font-semibold tracking-[0.15em] text-sage uppercase">{t.formate[g.format]}</p>
+          <p className="mono text-[11px] tracking-[0.14em] text-sage uppercase">{t.formate[g.format]}</p>
           <p className="font-display mt-1 text-xl font-bold">{g.name}</p>
           {g.rolle && <p className="text-ink-soft">{g.rolle[l] ?? g.rolle.de}</p>}
         </li>
@@ -80,9 +85,9 @@ function GaesteHervorgehoben({ l, t }: { l: Sprache; t: Texte }) {
     return g ? [{ ...h, g }] : [];
   });
   return (
-    <ul className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <ul className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 lg:grid-cols-4 lg:gap-x-6">
       {liste.map(({ foto, pos, zoom, g }) => (
-        <li key={g.name} className="overflow-hidden rounded-3xl bg-white/60 ring-1 ring-line">
+        <li key={g.name}>
           <div className="relative aspect-[4/5] overflow-hidden bg-paper-deep">
             <Image
               src={foto}
@@ -93,11 +98,9 @@ function GaesteHervorgehoben({ l, t }: { l: Sprache; t: Texte }) {
               style={{ objectPosition: pos, transform: zoom ? `scale(${zoom.faktor})` : undefined, transformOrigin: zoom?.um }}
             />
           </div>
-          <div className="p-4 sm:p-5">
-            <p className="text-xs font-semibold tracking-[0.15em] text-sage uppercase">{t.formate[g.format]}</p>
-            <p className="font-display mt-1 text-lg leading-tight font-bold sm:text-xl">{g.name}</p>
-            {g.rolle && <p className="mt-1 text-sm text-ink-soft">{g.rolle[l] ?? g.rolle.de}</p>}
-          </div>
+          <p className="mono mt-4 border-t border-ink pt-3 text-[11px] tracking-[0.14em] text-sage uppercase">{t.formate[g.format]}</p>
+          <p className="font-display mt-1 text-lg leading-tight font-bold sm:text-xl">{g.name}</p>
+          {g.rolle && <p className="mt-1 text-sm text-ink-soft">{g.rolle[l] ?? g.rolle.de}</p>}
         </li>
       ))}
     </ul>
@@ -109,8 +112,8 @@ function StimmenTeaser({ l }: { l: Sprache }) {
   const karten = stimmenKarten(l).slice(0, 3);
   if (karten.length === 0) return null;
   return (
-    <section id="stimmen" className="scroll-mt-20 bg-paper-deep/50">
-      <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-10">
+    <section id="stimmen" className="scroll-mt-20 border-t border-line bg-paper-deep/50">
+      <div className={abschnitt}>
         <div className="grid gap-6 lg:grid-cols-[1fr_1fr] lg:items-end">
           <div>
             <Kicker>{t.kicker}</Kicker>
@@ -118,15 +121,15 @@ function StimmenTeaser({ l }: { l: Sprache }) {
           </div>
           <p className="text-lg text-ink-soft">{t.startseiteText}</p>
         </div>
-        <ul className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <ul className="mt-12 grid gap-x-8 gap-y-10 md:grid-cols-2 lg:grid-cols-3">
           {karten.map((k) => (
             <li key={k.slug}>
               <StimmenKarte k={k} t={t} />
             </li>
           ))}
         </ul>
-        <Link href={pfad(l, "/stimmen/")} className="mt-8 inline-block rounded-full px-6 py-3 font-semibold ring-1 ring-ink/25 transition hover:bg-white">
-          {t.startseiteAlle} <Pfeil className="ml-1.5" />
+        <Link href={pfad(l, "/stimmen/")} className={`mt-10 ${knopfRahmen}`}>
+          {t.startseiteAlle} <Pfeil className="ml-2" />
         </Link>
       </div>
     </section>
@@ -137,66 +140,74 @@ export function Startseite({ l }: { l: Sprache }) {
   const t = texte[l];
   const e = eintraege(l);
   const h = t.hero;
+  const ed = h.editorial;
+  const auftakt = fotos.auftakt ?? [];
+  const fotoKeynote = auftakt.find((f) => f.src === "/fotos/yousaf.jpg");
+  const fotoSaal = auftakt.find((f) => f.src === "/fotos/saal.jpg");
 
   return (
     <>
-      {/* HERO */}
-      <section>
-        {/* Handy: Titel → Knöpfe → Foto → Einleitung (Knöpfe ohne Scrollen sichtbar). Desktop: Text links, Foto rechts. */}
-        <div className="mx-auto grid max-w-7xl gap-y-8 px-4 pt-8 pb-14 [grid-template-areas:'kopf'_'aktion'_'foto'_'intro'] sm:px-6 sm:pt-14 lg:grid-cols-[1.15fr_1fr] lg:grid-rows-[1fr_auto_auto_auto_1fr] lg:gap-x-14 lg:gap-y-0 lg:px-10 lg:pb-20 lg:[grid-template-areas:'._foto'_'kopf_foto'_'intro_foto'_'aktion_foto'_'._foto']">
-          <div className="[grid-area:kopf]">
-            <h1 className="ohne-trennung font-display text-[clamp(3.1rem,6.2vw,5rem)] leading-[0.88] font-extrabold">
+      {/* HERO – Editorial Split: links 60 % Text, rechts 40 % Foto-Arrangement; Desktop max. 90vh */}
+      <section className="border-b border-line">
+        <div className="mx-auto grid max-w-7xl gap-10 px-4 pt-8 pb-12 sm:px-6 sm:pt-12 lg:h-[calc(90vh-4.5rem)] lg:max-h-[860px] lg:min-h-[600px] lg:grid-cols-[3fr_2fr] lg:gap-14 lg:px-10 lg:py-10">
+          <div className="flex flex-col justify-center">
+            <p className="mono text-[11px] tracking-[0.14em] text-ink-soft uppercase sm:text-xs">[ {ed.kicker} ]</p>
+            <h1 className="ohne-trennung font-display mt-6 text-[clamp(2.5rem,5.2vw,4.75rem)] leading-[0.98] font-extrabold">
               <span className="sr-only">SES Academy – </span>
-              {h.zeilen[0]}
-              <br />
-              {h.zeilen[1]}
-              <br />
-              <span className="marker">{h.zeilen[2]}</span>
+              {ed.vor}
+              <span className="akzent text-forest">{ed.akzent}</span>
+              {ed.nach}
             </h1>
-            <p className="font-serif mt-6 text-2xl italic sm:mt-8">{h.claim}</p>
-          </div>
-          <p className="max-w-xl text-lg text-ink-soft [grid-area:intro] lg:mt-4">{h.intro}</p>
-          <div className="[grid-area:aktion] lg:mt-8">
-            <ul className="mb-5 flex flex-wrap gap-2 text-sm font-semibold lg:hidden">
-              {[h.alter, h.kosten].map((x) => (
-                <li key={x} className="rounded-full bg-paper-deep px-3 py-1.5">{x}</li>
+            <p className="mt-6 max-w-xl text-lg text-ink-soft sm:text-xl">{ed.lead}</p>
+            <div className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-4">
+              <a href={pfad(l, "/bewerbung/")} className={knopfPrimaer}>
+                {bewerbungOffen ? t.bewerbungSeite.nav : h.ctaVormerken} <Pfeil className="ml-2" />
+              </a>
+              <a href="#programm" className="font-semibold underline decoration-ink/35 decoration-1 underline-offset-[6px] transition hover:decoration-ink">
+                {ed.ctaProgramm}
+              </a>
+            </div>
+            <ul className="mono mt-10 flex flex-wrap gap-x-3 gap-y-1 border-t border-line pt-4 text-[12px] tracking-[0.12em] text-ink-soft uppercase">
+              {ed.trust.map((x, i) => (
+                <li key={x} className="flex items-center gap-3">
+                  {i > 0 && <span aria-hidden>•</span>}
+                  {x}
+                </li>
               ))}
             </ul>
-            <div className="flex flex-wrap gap-3">
-              <a href={pfad(l, "/bewerbung/")} className="rounded-full bg-ink px-7 py-4 font-semibold text-paper transition hover:bg-forest">
-                {bewerbungOffen ? t.bewerbungSeite.nav : h.ctaVormerken} <Pfeil className="ml-1.5" />
-              </a>
-              <a href="#programm" className="rounded-full px-7 py-4 font-semibold ring-1 ring-ink/25 transition hover:bg-paper-deep">
-                {h.ctaProgramm}
-              </a>
-            </div>
-            {!bewerbungOffen && (
-              <p className="mt-4 flex max-w-md items-start gap-2 text-sm text-ink-soft">
-                <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-sage" aria-hidden />
-                {h.status}
-              </p>
-            )}
           </div>
 
-          <div className="relative [grid-area:foto]">
-            <div className="relative aspect-[4/5] overflow-hidden rounded-[2rem] bg-paper-deep sm:aspect-[5/4] lg:aspect-[4/5]">
-              <Image src="/fotos/hero.jpg" alt={h.fotoAlt} fill priority sizes="(min-width:1024px) 45vw, 100vw" className="object-cover object-[72%_50%]" />
-              <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-ink/70 to-transparent" />
-              <p className="absolute right-5 bottom-5 left-5 text-sm font-medium text-paper/90">{h.fotoText}</p>
-            </div>
-            <NaechstesSticker
+          {/* Asymmetrisches Foto-Arrangement: Keynote groß, Panel versetzt darüber, Publikum klein */}
+          <div className="relative grid h-[26rem] grid-cols-6 grid-rows-6 gap-3 sm:h-[34rem] lg:h-auto">
+            {fotoKeynote && (
+              <figure className="relative col-span-5 col-start-2 row-span-4 row-start-1 overflow-hidden bg-paper-deep">
+                <Image src={fotoKeynote.src} alt={fotoKeynote.alt[l]} fill priority sizes="(min-width:1024px) 34vw, 85vw" className="object-cover object-[40%_30%]" />
+                <figcaption className="mono absolute top-3 right-3 bg-paper/90 px-2 py-1 text-[10px] tracking-[0.12em] text-ink uppercase">{h.fotoText}</figcaption>
+              </figure>
+            )}
+            <figure className="relative z-10 col-span-4 col-start-1 row-span-3 row-start-4 overflow-hidden bg-paper-deep outline-8 outline-paper">
+              <Image src="/fotos/hero.jpg" alt={h.fotoAlt} fill sizes="(min-width:1024px) 27vw, 66vw" className="object-cover object-[60%_55%]" />
+            </figure>
+            {fotoSaal && (
+              <figure className="relative col-span-2 col-start-5 row-span-2 row-start-5 overflow-hidden bg-paper-deep">
+                <Image src={fotoSaal.src} alt={fotoSaal.alt[l]} fill sizes="(min-width:1024px) 14vw, 33vw" className="object-cover" />
+              </figure>
+            )}
+            <NaechstesBadge
               eintraege={e}
               kicker={t.naechstes.kicker}
-              inKoeln={t.naechstes.inKoeln}
+              modulWort={t.programm.modul}
               kurzDaten={modulplan.map((m) => zeitraumKurz(l, m.von, m.bis))}
+              ortOffen={t.seminar.ortOffen}
+              className="absolute top-4 left-0 z-20 sm:top-6"
             />
           </div>
         </div>
 
-        <div className="overflow-hidden border-y border-ink bg-ink py-4 text-paper" aria-hidden>
-          <div className="laufband flex w-max gap-10 whitespace-nowrap">
+        <div className="overflow-hidden bg-forest py-3 text-paper" aria-hidden>
+          <div className="laufband flex w-max gap-8 whitespace-nowrap">
             {[...t.laufband, ...t.laufband].map((w, i) => (
-              <span key={i} className="font-display flex items-center gap-10 text-2xl font-bold sm:text-3xl">
+              <span key={i} className="font-display flex items-center gap-8 text-xl font-bold sm:text-2xl">
                 {w}
                 <span className="text-signal">✺</span>
               </span>
@@ -205,41 +216,44 @@ export function Startseite({ l }: { l: Sprache }) {
         </div>
       </section>
 
-      {/* ECKDATEN */}
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-10">
-        <dl className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            [h.laufzeitLabel, h.laufzeit],
-            [h.ortLabel, h.ort],
-            [h.alterLabel, h.alter],
-            [h.kostenLabel, h.kosten],
-          ].map(([k, v]) => (
-            <div key={k} className="border-l-2 border-ink pl-5">
-              <dt className="text-sm text-ink-soft">{k}</dt>
-              <dd className="font-display mt-1 text-2xl leading-tight font-bold">{v}</dd>
-            </div>
-          ))}
-        </dl>
+      {/* ECKDATEN – offizielle Einleitung + Fakten im Raster */}
+      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-10">
+        <div className="grid gap-10 lg:grid-cols-[1.1fr_1.6fr] lg:gap-16">
+          <p className="text-lg text-ink-soft">{h.intro}</p>
+          <dl className="grid grid-cols-2 gap-x-6 sm:grid-cols-4">
+            {[
+              [h.laufzeitLabel, h.laufzeit],
+              [h.ortLabel, h.ort],
+              [h.alterLabel, h.alter],
+              [h.kostenLabel, h.kosten],
+            ].map(([k, v]) => (
+              <div key={k} className="border-t border-ink py-4">
+                <dt className="mono text-[11px] tracking-[0.14em] text-ink-soft uppercase">{k}</dt>
+                <dd className="font-display mt-2 text-lg leading-tight font-bold">{v}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
       </section>
 
       <Naechstes eintraege={e} t={t} />
 
       {/* KOMPETENZEN */}
       <section id="kompetenzen" className="scroll-mt-20">
-        <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-10">
+        <div className={abschnitt}>
           <div className="grid gap-12 lg:grid-cols-[1fr_1.35fr]">
             <div>
               <Kicker>{t.kompetenzen.kicker}</Kicker>
               <h2 className={h2}>{t.kompetenzen.titel}</h2>
               <p className="mt-6 max-w-md text-lg text-ink-soft">{t.kompetenzen.intro}</p>
-              <div className="relative mt-10 hidden aspect-[4/3] w-full max-w-sm lg:block">
-                <Image src="/brand/megafon.png" alt="" fill sizes="384px" className="object-contain" />
+              <div className="relative mt-10 hidden aspect-[4/3] w-full max-w-xs lg:block">
+                <Image src="/brand/megafon.png" alt="" fill sizes="320px" className="object-contain" />
               </div>
             </div>
-            <ol className="divide-y divide-line border-y border-line">
+            <ol className="divide-y divide-line border-y border-ink">
               {t.kompetenzen.liste.map((k, i) => (
-                <li key={k.name} className="group grid grid-cols-[2.5rem_1fr] gap-x-4 py-7">
-                  <span className="font-display pt-2 text-sm font-bold text-ink/35">0{i + 1}</span>
+                <li key={k.name} className="group grid grid-cols-[3rem_1fr] gap-x-4 py-6">
+                  <span className="mono pt-3 text-xs text-ink-soft">{String(i + 1).padStart(2, "0")}</span>
                   <div>
                     <p className="font-display text-4xl font-extrabold transition-colors group-hover:text-sage sm:text-5xl">{k.name}</p>
                     <p className="mt-3 text-lg font-semibold">{k.kurz}</p>
@@ -253,8 +267,8 @@ export function Startseite({ l }: { l: Sprache }) {
       </section>
 
       {/* PROGRAMM */}
-      <section id="programm" className="scroll-mt-20 bg-paper-deep/50">
-        <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-10">
+      <section id="programm" className="scroll-mt-20 border-t border-line bg-paper-deep/50">
+        <div className={abschnitt}>
           <div className="grid gap-6 lg:grid-cols-[1fr_1fr] lg:items-end">
             <div>
               <Kicker>{t.programm.kicker}</Kicker>
@@ -270,25 +284,25 @@ export function Startseite({ l }: { l: Sprache }) {
 
       {/* ÜBER + ABLAUF */}
       <section className="bg-forest text-paper">
-        <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-10">
+        <div className={abschnitt}>
           <div className="grid gap-12 lg:grid-cols-2">
             <div>
               <Kicker hell>{t.ueber.kicker}</Kicker>
               <h2 className={h2}>{t.ueber.titel}</h2>
               <p className="mt-6 text-lg text-paper/80">{t.ueber.text}</p>
             </div>
-            <div className="rounded-[2rem] bg-signal p-8 text-ink sm:p-10">
+            <div className="border-t-4 border-signal bg-signal/95 p-8 text-ink sm:p-10">
               <p className="font-display text-3xl leading-tight font-extrabold">{t.ueber.fuerWenTitel}</p>
               <p className="mt-4 text-lg">{t.ueber.fuerWenText}</p>
-              <p className="font-serif mt-6 text-2xl italic">{t.ueber.fuerWenZusatz}</p>
+              <p className="akzent mt-6 text-2xl">{t.ueber.fuerWenZusatz}</p>
             </div>
           </div>
-          <p className="font-display mt-20 text-2xl font-bold">{t.ueber.ablaufTitel}</p>
-          <ol className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <p className="mono mt-16 text-xs tracking-[0.14em] text-signal uppercase">{t.ueber.ablaufTitel}</p>
+          <ol className="mt-5 grid border-t border-paper/25 sm:grid-cols-2 lg:grid-cols-4">
             {t.ueber.ablauf.map((a, i) => (
-              <li key={a.titel} className="rounded-3xl bg-forest-2 p-7">
-                <p className="font-display text-sm font-bold text-signal">0{i + 1}</p>
-                <p className="font-display mt-6 text-2xl font-bold">{a.titel}</p>
+              <li key={a.titel} className="border-b border-paper/15 py-6 sm:pr-8 lg:border-b-0 lg:border-l lg:px-6 lg:first:border-l-0 lg:first:pl-0">
+                <p className="mono text-xs text-signal">{String(i + 1).padStart(2, "0")}</p>
+                <p className="font-display mt-4 text-2xl font-bold">{a.titel}</p>
                 <p className="mt-2 text-paper/75">{a.text}</p>
               </li>
             ))}
@@ -298,7 +312,7 @@ export function Startseite({ l }: { l: Sprache }) {
 
       {/* RÜCKBLICK */}
       <section id="rueckblick" className="scroll-mt-20">
-        <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-10">
+        <div className={abschnitt}>
           <div className="grid gap-6 lg:grid-cols-[1fr_1fr] lg:items-end">
             <div>
               <Kicker>{t.rueckblick.kicker}</Kicker>
@@ -306,45 +320,45 @@ export function Startseite({ l }: { l: Sprache }) {
             </div>
             <p className="text-lg text-ink-soft">{t.rueckblick.text}</p>
           </div>
-          <div className="mt-12 grid grid-cols-2 gap-3 md:grid-cols-4">
-            {(fotos.auftakt ?? []).slice(0, 6).map((f) => (
-              <figure key={f.src} className={`relative overflow-hidden rounded-3xl bg-paper-deep ${f.breit ? "col-span-2 aspect-[16/10]" : "aspect-square md:aspect-auto"}`}>
+          <div className="mt-12 grid grid-cols-2 gap-2 md:grid-cols-4">
+            {auftakt.slice(0, 6).map((f) => (
+              <figure key={f.src} className={`relative overflow-hidden bg-paper-deep ${f.breit ? "col-span-2 aspect-[16/10]" : "aspect-square md:aspect-auto"}`}>
                 <Image src={f.src} alt={f.alt[l]} fill sizes="(min-width:768px) 50vw, 100vw" className="object-cover transition duration-700 hover:scale-105" />
               </figure>
             ))}
           </div>
-          <ul className="mt-6 grid gap-3 md:grid-cols-3">
+          <ul className="mt-10 grid gap-x-8 gap-y-10 md:grid-cols-3">
             {e
               .filter((m) => m.bis < heute())
               .map((m) => {
                 const cover = fotos[m.slug]?.[0];
                 return (
                   <li key={m.slug}>
-                    <Link href={m.href} className="group flex h-full flex-col overflow-hidden rounded-3xl bg-white/60 ring-1 ring-line transition hover:bg-white">
-                      <div className="relative aspect-[16/9] bg-forest">
+                    <Link href={m.href} className="group flex h-full flex-col">
+                      <div className="relative aspect-[16/9] overflow-hidden bg-forest">
                         {cover ? (
                           <Image src={cover.src} alt="" fill sizes="(min-width:768px) 33vw, 100vw" className="object-cover transition duration-700 group-hover:scale-105" />
                         ) : (
                           <div className="muster absolute inset-0 opacity-25" aria-hidden />
                         )}
-                        <span className="absolute top-4 left-4 rounded-full bg-paper px-3 py-1 text-xs font-semibold">{m.artText}</span>
                       </div>
-                      <div className="flex flex-1 flex-col p-6">
-                        <p className="text-sm text-ink-soft">{m.datum}</p>
-                        <p className="font-display mt-2 text-xl leading-tight font-bold">{m.titel}</p>
-                        <p className="mt-auto pt-5 text-sm font-semibold">
-                          {t.berichte.module[m.slug] ? <>{t.berichte.kicker} <Pfeil className="ml-1" /></> : t.berichte.folgt}
-                        </p>
-                      </div>
+                      <p className="mono mt-4 flex justify-between gap-4 border-t border-ink pt-3 text-[11px] tracking-[0.12em] text-ink-soft uppercase">
+                        <span>{m.artText}</span>
+                        <span>{m.datum}</span>
+                      </p>
+                      <p className="font-display mt-2 text-xl leading-tight font-bold">{m.titel}</p>
+                      <p className="mt-auto pt-4 text-sm font-semibold underline-offset-4 group-hover:underline">
+                        {t.berichte.module[m.slug] ? <>{t.berichte.kicker} <Pfeil className="ml-1" /></> : t.berichte.folgt}
+                      </p>
                     </Link>
                   </li>
                 );
               })}
           </ul>
-          <p className="font-display mt-16 text-2xl font-bold">{t.rueckblick.gaesteTitel}</p>
+          <p className="mono mt-16 text-xs tracking-[0.14em] text-sage uppercase">{t.rueckblick.gaesteTitel}</p>
           <GaesteHervorgehoben l={l} t={t} />
-          <details className="group mt-8">
-            <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-full px-6 py-3 font-semibold ring-1 ring-ink/25 transition hover:bg-paper-deep [&::-webkit-details-marker]:hidden">
+          <details className="group mt-10">
+            <summary className={`cursor-pointer list-none gap-3 [&::-webkit-details-marker]:hidden ${knopfRahmen}`}>
               {t.rueckblick.alleZeigen.replace("{n}", String(eindeutigeGaeste(gaeste).length))}
               <span className="transition group-open:rotate-45" aria-hidden>+</span>
             </summary>
@@ -359,7 +373,7 @@ export function Startseite({ l }: { l: Sprache }) {
 
       {/* FAQ */}
       <section id="faq" className="scroll-mt-20 border-t border-line">
-        <div className="mx-auto grid max-w-7xl gap-12 px-4 py-24 sm:px-6 lg:grid-cols-[1fr_2fr] lg:px-10">
+        <div className={`${abschnitt} grid gap-12 lg:grid-cols-[1fr_2fr]`}>
           <div>
             <Kicker>{t.faq.kicker}</Kicker>
             <h2 className={h2}>{t.faq.titel}</h2>
@@ -375,25 +389,25 @@ export function Startseite({ l }: { l: Sprache }) {
 
 function Kontakt({ l, t }: { l: Sprache; t: Texte }) {
   return (
-    <section id="kontakt" className="scroll-mt-20 px-4 pb-24 sm:px-6 lg:px-10">
-      <div className="mx-auto grid max-w-7xl gap-8 rounded-[2rem] bg-ink p-8 text-paper sm:p-12 lg:grid-cols-[1.3fr_1fr] lg:items-center lg:p-16">
+    <section id="kontakt" className="scroll-mt-20 bg-ink text-paper">
+      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1.3fr_1fr] lg:items-center lg:px-10">
         <div>
-          <p className="font-display text-[clamp(2.2rem,5vw,4rem)] leading-[0.95] font-extrabold">{t.kontakt.titel}</p>
+          <p className="font-display text-[clamp(2.2rem,5vw,3.8rem)] leading-[0.95] font-extrabold">{t.kontakt.titel}</p>
           <p className="mt-4 text-lg text-paper/75">{t.kontakt.text}</p>
-          <p className="mt-6 max-w-xl text-paper/60">
+          <p className="mt-6 max-w-xl border-t border-paper/20 pt-4 text-paper/60">
             <strong className="text-paper">{t.bewerbung.titel}</strong> {t.bewerbungSeite.status}
           </p>
-          <a href={pfad(l, "/bewerbung/")} className="mt-6 inline-block rounded-full px-6 py-3 font-semibold ring-1 ring-paper/30 transition hover:bg-paper hover:text-ink">
-            {t.bewerbungSeite.nav} <Pfeil className="ml-1.5" />
+          <a href={pfad(l, "/bewerbung/")} className="mt-6 inline-flex items-center border border-paper/40 px-5 py-3 font-semibold transition hover:bg-paper hover:text-ink">
+            {bewerbungOffen ? t.bewerbungSeite.nav : t.hero.ctaVormerken} <Pfeil className="ml-2" />
           </a>
         </div>
         <a
           href="mailto:ses@islamrat.de?subject=SES%20Academy"
-          className="font-display group flex items-center justify-between gap-4 rounded-3xl bg-signal p-6 text-2xl font-bold text-ink transition hover:bg-paper sm:text-3xl"
+          className="font-display group flex items-center justify-between gap-4 bg-signal p-6 text-2xl font-bold text-ink transition hover:bg-paper sm:p-8 sm:text-3xl"
         >
           <span>
             {t.kontakt.cta}
-            <span className="mt-1 block font-sans text-base font-medium">ses@islamrat.de</span>
+            <span className="mono mt-2 block text-sm font-normal tracking-normal">ses@islamrat.de</span>
           </span>
           <Pfeil className="text-3xl" />
         </a>
@@ -418,7 +432,7 @@ export function Seminarseite({ l, slug }: { l: Sprache; slug: ModulSlug }) {
           <Link href={`${pfad(l)}#programm`} className="text-sm font-semibold text-ink-soft hover:text-ink">
             <Pfeil richtung="links" className="mr-1.5" />{t.seminar.zurueck}
           </Link>
-          <p className="mt-10 w-fit rounded-full bg-ink px-4 py-1.5 text-xs font-semibold text-paper">
+          <p className="mt-10 w-fit bg-ink px-4 py-1.5 text-xs font-semibold text-paper">
             {t.programm.modul} {String(i + 1).padStart(2, "0")} · {m.artText}
           </p>
           <h1 className="font-display mt-6 max-w-5xl text-[clamp(2.4rem,6.5vw,5.5rem)] leading-[0.95] font-extrabold">{m.titel}</h1>
@@ -458,7 +472,7 @@ export function Seminarseite({ l, slug }: { l: Sprache; slug: ModulSlug }) {
                   {t.berichte.module[slug]!.zitate && (
                     <div className="space-y-4">
                       {t.berichte.module[slug]!.zitate!.map((z) => (
-                        <figure key={z.text} className="rounded-3xl bg-forest p-7 text-paper">
+                        <figure key={z.text} className="bg-forest p-7 text-paper">
                           <blockquote className="font-serif text-2xl leading-snug italic">{z.text}</blockquote>
                           <figcaption className="mt-3 text-sm">
                             <span className="font-semibold text-signal">{z.wer}</span>
@@ -481,7 +495,7 @@ export function Seminarseite({ l, slug }: { l: Sprache; slug: ModulSlug }) {
             <p className="font-display text-2xl font-bold">{t.seminar.eindruecke}</p>
             <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3">
               {fotos[slug]!.map((f) => (
-                <figure key={f.src} className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-paper-deep">
+                <figure key={f.src} className="relative aspect-[4/3] overflow-hidden bg-paper-deep">
                   <Image src={f.src} alt={f.alt[l]} fill sizes="(min-width:768px) 33vw, 50vw" className="object-cover" />
                 </figure>
               ))}
@@ -500,7 +514,7 @@ export function Seminarseite({ l, slug }: { l: Sprache; slug: ModulSlug }) {
 
         <nav className="mx-auto grid max-w-7xl gap-3 px-4 pb-24 sm:grid-cols-2 sm:px-6 lg:px-10" aria-label={t.programm.titel}>
           {vorher ? (
-            <Link href={vorher.href} className="rounded-3xl bg-white/50 p-6 ring-1 ring-line hover:bg-white">
+            <Link href={vorher.href} className="bg-white/50 p-6 ring-1 ring-line hover:bg-white">
               <p className="text-sm text-ink-soft"><Pfeil richtung="links" className="mr-1.5" />{t.seminar.vorher}</p>
               <p className="font-display mt-2 text-xl font-bold">{vorher.titel}</p>
             </Link>
@@ -508,7 +522,7 @@ export function Seminarseite({ l, slug }: { l: Sprache; slug: ModulSlug }) {
             <span />
           )}
           {nachher && (
-            <Link href={nachher.href} className="rounded-3xl bg-white/50 p-6 text-right ring-1 ring-line hover:bg-white">
+            <Link href={nachher.href} className="bg-white/50 p-6 text-right ring-1 ring-line hover:bg-white">
               <p className="text-sm text-ink-soft">{t.seminar.nachher}<Pfeil className="ml-1.5" /></p>
               <p className="font-display mt-2 text-xl font-bold">{nachher.titel}</p>
             </Link>
@@ -535,7 +549,7 @@ export function Bewerbungsseite({ l }: { l: Sprache }) {
           </h1>
           <p className="mt-8 max-w-xl text-xl text-ink-soft">{b.intro}</p>
         </div>
-        <div className="rounded-[2rem] bg-signal p-7 sm:p-9">
+        <div className="bg-signal p-7 sm:p-9">
           <p className="font-display text-2xl leading-tight font-extrabold">{t.bewerbung.titel}</p>
           <p className="mt-3 text-lg">{b.status}</p>
         </div>
@@ -558,7 +572,7 @@ export function Bewerbungsseite({ l }: { l: Sprache }) {
             <p className="font-display text-3xl font-extrabold">{b.ablaufTitel}</p>
             <ol className="mt-6 space-y-3">
               {b.ablauf.map((a, i) => (
-                <li key={a.titel} className="rounded-3xl bg-forest-2 p-6">
+                <li key={a.titel} className="bg-forest-2 p-6">
                   <p className="font-display text-sm font-bold text-signal">0{i + 1}</p>
                   <p className="font-display mt-2 text-2xl font-bold">{a.titel}</p>
                   <p className="mt-1 text-paper/75">{a.text}</p>
@@ -620,8 +634,8 @@ export function Beitragsseite({ l, slug }: { l: Sprache; slug: string }) {
         <Pfeil richtung="links" className="mr-1.5" />{t.zurueck}
       </Link>
       <div className="mt-10 flex flex-wrap items-center gap-2 text-xs font-semibold">
-        {k.muster && <span className="rounded-full bg-signal px-2.5 py-1 uppercase">{t.muster}</span>}
-        <span className="rounded-full bg-ink px-2.5 py-1 text-paper">{t.typ[k.typ]}</span>
+        {k.muster && <span className="bg-signal px-2.5 py-1 uppercase">{t.muster}</span>}
+        <span className="bg-ink px-2.5 py-1 text-paper">{t.typ[k.typ]}</span>
         <span className="text-ink-soft">{t.laender[k.land]}</span>
       </div>
       <h1 lang={k.sprache} className="font-display mt-6 text-[clamp(2.4rem,6vw,4.5rem)] leading-[0.95] font-extrabold">{k.titel}</h1>
@@ -654,7 +668,7 @@ export function Beitragsseite({ l, slug }: { l: Sprache; slug: string }) {
         </div>
       )}
       {k.bild && (
-        <div className="relative mt-10 aspect-[4/3] overflow-hidden rounded-3xl bg-paper-deep">
+        <div className="relative mt-10 aspect-[4/3] overflow-hidden bg-paper-deep">
           <Image src={k.bild} alt="" fill sizes="768px" className="object-contain" />
         </div>
       )}
@@ -668,7 +682,7 @@ export function Beitragsseite({ l, slug }: { l: Sprache; slug: string }) {
           href={k.extern.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-10 inline-flex rounded-full bg-ink px-7 py-4 font-semibold text-paper transition hover:bg-forest"
+          className="mt-10 inline-flex bg-forest px-7 py-4 font-semibold text-paper transition hover:bg-signal hover:text-ink"
         >
           {t.zumArtikel} · {k.extern.medium}
           <Pfeil richtung="extern" className="ml-2" />
@@ -692,10 +706,10 @@ export function Presseseite({ l }: { l: Sprache }) {
         <h1 className="font-display mt-6 max-w-4xl text-[clamp(2.8rem,8vw,6.5rem)] leading-[0.9] font-extrabold">{p.titel}</h1>
         <p className="mt-8 max-w-2xl text-xl text-ink-soft">{p.intro}</p>
         <div className="mt-8 flex flex-wrap gap-3">
-          <a href={`/presse/SES-Academy-${l}.pdf`} download className="rounded-full bg-ink px-7 py-4 font-semibold text-paper transition hover:bg-forest">
+          <a href={`/presse/SES-Academy-${l}.pdf`} download className="bg-forest px-7 py-4 font-semibold text-paper transition hover:bg-signal hover:text-ink">
             <Pfeil richtung="runter" className="mr-2" />{p.onepager}
           </a>
-          <a href="/brand/ses-logo.png" download="SES-Academy-Logo.png" className="rounded-full px-7 py-4 font-semibold ring-1 ring-ink/25 transition hover:bg-paper-deep">
+          <a href="/brand/ses-logo.png" download="SES-Academy-Logo.png" className="px-7 py-4 font-semibold ring-1 ring-ink/25 transition hover:bg-paper-deep">
             <Pfeil richtung="runter" className="mr-2" />{p.logo}
           </a>
         </div>
@@ -731,7 +745,7 @@ export function Presseseite({ l }: { l: Sprache }) {
           {gaeste
             .filter((g) => auswahl.includes(g.name))
             .map((g) => (
-              <li key={g.name} className="rounded-full bg-white/60 px-4 py-2 ring-1 ring-line">
+              <li key={g.name} className="bg-white/60 px-4 py-2 ring-1 ring-line">
                 <span className="font-semibold">{g.name}</span>
                 {g.rolle && <span className="text-ink-soft"> · {g.rolle[l] ?? g.rolle.de}</span>}
               </li>
@@ -743,7 +757,7 @@ export function Presseseite({ l }: { l: Sprache }) {
           {pressefotos.map((src) => (
             <li key={src}>
               <a href={src} download className="group block">
-                <span className="relative block aspect-[4/3] overflow-hidden rounded-2xl bg-paper-deep">
+                <span className="relative block aspect-[4/3] overflow-hidden bg-paper-deep">
                   <Image src={src} alt="" fill sizes="(min-width:768px) 25vw, 50vw" className="object-cover transition group-hover:scale-105" />
                 </span>
                 <span className="mt-2 block text-sm text-ink-soft"><Pfeil richtung="runter" className="mr-1.5" />{p.fotoCredit}</span>
@@ -752,7 +766,7 @@ export function Presseseite({ l }: { l: Sprache }) {
           ))}
         </ul>
 
-        <div className="mt-16 grid gap-6 rounded-[2rem] bg-signal p-8 sm:p-10 md:grid-cols-[1fr_auto] md:items-center">
+        <div className="mt-16 grid gap-6 bg-signal p-8 sm:p-10 md:grid-cols-[1fr_auto] md:items-center">
           <div>
             <p className="text-sm font-semibold">{p.kontaktTitel}</p>
             <p className="font-display mt-2 text-3xl font-extrabold">Murat Gümüş</p>

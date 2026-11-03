@@ -23,7 +23,7 @@ export function Faq({ t }: { t: Texte["faq"] }) {
         value={suche}
         onChange={(e) => setSuche(e.target.value)}
         placeholder={t.suche}
-        className="w-full rounded-full bg-white/70 px-6 py-4 text-lg ring-1 ring-line outline-none placeholder:text-ink-soft/60 focus:ring-2 focus:ring-ink"
+        className="w-full border-b border-ink bg-transparent px-1 py-4 text-lg outline-none placeholder:text-ink-soft/60 focus:border-forest focus:bg-white/40"
       />
       <div className="mt-6 divide-y divide-line border-y border-line">
         {treffer.map((f) => (
@@ -31,7 +31,7 @@ export function Faq({ t }: { t: Texte["faq"] }) {
             <summary className="flex cursor-pointer list-none items-center justify-between gap-6 py-5 text-left [&::-webkit-details-marker]:hidden">
               <span className="font-display text-xl font-bold sm:text-2xl">{f.frage}</span>
               <span
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink text-xl leading-none text-paper transition-transform group-open:rotate-45"
+                className="mono flex h-9 w-9 shrink-0 items-center justify-center border border-ink text-xl leading-none text-ink transition-transform group-hover:bg-ink group-hover:text-paper group-open:rotate-45"
                 aria-hidden
               >
                 +

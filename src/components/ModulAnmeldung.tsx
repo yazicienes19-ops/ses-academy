@@ -29,21 +29,21 @@ export function ModulAnmeldung({ l, slug, felder: f }: { l: Sprache; slug: strin
   }
 
   const fertig = { angemeldet: t.anmeldungOk, warteliste: t.anmeldungWarteliste, schon: t.anmeldungSchon }[zustand.status as "angemeldet"];
-  const feld = "w-full rounded-2xl bg-white/80 px-4 py-3.5 text-lg ring-1 ring-line outline-none transition focus:ring-2 focus:ring-ink";
+  const feld = "w-full bg-white/80 px-4 py-3.5 text-lg ring-1 ring-line outline-none transition focus:ring-2 focus:ring-ink";
   const label = "mb-1.5 block text-sm font-semibold";
 
   return (
     <section id="anmeldung" className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-10">
-      <div className="max-w-3xl rounded-[2rem] bg-forest p-6 text-paper sm:p-10">
+      <div className="max-w-3xl bg-forest p-6 text-paper sm:p-10">
         <h2 className="font-display text-3xl font-bold">{t.anmeldungTitel}</h2>
         <p className="mt-2 text-paper/80">{t.anmeldungIntro}</p>
         {lage.frei !== null && (
-          <p className="mt-3 w-fit rounded-full bg-signal px-4 py-1.5 text-sm font-semibold text-ink">
+          <p className="mt-3 w-fit bg-signal px-4 py-1.5 text-sm font-semibold text-ink">
             {lage.frei > 0 ? t.anmeldungFrei(lage.frei) : t.anmeldungVoll}
           </p>
         )}
         {fertig ? (
-          <p role="status" className="mt-6 rounded-3xl bg-paper p-6 text-lg text-ink">{fertig}</p>
+          <p role="status" className="mt-6 bg-paper p-6 text-lg text-ink">{fertig}</p>
         ) : (
           <form onSubmit={absenden} className="mt-6 grid gap-4 text-ink sm:grid-cols-2">
             <input type="hidden" name="slug" value={slug} />
@@ -69,7 +69,7 @@ export function ModulAnmeldung({ l, slug, felder: f }: { l: Sprache; slug: strin
               <span className="text-paper/80">{t.anmeldungEinwilligung}</span>
             </label>
             <div className="sm:col-span-2">
-              <button type="submit" disabled={sendet} className="w-full rounded-full bg-signal px-8 py-4 text-lg font-semibold text-ink transition hover:bg-paper disabled:opacity-60 sm:w-auto">
+              <button type="submit" disabled={sendet} className="w-full bg-signal px-8 py-4 text-lg font-semibold text-ink transition hover:bg-paper disabled:opacity-60 sm:w-auto">
                 {t.anmeldungSenden} <Pfeil className="ml-2" />
               </button>
               {zustand.status === "fehler" && <p role="alert" className="mt-3 text-sm text-signal">{t.anmeldungFehler}</p>}
