@@ -51,12 +51,13 @@ export default async function Freigaben({ searchParams }: PageProps<"/team/freig
           {offenFremd.length === 0 && <p className="mt-2 text-ink-soft">Nichts offen.</p>}
           <ul className="mt-3 space-y-3">
             {offenFremd.map((a) => {
-              const p = a.payload as { betreff?: string; text?: string; anzahl?: number; email?: string; name?: string; rolle?: string; art?: string; filter?: Record<string, string> };
+              const p = a.payload as { betreff?: string; text?: string; betreff_tr?: string; text_tr?: string; anzahl?: number; email?: string; name?: string; rolle?: string; art?: string; filter?: Record<string, string> };
               return (
                 <li key={a.id} className="karte">
                   <p className="text-xs font-semibold tracking-wide text-ink-soft uppercase">{aktionName[a.action]} · beantragt von {name.get(a.requested_by) ?? "?"} · {zeit.format(new Date(a.requested_at))}</p>
                   <p className="mt-1 font-semibold">{a.summary}</p>
-                  {p.text && <pre className="mt-3 max-h-64 overflow-auto rounded-2xl bg-paper p-3 font-sans text-sm whitespace-pre-wrap">{p.text}</pre>}
+                  {p.text && <pre className="mt-3 max-h-64 overflow-auto rounded-2xl bg-paper p-3 font-sans text-sm whitespace-pre-wrap">{p.text_tr ? <span className="mb-1 block text-xs font-semibold text-ink-soft">Deutsch · Betreff: {p.betreff}</span> : null}{p.text}</pre>}
+                  {p.text_tr && <pre lang="tr" className="mt-3 max-h-64 overflow-auto rounded-2xl bg-paper p-3 font-sans text-sm whitespace-pre-wrap"><span className="mb-1 block text-xs font-semibold text-ink-soft">Türkisch · Betreff: {p.betreff_tr}</span>{p.text_tr}</pre>}
                   {a.action === "team_zugang" && (
                     <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 text-sm">
                       {p.email && <><dt className="text-ink-soft">E-Mail</dt><dd>{p.email}</dd></>}

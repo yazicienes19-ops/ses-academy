@@ -108,6 +108,77 @@ if (teil("export")) {
   ok(anonym.status() >= 300 && anonym.status() < 400, "Ohne Login: kein Export");
 }
 
+// ---------------------------------------------------------------------------
+// 3. Rundmails: Vorlage, Sprache nach Konto, Empfängerzahl, Testmail, Vier-Augen, Versand je Sprache
+// ---------------------------------------------------------------------------
+if (teil("rundmail")) {
+  await mailsLeeren();
+  sql("update participants set preferred_language = 'tr' where email = 'leila@example.test'");
+  sql("delete from message_templates where name like 'TestWunsch%'");
+  const admin = await teamLogin(browser, "admin@ses.test");
+  await admin.goto(`${BASIS}/team/nachrichten/`);
+  await admin.getByLabel("Nach Kontosprache").check();
+  await admin.fill("#betreff", "TestWunsch Treffen");
+  await admin.fill("#text", "Wir treffen uns am Samstag.");
+  await admin.fill("#betreff_tr", "TestWunsch Buluşma");
+  await admin.fill("#text_tr", "Cumartesi günü buluşuyoruz.");
+  await admin.locator("summary", { hasText: "Als Vorlage speichern" }).click();
+  await admin.fill("#vorlage_name", "TestWunsch Treffen");
+  await admin.getByRole("button", { name: "Vorlage speichern" }).click();
+  await admin.getByText("Vorlage „TestWunsch Treffen“ gespeichert.").waitFor();
+  ok(sql("select subject_de || '/' || subject_tr from message_templates where name = 'TestWunsch Treffen'") === "TestWunsch Treffen/TestWunsch Buluşma", "Vorlage mit beiden Sprachen gespeichert");
+
+  // Vorlage wieder auswählen füllt das Formular
+  await admin.reload();
+  await admin.selectOption("#vorlage", { label: "TestWunsch Treffen" });
+  ok(await admin.inputValue("#text_tr") === "Cumartesi günü buluşuyoruz." && await admin.getByLabel("Nach Kontosprache").isChecked(), "Vorlage auswählen füllt Texte und Sprache");
+
+  ok(await admin.getByRole("button", { name: "Zur Freigabe vorlegen" }).count() === 0, "Vorlegen erst nach dem Prüfen");
+  await admin.getByRole("button", { name: "Empfänger zählen und prüfen" }).click();
+  const zahl = Number(sql("select count(*) from participants where active and email is not null"));
+  await admin.getByText(`${zahl} Empfänger:innen`).waitFor();
+  ok(await admin.getByText(`${zahl - 1} auf Deutsch, 1 auf Türkisch`).isVisible(), `Empfängerzahl ${zahl}, davon 1 auf Türkisch`);
+  await admin.getByRole("button", { name: "Testmail an mich" }).click();
+  await admin.getByText("Zwei Testmails (Deutsch und Türkisch) an admin@ses.test verschickt.").waitFor();
+  const tests = await mailsWarten("admin@ses.test", "[Test]", 2);
+  ok(tests.some((m) => m.Subject === "[Test] TestWunsch Treffen" && m.Text.startsWith("Hallo Admin,")) &&
+     tests.some((m) => m.Subject === "[Test] TestWunsch Buluşma" && m.Text.startsWith("Merhaba Admin,")), "Testmails in beiden Sprachen an mich");
+  // Änderung nach dem Prüfen: neu prüfen nötig
+  await admin.fill("#text", "Wir treffen uns am Samstag um 10 Uhr.");
+  ok(await admin.getByText("Seit der Prüfung wurde etwas geändert").isVisible() && await admin.getByRole("button", { name: "Zur Freigabe vorlegen" }).count() === 0, "Nach Änderung erst neu prüfen");
+  await admin.getByRole("button", { name: "Empfänger zählen und prüfen" }).click();
+  await admin.getByRole("button", { name: "Zur Freigabe vorlegen" }).click();
+  await admin.waitForURL(/hinweis=beantragt/);
+  ok(sql("select count(*) from email_log where kind like 'nachricht:%'") === "0", "Vorlegen und Testmail verschicken nichts an Teilnehmende");
+
+  const vorstand = await teamLogin(browser, "vorstand@ses.test", 390);
+  await vorstand.goto(`${BASIS}/team/freigaben/`);
+  const karte = vorstand.locator("li", { hasText: "TestWunsch Treffen" });
+  ok(await karte.getByText(`an ${zahl} Personen`).isVisible() && await karte.getByText("nach Kontosprache: 1 auf Türkisch").isVisible(), "Freigabe zeigt Anzahl und Sprachen");
+  ok(await karte.getByText("Cumartesi günü buluşuyoruz.").isVisible(), "Freigabe zeigt auch den türkischen Text");
+  await karte.getByRole("button", { name: "Freigeben" }).click();
+  await vorstand.getByText("Freigegeben.").waitFor();
+  ok(await keinUeberlauf(vorstand), "Freigaben am Handy ohne seitliches Scrollen");
+
+  await admin.goto(`${BASIS}/team/nachrichten/`);
+  await admin.getByRole("button", { name: `Jetzt an ${zahl} Personen senden` }).click();
+  await admin.waitForURL(/gesendet-/);
+  const leila = (await mailsWarten("leila@example.test", "TestWunsch"))[0];
+  const amina = (await mailsWarten("amina@example.test", "TestWunsch"))[0];
+  ok(leila?.Subject === "TestWunsch Buluşma" && leila.Text.startsWith("Merhaba Leila,") && leila.Text.includes("Selamlarımızla"), "Türkisches Konto bekommt den türkischen Text");
+  ok(amina?.Subject === "TestWunsch Treffen" && amina.Text.includes("um 10 Uhr") && amina.Text.startsWith("Hallo Amina,"), "Deutsches Konto bekommt den deutschen Text (geänderte Fassung)");
+
+  // Handy: Formular ohne seitliches Scrollen
+  const handy = await teamLogin(browser, "admin@ses.test", 390);
+  await handy.goto(`${BASIS}/team/nachrichten/`);
+  await handy.getByLabel("Nach Kontosprache").check();
+  ok(await keinUeberlauf(handy), "Nachrichten am Handy ohne seitliches Scrollen");
+
+  sql("update participants set preferred_language = 'de' where email = 'leila@example.test'");
+  sql("delete from message_templates where name like 'TestWunsch%'");
+  sql("delete from email_log where kind like 'nachricht:%'; delete from approvals where summary like '%TestWunsch%'");
+}
+
 await browser.close();
 console.log(fehler ? `\n${fehler} Fehler` : "\nAlles in Ordnung.");
 process.exit(fehler ? 1 : 0);

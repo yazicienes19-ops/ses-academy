@@ -370,6 +370,8 @@ if (teil("freigaben")) {
   await admin.goto(`${BASIS}/team/nachrichten/`);
   await admin.fill("#betreff", "TestNach Ablehnung");
   await admin.fill("#text", "Bitte nicht senden.");
+  // Seit den Wünschen vom 07.11.: erst Empfänger zählen und prüfen, dann vorlegen
+  await admin.getByRole("button", { name: "Empfänger zählen und prüfen" }).click();
   await admin.getByRole("button", { name: "Zur Freigabe vorlegen" }).click();
   await admin.waitForURL(/hinweis=/);
   const vorstand = await teamLogin(browser, "vorstand@ses.test", 390);

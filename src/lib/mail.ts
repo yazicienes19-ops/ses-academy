@@ -283,16 +283,29 @@ export async function sendeHausaufgabenErinnerung(participantId: string, assignm
   return ergebnis;
 }
 
-/** Nachricht an alle (nach Vier-Augen-Freigabe): persönliche Anrede, Text, Link zu „Mein Bereich“. */
-export async function sendeNachricht(an: { participant_id: string; email: string; first_name: string }, betreff: string, text: string, antragId: string, von?: string): Promise<Ergebnis> {
-  const voll = [`Hallo ${an.first_name},`, "", text, "", `Mein Bereich: ${seitenUrl("/mein-bereich/")}`, "", "Herzliche Grüße", "Dein SES-Academy-Team"].join("\n");
+/** Rundmail in einer Sprache: Betreff und Text (ohne Anrede und Gruß, die kommen hier dazu). */
+export type RundmailText = { betreff: string; text: string; sprache: "de" | "tr" };
+
+/** Text einer Rundmail mit persönlicher Anrede, Link zu „Mein Bereich“ und Gruß, auf Deutsch oder Türkisch. */
+export function rundmailVoll(vorname: string, inhalt: RundmailText): string {
+  const tr = inhalt.sprache === "tr";
+  return [tr ? `Merhaba ${vorname},` : `Hallo ${vorname},`, "", inhalt.text, "", `Mein Bereich: ${seitenUrl("/mein-bereich/")}`, "",
+    ...(tr ? ["Selamlarımızla", "SES Academy ekibi"] : ["Herzliche Grüße", "Dein SES-Academy-Team"])].join("\n");
+}
+
+/**
+ * Nachricht an alle (nach Vier-Augen-Freigabe): persönliche Anrede, Text, Link zu „Mein Bereich“.
+ * test = an diese Adresse statt an die Person (Testmail an sich selbst); zählt dann nicht als versendet.
+ */
+export async function sendeNachricht(an: { participant_id: string | null; email: string; first_name: string }, inhalt: RundmailText, antragId: string, von?: string, test = false): Promise<Ergebnis> {
+  const voll = rundmailVoll(an.first_name, inhalt);
   const ergebnis = await senden({
     to: an.email,
-    subject: betreff,
+    subject: test ? `[Test] ${inhalt.betreff}` : inhalt.betreff,
     text: voll,
-    html: `<div style="font-family:Arial,Helvetica,sans-serif;color:#13201a;max-width:560px;line-height:1.6;white-space:pre-line">${html(voll)}</div>`,
+    html: `<div lang="${inhalt.sprache}" style="font-family:Arial,Helvetica,sans-serif;color:#13201a;max-width:560px;line-height:1.6;white-space:pre-line">${html(voll)}</div>`,
   });
-  await protokolliere({ participantId: an.participant_id, art: `nachricht:${antragId}`, an: an.email, ergebnis, von });
+  if (!test) await protokolliere({ participantId: an.participant_id, art: `nachricht:${antragId}`, an: an.email, ergebnis, von });
   return ergebnis;
 }
 

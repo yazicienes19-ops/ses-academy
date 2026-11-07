@@ -585,6 +585,20 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"message_templates": {
+                  Row: {
+                    "body_de": string,"body_tr": string,"created_at": string,"created_by": string | null,"id": string,"name": string,"subject_de": string,"subject_tr": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "body_de"?: string,"body_tr"?: string,"created_at"?: string,"created_by"?: string | null,"id"?: string,"name": string,"subject_de"?: string,"subject_tr"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "body_de"?: string,"body_tr"?: string,"created_at"?: string,"created_by"?: string | null,"id"?: string,"name"?: string,"subject_de"?: string,"subject_tr"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"module_day_speakers": {
                   Row: {
                     "affiliation": string,"created_at": string,"created_by": string | null,"display_name": string,"id": string,"kind": string,"module_day_id": string,"participant_id": string | null,"topic": string
