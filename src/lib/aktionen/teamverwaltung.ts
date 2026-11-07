@@ -143,6 +143,9 @@ export async function mitgliedEntfernen(formData: FormData) {
   const staff = await requireStaff("admin");
   const userId = String(formData.get("user_id"));
   if (userId === staff.userId) zurueck("selbst");
+  // Folgenschwer: nur nach der Rückfrage (Rueckfrage schickt bestaetigt=ja)
+  if (formData.get("bestaetigt") !== "ja") return;
+
   const supabase = await createClient();
   await supabase.from("staff_members").delete().eq("user_id", userId);
   // Fremdschlüssel auf auth.users (checked_in_by, actor_id, ...) verhindern das Löschen, wenn das Konto

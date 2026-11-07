@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Mail, Phone, QrCode, Send } from "lucide-react";
 import { Hinweis as Meldung } from "@/components/team/Hinweis";
 import { KontaktFormular, KontaktKnoepfe, KontaktVerlauf, NotizFormular, ZusageKnoepfe, kontaktHinweise, type Kontakt } from "@/components/team/Kontakt";
+import { Rueckfrage } from "@/components/team/Rueckfrage";
 import { TeamKopf } from "@/components/team/TeamKopf";
 import { Rueckmeldung, laender } from "@/components/team/Ui";
 import { MailHinweis } from "@/components/team/MailHinweis";
@@ -272,9 +273,9 @@ export default async function Person({ params, searchParams }: PageProps<"/team/
                           {b.website_slug && <> · <a href={`/stimmen/${b.website_slug}/`} className="link">auf der Website</a></>}
                         </p>
                       </div>
-                      <form action={beitragEntfernen}>
+                      <form action={beitragEntfernen} className="max-w-56">
                         <input type="hidden" name="id" value={b.id} /><input type="hidden" name="participant_id" value={p.id} />
-                        <button className="text-xs text-rot hover:underline">Entfernen</button>
+                        <Rueckfrage knopf="Entfernen" knopfKlasse="text-xs text-rot hover:underline" gefahr ja="Ja, entfernen" frage={`Beitrag „${b.title}“ entfernen?`} />
                       </form>
                     </li>
                   ))}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Rueckfrage } from "@/components/team/Rueckfrage";
 import { TeamKopf } from "@/components/team/TeamKopf";
 import { Rueckmeldung, Titel } from "@/components/team/Ui";
 import { requireStaff } from "@/lib/auth";
@@ -78,9 +79,9 @@ export default async function Abgabe({ params, searchParams }: PageProps<"/team/
                   {zugeordnet.map((p) => (
                     <li key={p.id} className="flex items-center justify-between gap-2">
                       <span className="font-semibold">{p.display_name ?? "?"}<span className="font-normal text-ink-soft">{p.region ? ` · ${p.region}` : ""}</span></span>
-                      <form action={personEntfernen}>
+                      <form action={personEntfernen} className="max-w-56">
                         <input type="hidden" name="submission_id" value={id} /><input type="hidden" name="participant_id" value={p.id} />
-                        <button className="text-xs text-rot hover:underline">entfernen</button>
+                        <Rueckfrage knopf="entfernen" knopfKlasse="text-xs text-rot hover:underline" gefahr ja="Ja, entfernen" frage={`${p.display_name ?? "Person"} aus dieser Abgabe entfernen? Die Abgabe zählt dann nicht mehr für sie.`} />
                       </form>
                     </li>
                   ))}

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Phone } from "lucide-react";
 import { Hinweis } from "@/components/team/Hinweis";
 import { Ergebnis, kontaktHinweise, wann } from "@/components/team/Kontakt";
+import { Rueckfrage } from "@/components/team/Rueckfrage";
 import { TeamKopf } from "@/components/team/TeamKopf";
 import { Leer, Rueckmeldung, Titel } from "@/components/team/Ui";
 import { MailHinweis } from "@/components/team/MailHinweis";
@@ -89,7 +90,8 @@ export default async function Teilnehmende({ searchParams }: PageProps<"/team/te
         {alles && ohneLogin > 0 && (
           <form action={willkommenAnAlle} className="mb-6 flex flex-wrap items-center gap-3 rounded-2xl bg-white/70 p-4 ring-1 ring-line">
             <p className="mr-auto text-sm">{ohneLogin} Teilnehmende mit E-Mail haben sich noch nie angemeldet und noch keine Willkommensmail bekommen. Sie enthält Ticket und Anleitung zum Login.</p>
-            <button type="submit" className="knopf">Willkommensmail senden</button>
+            <Rueckfrage knopf="Willkommensmail senden" knopfKlasse="knopf" ja={`Ja, an ${ohneLogin} senden`}
+              frage={`Willkommensmail jetzt an ${ohneLogin} Teilnehmende senden? Jede Person bekommt sie nur einmal.`} />
             <MailHinweis knapp className="w-full" />
           </form>
         )}

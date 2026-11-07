@@ -151,6 +151,8 @@ export async function programmpunktEntfernen(formData: FormData) {
   const id = String(formData.get("id"));
   const pfad = `/team/regieplan/?tag=${tagId}`;
   if (!istToken(id)) zurueck(pfad, "eingabe");
+  // Folgenschwer: nur nach der Rückfrage (Rueckfrage schickt bestaetigt=ja)
+  if (formData.get("bestaetigt") !== "ja") return;
   const supabase = await createClient();
   const { error } = await supabase.from("program_items").delete().eq("id", id);
   zurueck(pfad, error ? "fehler" : "punkt-entfernt");
@@ -221,6 +223,8 @@ export async function einsatzEntfernen(formData: FormData) {
   const id = String(formData.get("id"));
   const pfad = `/team/regieplan/?tag=${tagId}`;
   if (!istToken(id)) zurueck(pfad, "eingabe");
+  // Folgenschwer: nur nach der Rückfrage (Rueckfrage schickt bestaetigt=ja)
+  if (formData.get("bestaetigt") !== "ja") return;
   const supabase = await createClient();
   const { error } = await supabase.from("duty_assignments").delete().eq("id", id);
   zurueck(pfad, error ? "fehler" : "einsatz-entfernt");

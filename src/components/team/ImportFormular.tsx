@@ -21,10 +21,13 @@ export function ImportFormular({ module = [] }: { module?: ModulWahl[] }) {
   const infos = z.bericht?.hinweise.filter((h) => h.stufe !== "warnung") ?? [];
 
   // Ohne <form action>: React würde das Formular (samt gewählter Datei) nach der Vorschau zurücksetzen.
+  const [rueckfrage, setRueckfrage] = useState(false);
   const senden = (m: "vorschau" | "anwenden") => {
     if (!form.current?.reportValidity()) return;
     const daten = new FormData(form.current);
     daten.set("modus", m);
+    if (m === "anwenden") daten.set("bestaetigt", "ja");
+    setRueckfrage(false);
     startTransition(() => aktion(daten));
   };
 
@@ -64,8 +67,19 @@ export function ImportFormular({ module = [] }: { module?: ModulWahl[] }) {
         </fieldset>
         <div className="flex flex-wrap gap-3 border-t border-line pt-5">
           <button type="button" onClick={() => senden("vorschau")} className="knopf-hell" disabled={laeuft}>{laeuft ? "Wird gelesen …" : "Vorschau anzeigen"}</button>
-          <button type="button" onClick={() => senden("anwenden")} className="knopf" disabled={laeuft || !z.bericht || z.bericht.angewendet}>Jetzt übernehmen</button>
+          <button type="button" onClick={() => setRueckfrage(true)} className="knopf" disabled={laeuft || !z.bericht || z.bericht.angewendet || rueckfrage}>Jetzt übernehmen</button>
         </div>
+        {rueckfrage && z.bericht && !z.bericht.angewendet && (
+          <div role="group" aria-label="Rückfrage" className="rounded-2xl bg-gelb-hell p-4 text-sm">
+            <p className="font-semibold">„{z.bericht.titel}“ jetzt in die Datenbank übernehmen?</p>
+            <p className="mt-1">So wie in der Vorschau: {z.bericht.zahlen.map(([k, v]) => `${k}: ${v}`).join(" · ")}.{warnungen.length ? ` ${warnungen.length} Hinweise zum Prüfen.` : ""} Rückgängig machen geht nur von Hand.</p>
+            <p className="mt-1 text-ink-soft">Geänderte Datei oder Optionen? Dann vorher noch einmal „Vorschau anzeigen“.</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button type="button" onClick={() => senden("anwenden")} className="knopf" disabled={laeuft}>Ja, übernehmen</button>
+              <button type="button" onClick={() => setRueckfrage(false)} className="knopf-hell">Abbrechen</button>
+            </div>
+          </div>
+        )}
         <p className="text-xs text-ink-soft">Die Vorschau ändert nichts. Erst „Jetzt übernehmen“ schreibt in die Datenbank. Mehrfaches Importieren derselben Datei legt nichts doppelt an.</p>
       </form>
 

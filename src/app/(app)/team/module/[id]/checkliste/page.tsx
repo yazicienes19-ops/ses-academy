@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Hinweis } from "@/components/team/Hinweis";
 import { ModulReiter } from "@/components/team/ModulReiter";
+import { Rueckfrage } from "@/components/team/Rueckfrage";
 import { TeamKopf } from "@/components/team/TeamKopf";
 import { aufgabeEntfernen, aufgabeSpeichern, aufgabeUmschalten, checklisteAnlegen } from "@/lib/aktionen/modulwerkzeuge";
 import { requireStaff } from "@/lib/auth";
@@ -87,9 +88,9 @@ export default async function Checkliste({ params, searchParams }: PageProps<"/t
                     <input name="notes" defaultValue={a.notes} placeholder="Notiz" className="feld sm:col-span-2" aria-label="Notiz" />
                     <div className="flex gap-3 sm:col-span-4"><button type="submit" className="knopf-hell">Speichern</button></div>
                   </form>
-                  <form action={aufgabeEntfernen} className="mt-1">
+                  <form action={aufgabeEntfernen} className="mt-1 flex flex-wrap">
                     <input type="hidden" name="id" value={a.id} /><input type="hidden" name="module_id" value={id} />
-                    <button type="submit" className="text-xs font-semibold text-ink-soft underline">entfernen</button>
+                    <Rueckfrage knopf="entfernen" knopfKlasse="text-xs font-semibold text-ink-soft underline" gefahr ja="Ja, entfernen" frage={`Aufgabe „${a.title}“ entfernen?`} />
                   </form>
                 </details>
               </li>

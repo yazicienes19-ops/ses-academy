@@ -93,6 +93,8 @@ export async function beitragHinzufuegen(formData: FormData) {
 
 export async function beitragEntfernen(formData: FormData) {
   await requireStaff("alles");
+  // Folgenschwer: nur nach der Rückfrage (Rueckfrage schickt bestaetigt=ja)
+  if (formData.get("bestaetigt") !== "ja") return;
   const supabase = await createClient();
   await supabase.from("contributions").delete().eq("id", String(formData.get("id")));
   revalidatePath(`/team/teilnehmende/${String(formData.get("participant_id"))}/`);
@@ -131,8 +133,10 @@ export async function anwesenheitSetzen(formData: FormData) {
  * Willkommensmail „Dein SES-Konto ist bereit“ (mit Ticket und Login-Hinweis) an alle Teilnehmenden mit E-Mail-Adresse,
  * die sich noch nie angemeldet und noch keine Willkommensmail bekommen haben.
  */
-export async function willkommenAnAlle() {
+export async function willkommenAnAlle(formData: FormData) {
   const staff = await requireStaff("alles");
+  // Geht an viele: nur nach der Rückfrage
+  if (formData.get("bestaetigt") !== "ja") redirect("/team/teilnehmende/?fehler=" + encodeURIComponent("Bitte die Rückfrage bestätigen. Es wurde nichts verschickt."));
   const db = createAdminClient();
   const [{ data: personen }, { data: schon }] = await Promise.all([
     db.from("participants").select("id").eq("affiliation_status", "academy_student").eq("active", true).not("email", "is", null).is("user_id", null),

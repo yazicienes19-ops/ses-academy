@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Hinweis } from "@/components/team/Hinweis";
 import { MailHinweis } from "@/components/team/MailHinweis";
+import { Rueckfrage } from "@/components/team/Rueckfrage";
 import { TeamKopf } from "@/components/team/TeamKopf";
 import { zweiterFaktorPflicht } from "@/lib/aktionen/team";
 import { faktorZuruecksetzen, mitgliedAnlegen, mitgliedEntfernen, rolleAendern, teamZugangAusfuehren, zugangZeitraum } from "@/lib/aktionen/teamverwaltung";
@@ -128,9 +129,10 @@ export default async function TeamVerwaltung({ searchParams }: PageProps<"/team/
                 </form>
               )}
               {m.user_id !== staff.userId && (
-                <form action={mitgliedEntfernen}>
+                <form action={mitgliedEntfernen} className="contents">
                   <input type="hidden" name="user_id" value={m.user_id} />
-                  <button type="submit" className="text-sm font-semibold text-red-900 underline">entfernen</button>
+                  <Rueckfrage knopf="entfernen" knopfKlasse="text-sm font-semibold text-red-900 underline" gefahr ja="Ja, Zugang entfernen"
+                    frage={`Team-Zugang von ${m.display_name} entfernen? Die Person kann sich danach nicht mehr im Team-Bereich anmelden. Wieder einrichten geht nur mit neuer Freigabe.`} />
                 </form>
               )}
             </li>

@@ -4,6 +4,7 @@ import { Ellipsis, Phone, Printer } from "lucide-react";
 import { AutoAktualisieren } from "@/components/team/AutoAktualisieren";
 import { Hinweis } from "@/components/team/Hinweis";
 import { TagWahl } from "@/components/team/TagWahl";
+import { Rueckfrage } from "@/components/team/Rueckfrage";
 import { TeamKopf } from "@/components/team/TeamKopf";
 import { punktEnde, punktZustand, telLink, zustaendigWaehrend } from "@/lib/ablauf";
 import {
@@ -243,7 +244,8 @@ export default async function Regieplan({ searchParams }: PageProps<"/team/regie
                               ))}
                               <form action={programmpunktEntfernen}>
                                 <input type="hidden" name="tag" value={tag.id} /><input type="hidden" name="id" value={p.id} />
-                                <button type="submit" className="w-full rounded-xl px-3 py-2 text-left text-sm text-rot hover:bg-rot-hell">Entfernen</button>
+                                <Rueckfrage knopf="Entfernen" knopfKlasse="w-full rounded-xl px-3 py-2 text-left text-sm text-rot hover:bg-rot-hell" gefahr ja="Ja, entfernen"
+                                  frage={`„${p.title}“ aus dem Programm entfernen? Die Eingeteilten zu diesem Punkt bleiben im Rollenplan.`} />
                               </form>
                             </div>
                           </details>
@@ -320,7 +322,8 @@ export default async function Regieplan({ searchParams }: PageProps<"/team/regie
                                 <Link href={`/team/regieplan/?tag=${tag.id}&einsatz=${e.id}#einsatz-${e.id}`} className="block w-full rounded-xl px-3 py-2 text-left text-sm hover:bg-paper">Bearbeiten</Link>
                                 <form action={einsatzEntfernen}>
                                   <input type="hidden" name="tag" value={tag.id} /><input type="hidden" name="id" value={e.id} />
-                                  <button type="submit" className="w-full rounded-xl px-3 py-2 text-left text-sm text-rot hover:bg-rot-hell">Entfernen</button>
+                                  <Rueckfrage knopf="Entfernen" knopfKlasse="w-full rounded-xl px-3 py-2 text-left text-sm text-rot hover:bg-rot-hell" gefahr ja="Ja, entfernen"
+                                    frage={`Einsatz von ${e.person_name} entfernen?`} />
                                 </form>
                               </div>
                             </details>

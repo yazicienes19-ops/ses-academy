@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Hinweis } from "@/components/team/Hinweis";
 import { ModulReiter } from "@/components/team/ModulReiter";
+import { Rueckfrage } from "@/components/team/Rueckfrage";
 import { TeamKopf } from "@/components/team/TeamKopf";
 import { einladungEntfernen, gaesteblattSpeichern, referentAnlegen, referentEinladen } from "@/lib/aktionen/modulwerkzeuge";
 import { requireStaff } from "@/lib/auth";
@@ -104,9 +105,10 @@ export default async function Referenten({ params, searchParams }: PageProps<"/t
                   <button type="submit" className="knopf">Speichern</button>
                 </div>
               </form>
-              <form action={einladungEntfernen} className="mt-2">
+              <form action={einladungEntfernen} className="mt-2 flex flex-wrap">
                 <input type="hidden" name="module_id" value={id} /><input type="hidden" name="id" value={e.id} />
-                <button type="submit" className="text-sm font-semibold text-ink-soft underline">aus diesem Modul entfernen</button>
+                <Rueckfrage knopf="aus diesem Modul entfernen" knopfKlasse="text-sm font-semibold text-ink-soft underline" gefahr ja="Ja, entfernen"
+                  frage="Aus diesem Modul entfernen? Das Gästeblatt (Anreise, Hotel, Honorar, Notizen) für dieses Modul geht dabei verloren. Im Referentenpool bleibt die Person." />
               </form>
             </details>
           ))}

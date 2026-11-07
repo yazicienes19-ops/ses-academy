@@ -82,6 +82,8 @@ export async function personZuordnen(formData: FormData) {
 
 export async function personEntfernen(formData: FormData) {
   await requireStaff("orga");
+  // Folgenschwer: nur nach der Rückfrage (Rueckfrage schickt bestaetigt=ja)
+  if (formData.get("bestaetigt") !== "ja") return;
   const supabase = await createClient();
   await supabase.from("submission_participants").delete().eq("submission_id", String(formData.get("submission_id"))).eq("participant_id", String(formData.get("participant_id")));
   revalidatePath("/team/", "layout");

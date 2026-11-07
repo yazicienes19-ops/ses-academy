@@ -2,6 +2,9 @@
 // Erwartet: frische DB (supabase db reset) und einen laufenden Server, z. B. `npx next dev -p 3031`.
 // Aufruf aus dem Projektordner: BASIS=http://localhost:3031 node scripts/e2e-wuensche.mjs [teil …]
 import { execFileSync } from "node:child_process";
+import { mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { chromium } from "playwright";
 
 // localhost statt 127.0.0.1: der Entwicklungsserver liefert seine Skripte sonst nicht aus (allowedDevOrigins)
@@ -311,6 +314,66 @@ if (teil("bewerbungen")) {
   const nilsId = sql("select participant_id from applications where last_name = 'TestWunschAnnahme'");
   if (nilsId) sql(`delete from email_log where participant_id = '${nilsId}'; delete from applications where last_name like 'TestWunsch%'; delete from participants where id = '${nilsId}'`);
   sql("delete from applications where last_name like 'TestWunsch%'; delete from email_log where recipient like '%.tw@example.test'");
+}
+
+// ---------------------------------------------------------------------------
+// 6. Rückfragen: Willkommensmail an alle, Import, Entfernen
+// ---------------------------------------------------------------------------
+if (teil("rueckfragen")) {
+  await mailsLeeren();
+  const admin = await teamLogin(browser, "admin@ses.test");
+
+  // Willkommensmail an alle
+  await admin.goto(`${BASIS}/team/teilnehmende/`);
+  const offen = Number(sql("select count(*) from participants p where affiliation_status = 'academy_student' and active and email is not null and user_id is null and not exists (select 1 from email_log e where e.participant_id = p.id and e.kind = 'willkommen' and e.status = 'sent')"));
+  await admin.getByRole("button", { name: "Willkommensmail senden" }).click();
+  ok(await admin.getByText(`Willkommensmail jetzt an ${offen} Teilnehmende senden?`).isVisible(), `Rückfrage nennt die Zahl (${offen})`);
+  await admin.getByRole("button", { name: "Abbrechen" }).click();
+  await warte(500);
+  ok(sql("select count(*) from email_log where kind = 'willkommen'") === "0", "Abbrechen: keine Willkommensmail");
+  await admin.getByRole("button", { name: "Willkommensmail senden" }).click();
+  await admin.getByRole("button", { name: `Ja, an ${offen} senden` }).click();
+  await admin.getByText(`Willkommensmail an ${offen} verschickt`).waitFor();
+  ok(true, "Nach Bestätigung verschickt");
+  sql("delete from email_log where kind in ('willkommen', 'ticket') and triggered_by = (select id from auth.users where email = 'admin@ses.test')");
+
+  // Import: erst Vorschau, dann Rückfrage, dann übernehmen
+  const ordner = mkdtempSync(join(tmpdir(), "ses-import-"));
+  const datei = join(ordner, "emails.csv");
+  writeFileSync(datei, "Vorname;Nachname;E-Mail\nTina;TestWunschImport;tina.tw@example.test\n");
+  await admin.goto(`${BASIS}/team/import/`);
+  await admin.getByRole("radio", { name: /^E-Mail-Adressen/ }).check();
+  await admin.setInputFiles("#datei", datei);
+  await admin.getByLabel(/noch nicht im Portal sind, neu anlegen/).check();
+  await admin.getByRole("button", { name: "Vorschau anzeigen" }).click();
+  await admin.getByText("Vorschau – noch nichts gespeichert").waitFor();
+  await admin.getByRole("button", { name: "Jetzt übernehmen" }).click();
+  ok(await admin.getByText(/jetzt in die Datenbank übernehmen\?/).isVisible(), "Rückfrage vor dem Übernehmen mit Zahlen");
+  await admin.getByRole("button", { name: "Abbrechen" }).click();
+  ok(sql("select count(*) from participants where email = 'tina.tw@example.test'") === "0", "Abbrechen: nichts gespeichert");
+  await admin.getByRole("button", { name: "Jetzt übernehmen" }).click();
+  await admin.getByRole("button", { name: "Ja, übernehmen" }).click();
+  await admin.getByText("Übernommen", { exact: true }).waitFor();
+  ok(sql("select count(*) from participants where email = 'tina.tw@example.test'") === "1", "Nach Bestätigung übernommen");
+  sql("delete from participants where email = 'tina.tw@example.test'");
+
+  // Entfernen: Programmpunkt im Regieplan, Team-Zugang (nur Rückfrage, abbrechen)
+  const tag = sql("select d.id from module_days d join modules m on m.id = d.module_id where m.slug = 'probe-einlass' limit 1");
+  sql(`insert into program_items (module_day_id, starts_at, title) values ('${tag}', now() + interval '1 hour', 'TestWunsch Punkt')`);
+  await admin.goto(`${BASIS}/team/regieplan/?tag=${tag}`);
+  await admin.getByLabel(/Optionen für TestWunsch Punkt|Optionen für „TestWunsch Punkt“/).click();
+  await admin.getByRole("button", { name: "Entfernen" }).click();
+  ok(await admin.getByText("„TestWunsch Punkt“ aus dem Programm entfernen?").isVisible(), "Rückfrage vor dem Entfernen eines Programmpunkts");
+  await admin.getByRole("button", { name: "Ja, entfernen" }).click();
+  await admin.waitForURL(/hinweis=punkt-entfernt/);
+  ok(sql("select count(*) from program_items where title = 'TestWunsch Punkt'") === "0", "Programmpunkt nach Bestätigung entfernt");
+
+  await admin.goto(`${BASIS}/team/team/`);
+  const zeile = admin.locator("li", { hasText: "Orga Test" });
+  await zeile.getByRole("button", { name: "entfernen" }).click();
+  ok(await zeile.getByText("Team-Zugang von Orga Test entfernen?").isVisible(), "Rückfrage vor dem Entfernen eines Team-Zugangs");
+  await zeile.getByRole("button", { name: "Abbrechen" }).click();
+  ok(sql("select count(*) from staff_members s join auth.users u on u.id = s.user_id where u.email = 'orga@ses.test'") === "1", "Abbrechen: Zugang bleibt");
 }
 
 await browser.close();

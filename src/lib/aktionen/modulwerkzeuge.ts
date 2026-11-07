@@ -91,6 +91,8 @@ export async function einladungEntfernen(formData: FormData) {
   const id = text(formData, "id");
   const pfad = `/team/module/${modulId}/referenten/`;
   if (!istToken(id)) zurueck(pfad, "eingabe");
+  // Folgenschwer: nur nach der Rückfrage (Rueckfrage schickt bestaetigt=ja)
+  if (formData.get("bestaetigt") !== "ja") return;
   const supabase = await createClient();
   const { error } = await supabase.from("module_speakers").delete().eq("id", id);
   zurueck(pfad, error ? "fehler" : "entfernt");
@@ -147,6 +149,8 @@ export async function aufgabeEntfernen(formData: FormData) {
   const modulId = text(formData, "module_id");
   const pfad = istToken(modulId) ? `/team/module/${modulId}/checkliste/` : "/team/aufgaben/";
   if (!istToken(id)) zurueck(pfad, "eingabe");
+  // Folgenschwer: nur nach der Rückfrage (Rueckfrage schickt bestaetigt=ja)
+  if (formData.get("bestaetigt") !== "ja") return;
   const supabase = await createClient();
   const { error } = await supabase.from("tasks").delete().eq("id", id);
   zurueck(pfad, error ? "fehler" : "aufgabe-entfernt");

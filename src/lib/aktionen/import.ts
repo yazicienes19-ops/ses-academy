@@ -22,6 +22,8 @@ export async function importieren(_: ImportZustand, formData: FormData): Promise
   if (!(datei instanceof File) || datei.size === 0) return { fehler: "Bitte eine Datei auswählen." };
   if (datei.size > 10 * 1024 * 1024) return { fehler: "Die Datei ist größer als 10 MB." };
   if (!/\.(xlsx|xlsm|csv)$/i.test(datei.name)) return { fehler: "Bitte eine Excel-Datei (.xlsx, .xlsm) oder CSV hochladen." };
+  // Übernehmen schreibt in die Datenbank: nur nach der Rückfrage im Formular
+  if (formData.get("modus") === "anwenden" && formData.get("bestaetigt") !== "ja") return { fehler: "Bitte das Übernehmen bestätigen. Es wurde nichts gespeichert." };
   try {
     const bericht = await importiere(createAdminClient(), art, datei, {
       anwenden: formData.get("modus") === "anwenden",
