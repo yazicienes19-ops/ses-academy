@@ -42,7 +42,11 @@ export default async function BewerbungenSeite({ searchParams }: PageProps<"/tea
   let query = supabase.from("applications").select("*").order("created_at", { ascending: true });
   if (jahrgang) query = query.eq("cohort_id", jahrgang.id);
   query = filter === "offen" ? query.in("status", ["eingegangen", "in_pruefung"]) : query.eq("status", filter);
-  const { data: bewerbungen } = await query;
+  // Zähler an den Reitern (nur Status, keine Inhalte)
+  let zaehlAbfrage = supabase.from("applications").select("status");
+  if (jahrgang) zaehlAbfrage = zaehlAbfrage.eq("cohort_id", jahrgang.id);
+  const [{ data: bewerbungen }, { data: alleStatus }] = await Promise.all([query, zaehlAbfrage]);
+  const anzahl = (f: Status | "offen") => (alleStatus ?? []).filter((b) => (f === "offen" ? b.status === "eingegangen" || b.status === "in_pruefung" : b.status === f)).length;
   const h = hinweis ? hinweise[String(hinweis)] : null;
 
   const knopf = "rounded-full px-4 py-2 text-sm font-semibold ring-1 ring-line bg-white hover:bg-paper-deep";
@@ -62,7 +66,7 @@ export default async function BewerbungenSeite({ searchParams }: PageProps<"/tea
           {filterListe.map((f) => (
             <Link key={f} href={`/team/bewerbungen/?status=${f}`}
               className={`rounded-full px-4 py-2 text-sm font-semibold ${f === filter ? "bg-ink text-paper" : "bg-white ring-1 ring-line"}`}>
-              {f === "offen" ? "Offen" : statusName[f]}
+              {f === "offen" ? "Offen" : statusName[f]} <span className={f === filter ? "opacity-75" : "text-ink-soft"}>{anzahl(f)}</span>
             </Link>
           ))}
         </nav>
