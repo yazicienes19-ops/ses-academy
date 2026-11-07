@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Hinweis } from "@/components/team/Hinweis";
 import { ModulReiter } from "@/components/team/ModulReiter";
 import { TeamKopf } from "@/components/team/TeamKopf";
+import { SendeKnopf } from "@/components/team/SendeKnopf";
 import { planUebernehmen, probeUebernehmen, vorschlagZuruecksetzen, wunschKorrigieren, zuteilungFestlegen } from "@/lib/aktionen/zimmerplan";
 import { requireStaff } from "@/lib/auth";
 import { istToken } from "@/lib/codes";
@@ -19,7 +20,7 @@ const hinweise: Record<string, { text: string; gut: boolean }> = {
   festgelegt: { text: "Bleibt jetzt fest in diesem Zimmer, auch bei neuen Vorschlägen.", gut: true },
   freigegeben: { text: "Freigegeben: Ein neuer Vorschlag darf die Person umsetzen.", gut: true },
   "kein-hotel": { text: "Zuerst unter Logistik das Hotel und die Zimmer anlegen.", gut: false },
-  "schon-zimmer": { text: "Es sind schon Zimmer angelegt. Bitte den Vorschlag unten nutzen.", gut: false },
+  "schon-uebernommen": { text: "Die Einteilung ist schon übernommen. Unten steht der aktuelle Zimmerplan zum Anpassen.", gut: true },
   eingabe: { text: "Bitte die Angaben prüfen.", gut: false },
   fehler: { text: "Das hat nicht geklappt. Ist ein Zimmer schon voll? Dann bleibt alles beim alten Stand.", gut: false },
 };
@@ -135,7 +136,7 @@ export default async function ZimmerplanSeite({ params, searchParams }: PageProp
               <a href={`/team/module/${id}/zimmerplan/liste/?groesse=${groesse}`} className="knopf-hell">Excel-Liste herunterladen</a>
               <form action={probeUebernehmen}>
                 <input type="hidden" name="module_id" value={id} /><input type="hidden" name="groesse" value={groesse} />
-                <button className="knopf-hell">So übernehmen und von Hand anpassen</button>
+                <SendeKnopf className="knopf-hell" laeuft="Wird übernommen …">So übernehmen und von Hand anpassen</SendeKnopf>
               </form>
             </div>
             <p className="mt-2 max-w-3xl text-xs text-ink-soft">

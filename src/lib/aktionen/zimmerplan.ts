@@ -76,18 +76,15 @@ export async function probeUebernehmen(formData: FormData) {
   const groesse = Number(formData.get("groesse"));
   if (!istToken(modulId) || (groesse !== 2 && groesse !== 3)) zurueck(modulId, "eingabe");
   const daten = await ladeZimmerplan(modulId);
-  if (daten.zimmer.length > 0) zurueck(modulId, "schon-zimmer");
-  const supabase = await createClient();
-  const hotelId = daten.hotel?.id
-    ?? (await supabase.from("hotels").insert({ module_id: modulId, name: "Hotel (Name folgt)" }).select("id").single()).data?.id;
-  if (!hotelId) zurueck(modulId, "fehler");
+  if (daten.zimmer.length > 0) zurueck(modulId, "schon-uebernommen");
   const probe = probeplan(daten, groesse);
-  const { data: angelegt, error } = await supabase.from("rooms")
-    .insert(probe.zimmer.map((z) => ({ hotel_id: hotelId, label: z.label, capacity: groesse, section: z.bereich })))
-    .select("id, label");
-  if (error || !angelegt) zurueck(modulId, "fehler");
-  const idVon = new Map(angelegt.map((r) => [r.label, r.id]));
-  const plan = probe.zimmer.flatMap((z) => z.belegung.map((b) => ({ room_id: idVon.get(z.label)!, participant_id: b.id })));
-  const { data: n, error: fehler } = await supabase.rpc("apply_room_plan", { p_hotel_id: hotelId, p_plan: plan });
-  zurueck(modulId, fehler ? "fehler" : `plan-${n ?? 0}`);
+  // Hotel, Zimmer und Einteilung in einer Transaktion; eine zweite Anfrage (Doppelklick) wartet und ändert nichts
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("apply_probe_rooms", {
+    p_module_id: modulId, p_capacity: groesse,
+    p_zimmer: probe.zimmer.map((z) => ({ label: z.label, section: z.bereich ?? "", personen: z.belegung.map((b) => b.id) })),
+  });
+  const antwort = data as { result?: string; assigned?: number } | null;
+  if (error || !antwort) zurueck(modulId, "fehler");
+  zurueck(modulId, antwort.result === "already_applied" ? "schon-uebernommen" : `plan-${antwort.assigned ?? 0}`);
 }

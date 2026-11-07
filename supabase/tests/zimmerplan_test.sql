@@ -117,4 +117,28 @@ SELECT pg_temp.ok('Teilnehmerin sieht keine Korrekturen', (SELECT count(*)::text
 SELECT pg_temp.ok('Teilnehmerin sieht keinen Verlauf', (SELECT count(*)::text FROM public.get_person_rooms((SELECT amina FROM t))), '0');
 SELECT pg_temp.ok('Teilnehmerin sieht keine Zimmer', (SELECT count(*)::text FROM public.room_assignments), '0');
 
+-- „So übernehmen“ einmalig (Migration 20261122090000_zimmerplan_einmal): zweiter Aufruf ändert nichts
+RESET ROLE;
+DELETE FROM public.hotels WHERE module_id = (SELECT id FROM public.modules WHERE slug = 'winter-school');
+CREATE TEMP TABLE w AS SELECT (SELECT id FROM public.modules WHERE slug = 'winter-school') AS ws,
+  (SELECT id FROM public.participants WHERE email = 'amina@example.test') AS amina,
+  (SELECT id FROM public.participants WHERE email = 'leila@example.test') AS leila;
+GRANT SELECT ON w TO authenticated;
+SELECT pg_temp.login('helfer@ses.test');
+DO $$ BEGIN
+  PERFORM public.apply_probe_rooms((SELECT ws FROM w), 2, '[]');
+  RAISE EXCEPTION 'FEHLER Helfer darf Zimmer übernehmen';
+EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok  Helfer darf nicht übernehmen';
+END $$;
+SELECT pg_temp.login('orga@ses.test');
+SELECT pg_temp.ok('Erste Übernahme legt Hotel, Zimmer und Einteilung an',
+  (public.apply_probe_rooms((SELECT ws FROM w), 2, jsonb_build_array(jsonb_build_object('label', '0001', 'section', 'Frauen',
+    'personen', jsonb_build_array((SELECT amina FROM w), (SELECT leila FROM w))))))->>'assigned', '2');
+SELECT pg_temp.ok('Zweite Übernahme (Doppelklick) ändert nichts',
+  (public.apply_probe_rooms((SELECT ws FROM w), 2, jsonb_build_array(jsonb_build_object('label', '0001', 'personen', '[]'::jsonb))))->>'result', 'already_applied');
+SELECT pg_temp.ok('Ein Hotel, ein Zimmer, zwei Personen',
+  (SELECT count(DISTINCT h.id) || '/' || count(DISTINCT r.id) || '/' || count(ra.participant_id)
+     FROM public.hotels h JOIN public.rooms r ON r.hotel_id = h.id LEFT JOIN public.room_assignments ra ON ra.room_id = r.id
+    WHERE h.module_id = (SELECT ws FROM w)), '1/1/2');
+
 ROLLBACK;

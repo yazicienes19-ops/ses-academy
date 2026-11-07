@@ -499,6 +499,29 @@ if (teil("faktor")) {
   sql("delete from auth.mfa_factors f using auth.users u where u.id = f.user_id and u.email = 'orga@ses.test'");
 }
 
+// ---------------------------------------------------------------------------
+// 14. Zimmerplan: „So übernehmen“ doppelt geklickt bzw. von zwei Geräten gleichzeitig
+// ---------------------------------------------------------------------------
+if (teil("zimmerplan")) {
+  const demo = sql("select id from modules where slug = 'demokratie'");
+  sql(`delete from hotels where module_id = '${demo}'`);
+  sql(`update participants set gender = 'w' where email in ('amina@example.test', 'leila@example.test'); update participants set gender = 'm' where email = 'yusuf@example.test'`);
+  sql(`insert into stay_requests (registration_id, nights) select r.id, '{2026-11-13,2026-11-14}' from registrations r join participants p on p.id = r.participant_id
+       where r.module_id = '${demo}' and p.email in ('amina@example.test', 'leila@example.test', 'yusuf@example.test') on conflict (registration_id) do update set nights = excluded.nights`);
+  const a = await teamLogin(browser, "orga@ses.test");
+  const b2 = await teamLogin(browser, "admin@ses.test");
+  await Promise.all([a.goto(`${BASIS}/team/module/${demo}/zimmerplan/`), b2.goto(`${BASIS}/team/module/${demo}/zimmerplan/`)]);
+  const knopfA = a.getByRole("button", { name: "So übernehmen und von Hand anpassen" });
+  // Doppelklick auf einem Gerät und gleichzeitig ein zweites Gerät
+  await Promise.all([knopfA.dblclick(), b2.getByRole("button", { name: "So übernehmen und von Hand anpassen" }).click()]);
+  await Promise.all([a.waitForURL(/hinweis=/), b2.waitForURL(/hinweis=/)]);
+  const meldungen = [new URL(a.url()).searchParams.get("hinweis"), new URL(b2.url()).searchParams.get("hinweis")];
+  ok(meldungen.filter((m) => m?.startsWith("plan-")).length === 1 && meldungen.includes("schon-uebernommen"), `Einmal übernommen, sonst freundliche Meldung (${meldungen.join(", ")})`);
+  ok(!(await a.content()).includes("Ist ein Zimmer schon voll") && !(await b2.content()).includes("Ist ein Zimmer schon voll"), "Keine verwirrende Fehlermeldung");
+  ok(sql(`select count(distinct h.id) || '/' || count(ra.participant_id) from hotels h join rooms r on r.hotel_id = h.id left join room_assignments ra on ra.room_id = r.id where h.module_id = '${demo}'`) === "1/3", "Ein Hotel, alle drei eingeteilt, nichts doppelt");
+  sql(`delete from hotels where module_id = '${demo}'; delete from stay_requests s using registrations r where r.id = s.registration_id and r.module_id = '${demo}'`);
+}
+
 await browser.close();
 console.log(fehler ? `\n${fehler} Fehler` : "\nAlles in Ordnung.");
 process.exit(fehler ? 1 : 0);

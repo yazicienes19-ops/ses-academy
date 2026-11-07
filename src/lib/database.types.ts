@@ -1137,6 +1137,9 @@ isOneToOne: false
 "add_document_version":
 { Args: { "p_document_id": string,"p_file_name": string,"p_mime": string,"p_note"?: string,"p_storage_path": string }; Returns: number
                            },
+"apply_probe_rooms":
+{ Args: { "p_capacity": number,"p_module_id": string,"p_zimmer": Json }; Returns: Json
+                           },
 "apply_room_plan":
 { Args: { "p_hotel_id": string,"p_plan": Json }; Returns: number
                            },
