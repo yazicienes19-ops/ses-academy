@@ -142,6 +142,12 @@ SELECT pg_temp.ok('Audit: eigene Aktionen ohne Konto, Löschung protokolliert', 
   (count(*) FILTER (WHERE action = 'participant_anonymized'))::text FROM public.audit_log WHERE target_participant_id = (SELECT amina FROM t)), '0/1');
 SELECT pg_temp.ok('Antrag erledigt mit Ergebnis', (SELECT status || '/' || (result ->> 'konto_geloescht') FROM public.deletion_requests WHERE id = (SELECT id FROM antrag)), 'erledigt/true');
 SELECT pg_temp.ok('Freigabe ausgeführt', (SELECT status FROM public.approvals WHERE id = (SELECT id FROM frei)), 'ausgefuehrt');
+SELECT pg_temp.ok('Freigaben zum Antrag ohne Name, E-Mail und Grund',
+  (SELECT count(*)::text FROM public.approvals WHERE action = 'person_loeschen' AND payload ->> 'antrag' = (SELECT id FROM antrag)::text
+     AND (summary ILIKE '%amina%' OR payload::text ILIKE '%amina%' OR payload ? 'email' OR payload ? 'grund' OR payload ? 'name')), '0');
+SELECT pg_temp.ok('Freigabe behält Kennung und Zahlen', (SELECT (payload ? 'antrag' AND payload ? 'zahlen' AND summary LIKE 'Person löschen: Gelöschte Person (%')::text
+  FROM public.approvals WHERE id = (SELECT id FROM frei)), 'true');
+SELECT pg_temp.ok('Grund im Antrag geleert', (SELECT reason FROM public.deletion_requests WHERE id = (SELECT id FROM antrag)), '');
 SELECT pg_temp.ok('Genau einmal gelöscht (ein Protokolleintrag)', (SELECT count(*)::text FROM public.audit_log WHERE action = 'participant_anonymized' AND target_participant_id = (SELECT amina FROM t)), '1');
 SELECT pg_temp.login('admin@ses.test');
 SELECT pg_temp.ok('Zweimal geht nicht', public.execute_deletion((SELECT id FROM frei)) ->> 'result', 'ausgefuehrt');
