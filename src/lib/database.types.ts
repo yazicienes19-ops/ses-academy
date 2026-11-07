@@ -1158,13 +1158,16 @@ isOneToOne: false
 { Args: { "p_document_id": string,"p_file_name": string,"p_mime": string,"p_note"?: string,"p_storage_path": string }; Returns: number
                            },
 "apply_probe_rooms":
-{ Args: { "p_capacity": number,"p_module_id": string,"p_zimmer": Json }; Returns: Json
+{ Args: { "p_capacity": number,"p_hotel_id"?: string,"p_module_id": string,"p_zimmer": Json }; Returns: Json
                            },
 "apply_room_plan":
 { Args: { "p_hotel_id": string,"p_plan": Json }; Returns: number
                            },
 "ask_question":
 { Args: { "p_code": string,"p_device": string,"p_ip": string,"p_name": string,"p_text": string }; Returns: string
+                           },
+"assign_room":
+{ Args: { "p_participant_id": string,"p_room_id": string }; Returns: string
                            },
 "broadcast_recipients":
 { Args: { "p_filter": Json }; Returns: {
@@ -1327,12 +1330,12 @@ isOneToOne: false
                            },
 "get_room_planning":
 { Args: { "p_module_id": string }; Returns: {
-              "answered": boolean,"gender": string,"name": string,"nights": (string)[],"participant_id": string,"region": string,"registration_status": Database["public"]['Enums']["registration_status"],"room_id": string,"room_label": string,"room_wish": string,"source": string
+              "answered": boolean,"gender": string,"hotel_id": string,"name": string,"nights": (string)[],"participant_id": string,"region": string,"registration_status": Database["public"]['Enums']["registration_status"],"room_id": string,"room_label": string,"room_wish": string,"source": string
             }[]
                            },
 "get_stay_overview":
 { Args: { "p_module_id": string }; Returns: {
-              "answered": boolean,"arrival_at": string,"arrival_by": string,"departure_at": string,"gender": string,"name": string,"nights": (string)[],"notes": string,"participant_id": string,"registration_status": Database["public"]['Enums']["registration_status"],"room_id": string,"room_label": string,"room_wish": string
+              "answered": boolean,"arrival_at": string,"arrival_by": string,"departure_at": string,"gender": string,"hotel_id": string,"name": string,"nights": (string)[],"notes": string,"participant_id": string,"registration_status": Database["public"]['Enums']["registration_status"],"room_id": string,"room_label": string,"room_wish": string
             }[]
                            },
 "get_team_members":

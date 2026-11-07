@@ -26,7 +26,7 @@ export default async function Zimmerliste({ params, searchParams }: PageProps<"/
   const { id } = await params;
   const sp = await searchParams;
   if (!istToken(id)) notFound();
-  const d = await ladeZimmerplan(id);
+  const d = await ladeZimmerplan(id, typeof sp.hotel === "string" ? sp.hotel : null);
   if (!d.modul) notFound();
   const groesse = sp.groesse === "3" ? 3 : 2;
   const name = new Map(d.personen.map((p) => [p.participant_id, p.name]));
@@ -53,7 +53,8 @@ export default async function Zimmerliste({ params, searchParams }: PageProps<"/
       }).filter((z) => z.gaeste.length > 0)
     : probeplan(d, groesse).zimmer.map((z) => ({ label: z.label, art: zimmerArt[groesse], bereich: z.bereich, ...belegen(z.belegung.map((b) => b.id)) }));
   const bereiche = [...new Set(zimmer.map((z) => z.bereich || "Zimmer"))];
-  const alleNaechte = [...new Set(d.personen.flatMap((p) => p.nights))].sort();
+  // Nur die Gäste dieses Hotels (bei mehreren Hotels je Modul eine Liste je Hotel)
+  const alleNaechte = [...new Set((echt ? d.imHotel : d.planPersonen).flatMap((p) => p.nights))].sort();
   const anreise = alleNaechte[0] ? new Date(`${alleNaechte[0]}T12:00:00Z`) : null;
   const abreise = alleNaechte.length ? new Date(Date.parse(`${alleNaechte.at(-1)}T12:00:00Z`) + 86_400_000) : null;
   const gaeste = zimmer.reduce((n, z) => n + z.gaeste.length, 0);
@@ -94,7 +95,7 @@ export default async function Zimmerliste({ params, searchParams }: PageProps<"/
       `}</style>
 
       <div className="nur-bildschirm sticky top-0 z-10 flex flex-wrap items-center gap-3 border-b border-line bg-paper px-5 py-3 text-sm">
-        <p className="mr-auto"><span className="font-semibold">Zimmerliste · {d.modul.title}</span> · {zimmer.length} Zimmer, {gaeste} Gäste{echt ? "" : ` · automatische Einteilung mit ${zimmerArt[groesse]}n`}</p>
+        <p className="mr-auto"><span className="font-semibold">Zimmerliste · {d.modul.title}{d.hotels.length > 1 && d.hotel ? ` · ${d.hotel.name}` : ""}</span> · {zimmer.length} Zimmer, {gaeste} Gäste{echt ? "" : ` · automatische Einteilung mit ${zimmerArt[groesse]}n`}</p>
         <p className="text-ink-soft">Druckdialog: A4, 100 %, Kopf- und Fußzeilen aus. „Als PDF sichern“ zum Verschicken ans Hotel.</p>
         <button id="drucken" className="rounded-full bg-ink px-5 py-2 font-semibold text-paper">Drucken / als PDF sichern</button>
         <script dangerouslySetInnerHTML={{ __html: "document.getElementById('drucken').onclick=()=>window.print()" }} />

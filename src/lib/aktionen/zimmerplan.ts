@@ -7,12 +7,14 @@ import { istToken } from "@/lib/codes";
 import { createClient } from "@/lib/supabase/server";
 import { ladeZimmerplan, probeplan, vorschlag } from "@/lib/zimmerplan-daten";
 
-function zurueck(modulId: string, hinweis: string, anker?: string): never {
+function zurueck(modulId: string, hinweis: string, anker?: string, hotel?: string | null): never {
   const pfad = `/team/module/${modulId}/zimmerplan/`;
   revalidatePath(pfad);
   revalidatePath(`/team/module/${modulId}/hotel/`);
-  redirect(`${pfad}?hinweis=${hinweis}${anker ? `#${anker}` : ""}`);
+  redirect(`${pfad}?hinweis=${hinweis}${hotel && istToken(hotel) ? `&hotel=${hotel}` : ""}${anker ? `#${anker}` : ""}`);
 }
+
+const hotelVon = (formData: FormData) => String(formData.get("hotel_id") ?? "");
 
 /** Namensteil eines Wunsches richtig zuordnen, ignorieren („-“) oder wieder automatisch erkennen lassen („auto“). */
 export async function wunschKorrigieren(formData: FormData) {
@@ -26,7 +28,7 @@ export async function wunschKorrigieren(formData: FormData) {
   const { error } = ziel === "auto"
     ? await supabase.from("room_wish_overrides").delete().eq("module_id", modulId).eq("participant_id", person).eq("token", token)
     : await supabase.from("room_wish_overrides").upsert({ module_id: modulId, participant_id: person, token, wished_id: ziel === "-" ? null : ziel });
-  zurueck(modulId, error ? "fehler" : "wunsch", `w-${person}`);
+  zurueck(modulId, error ? "fehler" : "wunsch", `w-${person}`, hotelVon(formData));
 }
 
 /** Vorschlag neu rechnen und speichern. Was von Hand zugeteilt ist, bleibt; frühere Vorschläge werden ersetzt. */
@@ -34,12 +36,12 @@ export async function planUebernehmen(formData: FormData) {
   await requireStaff("orga");
   const modulId = String(formData.get("module_id"));
   if (!istToken(modulId)) zurueck(modulId, "eingabe");
-  const daten = await ladeZimmerplan(modulId);
+  const daten = await ladeZimmerplan(modulId, hotelVon(formData));
   if (!daten.hotel) zurueck(modulId, "kein-hotel");
   const plan = vorschlag(daten).zimmer.flatMap((z) => z.belegung.filter((b) => b.grund !== "fest").map((b) => ({ room_id: z.id, participant_id: b.id })));
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("apply_room_plan", { p_hotel_id: daten.hotel.id, p_plan: plan });
-  zurueck(modulId, error ? "fehler" : `plan-${data ?? 0}`);
+  zurueck(modulId, error ? "fehler" : `plan-${data ?? 0}`, undefined, daten.hotel.id);
 }
 
 /** Alle Zuteilungen aus dem Vorschlag entfernen; Handzuteilungen bleiben. */
@@ -50,7 +52,7 @@ export async function vorschlagZuruecksetzen(formData: FormData) {
   if (!istToken(modulId) || !istToken(hotel)) zurueck(modulId, "eingabe");
   const supabase = await createClient();
   const { error } = await supabase.from("room_assignments").delete().eq("hotel_id", hotel).eq("source", "auto");
-  zurueck(modulId, error ? "fehler" : "zurueckgesetzt");
+  zurueck(modulId, error ? "fehler" : "zurueckgesetzt", undefined, hotel);
 }
 
 /** Eine Person fest in ihrem Zimmer lassen (aus dem Vorschlag wird eine Handzuteilung) oder wieder freigeben. */
@@ -63,7 +65,7 @@ export async function zuteilungFestlegen(formData: FormData) {
   if (!istToken(modulId) || !istToken(hotel) || !istToken(person)) zurueck(modulId, "eingabe");
   const supabase = await createClient();
   const { error } = await supabase.from("room_assignments").update({ source: fest ? "manual" : "auto" }).eq("hotel_id", hotel).eq("participant_id", person);
-  zurueck(modulId, error ? "fehler" : fest ? "festgelegt" : "freigegeben", `z-${person}`);
+  zurueck(modulId, error ? "fehler" : fest ? "festgelegt" : "freigegeben", `z-${person}`, hotel);
 }
 
 /**
@@ -75,16 +77,17 @@ export async function probeUebernehmen(formData: FormData) {
   const modulId = String(formData.get("module_id"));
   const groesse = Number(formData.get("groesse"));
   if (!istToken(modulId) || (groesse !== 2 && groesse !== 3)) zurueck(modulId, "eingabe");
-  const daten = await ladeZimmerplan(modulId);
-  if (daten.zimmer.length > 0) zurueck(modulId, "schon-uebernommen");
+  const gewaehlt = hotelVon(formData);
+  const daten = await ladeZimmerplan(modulId, gewaehlt);
+  if (daten.zimmer.length > 0) zurueck(modulId, "schon-uebernommen", undefined, daten.hotel?.id);
   const probe = probeplan(daten, groesse);
   // Hotel, Zimmer und Einteilung in einer Transaktion; eine zweite Anfrage (Doppelklick) wartet und ändert nichts
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("apply_probe_rooms", {
-    p_module_id: modulId, p_capacity: groesse,
+    p_module_id: modulId, p_capacity: groesse, p_hotel_id: istToken(gewaehlt) ? gewaehlt : undefined,
     p_zimmer: probe.zimmer.map((z) => ({ label: z.label, section: z.bereich ?? "", personen: z.belegung.map((b) => b.id) })),
   });
-  const antwort = data as { result?: string; assigned?: number } | null;
+  const antwort = data as { result?: string; assigned?: number; hotel_id?: string } | null;
   if (error || !antwort) zurueck(modulId, "fehler");
-  zurueck(modulId, antwort.result === "already_applied" ? "schon-uebernommen" : `plan-${antwort.assigned ?? 0}`);
+  zurueck(modulId, antwort.result === "already_applied" ? "schon-uebernommen" : `plan-${antwort.assigned ?? 0}`, undefined, antwort.hotel_id ?? gewaehlt);
 }

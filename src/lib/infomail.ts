@@ -72,12 +72,17 @@ export async function ladeInfoMail(participantId: string, modulId: string) {
     admin.from("participants").select("id, first_name, last_name, email, preferred_language, checkin_token, link_token, short_code").eq("id", participantId).maybeSingle(),
     admin.from("modules").select("id, title, subtitle, location, ticket_required, stay_form_open, module_days(id, starts_at, ends_at, program_items(starts_at, ends_at, title, status))").eq("id", modulId).maybeSingle(),
     admin.from("registrations").select("id, status, rsvp, stay_requests(nights)").eq("module_id", modulId).eq("participant_id", participantId).maybeSingle(),
-    admin.from("hotels").select("id, name, address, rooms_visible").eq("module_id", modulId).order("created_at").limit(1),
+    admin.from("hotels").select("id, name, address, rooms_visible").eq("module_id", modulId).order("created_at"),
     admin.from("room_assignments").select("hotel_id, rooms(label)").eq("participant_id", participantId),
   ]);
   if (!p || !modul || !reg) return null;
-  const hotel = hotels?.[0] ?? null;
-  const zimmer = hotel?.rooms_visible ? zuteilung?.find((z) => z.hotel_id === hotel.id)?.rooms?.label ?? null : null;
+  // Mehrere Hotels je Modul: das Hotel der Person, sobald ihre Zimmer freigegeben sind; bis dahin nur, wenn es
+  // ohnehin nur ein Hotel gibt (sonst „Zimmer folgt“ ohne Hotelnamen, damit kein ungeprüfter Plan durchsickert)
+  const liste = hotels ?? [];
+  const eigene = zuteilung?.find((z) => liste.some((h) => h.id === z.hotel_id));
+  const eigenesHotel = liste.find((h) => h.id === eigene?.hotel_id);
+  const hotel = eigenesHotel?.rooms_visible ? eigenesHotel : liste.length === 1 ? liste[0] : null;
+  const zimmer = eigenesHotel?.rooms_visible ? eigene?.rooms?.label ?? null : null;
   const stay = Array.isArray(reg.stay_requests) ? reg.stay_requests[0] : reg.stay_requests;
   const tage = [...modul.module_days].sort((a, b) => a.starts_at.localeCompare(b.starts_at)).map((t) => ({
     ...t, punkte: t.program_items.filter((x) => x.status !== "entfaellt").sort((a, b) => a.starts_at.localeCompare(b.starts_at)),

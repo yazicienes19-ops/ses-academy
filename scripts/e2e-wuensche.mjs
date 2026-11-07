@@ -376,6 +376,99 @@ if (teil("rueckfragen")) {
   ok(sql("select count(*) from staff_members s join auth.users u on u.id = s.user_id where u.email = 'orga@ses.test'") === "1", "Abbrechen: Zugang bleibt");
 }
 
+// ---------------------------------------------------------------------------
+// 7a. Logistik: mehrere Hotels je Modul, Zimmerplan und Zimmerliste je Hotel
+// ---------------------------------------------------------------------------
+if (teil("hotels")) {
+  const demo = sql("select id from modules where slug = 'demokratie'");
+  const nacht = sql(`select (min(day) - 1)::text from module_days where module_id = '${demo}'`);
+  sql(`delete from hotels where module_id = '${demo}'`);
+  sql(`update participants set gender = case email when 'yusuf@example.test' then 'm' else 'w' end where email in ('amina@example.test', 'leila@example.test', 'yusuf@example.test')`);
+  sql(`insert into stay_requests (registration_id, nights) select r.id, array['${nacht}']::date[] from registrations r join participants p on p.id = r.participant_id
+       where r.module_id = '${demo}' and p.email in ('amina@example.test', 'leila@example.test', 'yusuf@example.test') on conflict (registration_id) do update set nights = excluded.nights`);
+  const orga = await teamLogin(browser, "orga@ses.test");
+  await orga.goto(`${BASIS}/team/module/${demo}/hotel/`);
+  await orga.fill("#name", "TestWunsch Hotel A");
+  await orga.fill("#price_per_night", "80");
+  await orga.getByRole("button", { name: "Hotel anlegen" }).click();
+  await orga.getByText("Hotel gespeichert.").waitFor();
+  await orga.fill("#labels", "101-102");
+  await orga.getByRole("button", { name: "Anlegen" }).click();
+  await orga.getByText("Zimmer angelegt.").waitFor();
+  await orga.getByRole("link", { name: "+ Weiteres Hotel" }).click();
+  await orga.getByRole("heading", { name: "Weiteres Hotel anlegen" }).waitFor();
+  await orga.fill("#name", "TestWunsch Pension B");
+  await orga.fill("#price_per_night", "50");
+  await orga.getByRole("button", { name: "Hotel anlegen" }).click();
+  await orga.getByText("Hotel gespeichert.").waitFor();
+  ok(await orga.getByRole("heading", { name: "TestWunsch Pension B" }).isVisible(), "Zweites Hotel angelegt und gewählt");
+  await orga.fill("#labels", "B1");
+  await orga.getByRole("button", { name: "Anlegen" }).click();
+  await orga.getByText("Zimmer angelegt.").waitFor();
+  ok(sql(`select count(*) from hotels where module_id = '${demo}'`) === "2", "Zwei Hotels im Modul");
+  const hotelB = sql("select id from hotels where name = 'TestWunsch Pension B'");
+  const hotelA = sql("select id from hotels where name = 'TestWunsch Hotel A'");
+  ok(orga.url().includes(`hotel=${hotelB}`), "Seite bleibt beim gewählten Hotel");
+
+  // Zuteilen über Hotelgrenzen
+  const zuteilen = async (name, zimmer) => {
+    const zeile = orga.locator("tr", { hasText: name });
+    await zeile.locator("select").selectOption({ label: zimmer });
+    await zeile.getByRole("button", { name: "OK" }).click();
+    await orga.getByText("Zuteilung gespeichert.").waitFor();
+    await orga.waitForLoadState("networkidle");
+    await orga.reload();
+  };
+  await zuteilen("Yusuf Demir", "B1 (0/2)");
+  ok(sql("select h.name from room_assignments ra join hotels h on h.id = ra.hotel_id join participants p on p.id = ra.participant_id where p.email = 'yusuf@example.test'") === "TestWunsch Pension B", "Yusuf in der Pension");
+  await zuteilen("Yusuf Demir", "101 (0/2)");
+  ok(sql("select string_agg(h.name, ',') from room_assignments ra join hotels h on h.id = ra.hotel_id join participants p on p.id = ra.participant_id where p.email = 'yusuf@example.test'") === "TestWunsch Hotel A", "Umzug ins andere Hotel: nur noch ein Zimmer");
+  ok(await orga.locator("tr", { hasText: "Yusuf Demir" }).getByText("TestWunsch Hotel A").isVisible(), "Tabelle zeigt das Hotel der Person");
+
+  // Zimmerplan je Hotel: Vorschlag für Hotel A
+  await orga.goto(`${BASIS}/team/module/${demo}/zimmerplan/?hotel=${hotelA}`);
+  ok(await orga.getByRole("navigation", { name: "Hotel" }).getByRole("link", { name: /TestWunsch Pension B/ }).isVisible(), "Zimmerplan: Auswahl der Hotels");
+  await orga.getByRole("link", { name: "Vorschlag berechnen" }).click();
+  await orga.getByRole("button", { name: "Vorschlag übernehmen" }).click();
+  await orga.waitForURL(/hinweis=plan-/);
+  ok(orga.url().includes(`hotel=${hotelA}`), "Nach dem Übernehmen beim selben Hotel");
+  ok(sql(`select count(*) from room_assignments where hotel_id = '${hotelA}'`) === "3" && sql(`select count(*) from room_assignments where hotel_id = '${hotelB}'`) === "0", "Vorschlag teilt alle drei in Hotel A ein");
+
+  // Zimmerliste je Hotel (Excel und PDF)
+  const liste = await herunterladen(orga, orga.getByRole("link", { name: "Zimmerliste als Excel" }));
+  ok(liste.text.includes("\"TestWunsch Hotel A\"") && liste.text.includes("Amina Yilmaz") && liste.text.includes("Yusuf Demir"), "Excel-Zimmerliste für Hotel A");
+  ok(liste.name.includes("TestWunsch Hotel A"), `Dateiname nennt das Hotel („${liste.name}“)`);
+  const pdf = await orga.context().newPage();
+  await pdf.goto(`${BASIS}/team/module/${demo}/zimmerliste/?hotel=${hotelA}`);
+  ok(await pdf.getByText("TestWunsch Hotel A").first().isVisible() && await pdf.getByText("Yusuf Demir").isVisible(), "Zimmerliste (PDF-Druckseite) für Hotel A");
+  await pdf.goto(`${BASIS}/team/module/${demo}/zimmerliste/?hotel=${hotelB}`);
+  ok(!(await pdf.getByText("Yusuf Demir").count()), "Zimmerliste der Pension ohne die Gäste von Hotel A");
+
+  // Leeres Hotel entfernen (Rückfrage)
+  await orga.goto(`${BASIS}/team/module/${demo}/hotel/?hotel=${hotelB}`);
+  await orga.getByRole("button", { name: "Dieses Hotel entfernen" }).click();
+  await orga.getByRole("button", { name: "Ja, Hotel entfernen" }).click();
+  await orga.getByText("Hotel entfernt.").waitFor();
+  ok(sql(`select count(*) from hotels where module_id = '${demo}'`) === "1", "Leeres Hotel entfernt");
+
+  // Info-Mail nennt das Hotel der Person erst nach der Freigabe der Zimmer
+  const admin = await teamLogin(browser, "admin@ses.test");
+  const amina = sql("select id from participants where email = 'amina@example.test'");
+  await admin.goto(`${BASIS}/team/module/${demo}/infomail/?person=${amina}`);
+  ok(!(await admin.content()).includes("TestWunsch Hotel A") || sql(`select count(*) from hotels where module_id = '${demo}'`) === "1", "Info-Mail: ein Hotel wird wie bisher genannt");
+  sql(`update hotels set rooms_visible = true where id = '${hotelA}'`);
+  await admin.reload();
+  const zimmerA = sql(`select r.label from room_assignments ra join rooms r on r.id = ra.room_id where ra.participant_id = '${amina}' and ra.hotel_id = '${hotelA}'`);
+  ok((await admin.content()).includes("TestWunsch Hotel A") && (await admin.content()).includes(zimmerA), "Info-Mail: Hotel und Zimmer nach der Freigabe");
+
+  const handy = await teamLogin(browser, "orga@ses.test", 390);
+  for (const pfad of [`/team/module/${demo}/hotel/`, `/team/module/${demo}/zimmerplan/`]) {
+    await handy.goto(`${BASIS}${pfad}`);
+    ok(await keinUeberlauf(handy), `${pfad} am Handy ohne seitliches Scrollen`);
+  }
+  sql(`delete from hotels where module_id = '${demo}'; delete from stay_requests s using registrations r where r.id = s.registration_id and r.module_id = '${demo}'`);
+}
+
 await browser.close();
 console.log(fehler ? `\n${fehler} Fehler` : "\nAlles in Ordnung.");
 process.exit(fehler ? 1 : 0);

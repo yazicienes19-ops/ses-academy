@@ -54,8 +54,14 @@ export default async function ZimmerplanSeite({ params, searchParams }: PageProp
   const { id } = await params;
   const sp = await searchParams;
   if (!istToken(id)) notFound();
-  const d = await ladeZimmerplan(id);
+  const d = await ladeZimmerplan(id, typeof sp.hotel === "string" ? sp.hotel : null);
   if (!d.modul) notFound();
+  // Adressen innerhalb der Seite behalten das gewählte Hotel
+  const mitHotel = (extra: Record<string, string> = {}, pfad = `/team/module/${id}/zimmerplan/`) => {
+    const q = new URLSearchParams({ ...(d.hotel ? { hotel: d.hotel.id } : {}), ...extra });
+    return `${pfad}${q.size ? `?${q}` : ""}`;
+  };
+  const hotelFeld = d.hotel ? <input type="hidden" name="hotel_id" value={d.hotel.id} /> : null;
 
   const plan = vorschlag(d);
   // Noch keine Zimmer: automatische Einteilung mit 2er- oder 3er-Zimmern zeigen (Hinweise dann auch von dort)
@@ -71,8 +77,9 @@ export default async function ZimmerplanSeite({ params, searchParams }: PageProp
   const name = (pid: string) => byId.get(pid)?.name ?? "?";
   const uebernachten = d.personen.filter((p) => p.nights.length > 0);
   const betten = d.zimmer.reduce((s, z) => s + z.capacity, 0);
-  const eingeteilt = d.personen.filter((p) => p.room_id);
+  const eingeteilt = d.imHotel;
   const ohneZimmer = uebernachten.filter((p) => !p.room_id);
+  const mehrereHotels = d.hotels.length > 1;
   const hinweiseJePerson = new Map<string, string[]>();
   for (const h of probe?.hinweise ?? plan.hinweise) hinweiseJePerson.set(h.personId, [...(hinweiseJePerson.get(h.personId) ?? []), h.text]);
   const mitWunsch = d.personen.filter((p) => p.room_wish.trim())
@@ -97,10 +104,23 @@ export default async function ZimmerplanSeite({ params, searchParams }: PageProp
         <Hinweis code={sp.hinweis} texte={hinweise} />
         {plancode !== null && <p role="status" className="mt-4 rounded-2xl bg-emerald-100 p-4 text-emerald-950">Vorschlag übernommen: {plancode} Personen eingeteilt. Handzuteilungen sind geblieben.</p>}
 
+        {mehrereHotels && (
+          <nav aria-label="Hotel" className="mt-6 flex flex-wrap items-center gap-2">
+            <span className="text-sm font-semibold">Hotel:</span>
+            {d.hotels.map((h) => (
+              <Link key={h.id} href={`/team/module/${id}/zimmerplan/?hotel=${h.id}`} aria-current={h.id === d.hotel?.id ? "page" : undefined}
+                className={`rounded-full px-4 py-2 text-sm font-semibold ring-1 ${h.id === d.hotel?.id ? "bg-ink text-paper ring-ink" : "bg-weiss ring-line hover:ring-ink"}`}>
+                {h.name} <span className="opacity-70">{d.personen.filter((p) => p.hotel_id === h.id).length}</span>
+              </Link>
+            ))}
+            {d.inAnderenHotels.length > 0 && <span className="text-sm text-ink-soft">Geplant wird hier nur für dieses Hotel; {d.inAnderenHotels.length} sind in einem anderen Hotel eingeteilt.</span>}
+          </nav>
+        )}
+
         <section className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Kachel wert={uebernachten.length} text={`übernachten (${uebernachten.filter((p) => p.gender === "w").length} w · ${uebernachten.filter((p) => p.gender === "m").length} m)`} />
           <Kachel wert={betten} text={`Betten in ${d.zimmer.length} Zimmern`} ton={betten < uebernachten.length ? "warnung" : "neutral"} />
-          <Kachel wert={eingeteilt.length} text="eingeteilt" ton={eingeteilt.length && !ohneZimmer.length ? "gut" : "neutral"} />
+          <Kachel wert={eingeteilt.length} text={mehrereHotels ? `in diesem Hotel eingeteilt (${d.inAnderenHotels.length} in anderen)` : "eingeteilt"} ton={eingeteilt.length && !ohneZimmer.length ? "gut" : "neutral"} />
           <Kachel wert={ohneZimmer.length} text="übernachten, noch ohne Zimmer" ton={ohneZimmer.length ? "warnung" : "neutral"} />
         </section>
 
@@ -110,7 +130,7 @@ export default async function ZimmerplanSeite({ params, searchParams }: PageProp
           <section id="einteilung" className="karte mt-6 scroll-mt-4">
             <h2 className="font-display text-2xl font-bold">Automatische Einteilung</h2>
             <p className="mt-1 max-w-3xl text-sm text-ink-soft">
-              Noch sind keine Zimmer angelegt. So verteilen sich die {uebernachten.length} Übernachtenden: Frauen und Männer getrennt,
+              {mehrereHotels ? `In „${d.hotel?.name}“ sind noch keine Zimmer angelegt. So verteilen sich die ${d.planPersonen.filter((p) => p.nights.length > 0).length} Übernachtenden, die noch in keinem anderen Hotel sind:` : `Noch sind keine Zimmer angelegt. So verteilen sich die ${uebernachten.length} Übernachtenden:`} Frauen und Männer getrennt,
               gegenseitige Wünsche zusammen, sonst gemischt nach Region und ohne frühere Zimmerpartner. Die Liste könnt ihr so ans Hotel
               schicken, die Zimmernummern vergibt das Hotel.
             </p>
@@ -120,7 +140,7 @@ export default async function ZimmerplanSeite({ params, searchParams }: PageProp
                 const zahl = (b: string) => v.zimmer.filter((z) => z.bereich === b).length;
                 const aktiv = g === groesse;
                 return (
-                  <Link key={g} href={`/team/module/${id}/zimmerplan/?groesse=${g}#einteilung`} aria-current={aktiv ? "true" : undefined}
+                  <Link key={g} href={`${mitHotel({ groesse: String(g) })}#einteilung`} aria-current={aktiv ? "true" : undefined}
                     className={`rounded-3xl p-5 ring-1 transition ${aktiv ? "bg-ink text-paper ring-ink" : "bg-white ring-line hover:ring-ink"}`}>
                     <span className="block font-semibold">mit {zimmerArt[g]}n ({g} Betten)</span>
                     <span className="font-display mt-1 block text-3xl font-extrabold">{v.zimmer.length} Zimmer</span>
@@ -132,10 +152,10 @@ export default async function ZimmerplanSeite({ params, searchParams }: PageProp
               })}
             </div>
             <div className="mt-4 flex flex-wrap items-center gap-2">
-              <a href={`/team/module/${id}/zimmerliste/?groesse=${groesse}`} target="_blank" className="knopf">Zimmerliste als PDF (fürs Hotel)</a>
-              <a href={`/team/module/${id}/zimmerplan/liste/?groesse=${groesse}`} className="knopf-hell">Excel-Liste herunterladen</a>
+              <a href={mitHotel({ groesse: String(groesse) }, `/team/module/${id}/zimmerliste/`)} target="_blank" className="knopf">Zimmerliste als PDF (fürs Hotel)</a>
+              <a href={mitHotel({ groesse: String(groesse) }, `/team/module/${id}/zimmerplan/liste/`)} className="knopf-hell">Excel-Liste herunterladen</a>
               <form action={probeUebernehmen}>
-                <input type="hidden" name="module_id" value={id} /><input type="hidden" name="groesse" value={groesse} />
+                <input type="hidden" name="module_id" value={id} /><input type="hidden" name="groesse" value={groesse} />{hotelFeld}
                 <SendeKnopf className="knopf-hell" laeuft="Wird übernommen …">So übernehmen und von Hand anpassen</SendeKnopf>
               </form>
             </div>
@@ -170,15 +190,15 @@ export default async function ZimmerplanSeite({ params, searchParams }: PageProp
                   <p className="mt-1 text-sm">
                     {d.hotel.rooms_visible
                       ? <><span className="font-semibold">Achtung:</span> Die Zimmer sind in „Mein Bereich“ freigegeben, Übernommenes sehen die Teilnehmenden sofort.</>
-                      : <>Teilnehmende sehen ihr Zimmer erst, wenn es unter <Link href={`/team/module/${id}/hotel/`} className="link font-semibold">Logistik</Link> freigegeben ist.</>}
+                      : <>Teilnehmende sehen ihr Zimmer erst, wenn es unter <Link href={mitHotel({}, `/team/module/${id}/hotel/`)} className="link font-semibold">Logistik</Link> freigegeben ist.</>}
                   </p>
                 </div>
                 {zeigeVorschlag ? (
                   <>
-                    <Link href={`/team/module/${id}/zimmerplan/`} className="knopf-hell">Verwerfen</Link>
-                    <form action={planUebernehmen}><input type="hidden" name="module_id" value={id} /><button className="knopf">Vorschlag übernehmen</button></form>
+                    <Link href={mitHotel()} className="knopf-hell">Verwerfen</Link>
+                    <form action={planUebernehmen}><input type="hidden" name="module_id" value={id} />{hotelFeld}<button className="knopf">Vorschlag übernehmen</button></form>
                   </>
-                ) : <Link href={`/team/module/${id}/zimmerplan/?vorschlag=1`} className="knopf">Vorschlag berechnen</Link>}
+                ) : <Link href={mitHotel({ vorschlag: "1" })} className="knopf">Vorschlag berechnen</Link>}
               </div>
               {zeigeVorschlag && (
                 <>
@@ -198,8 +218,9 @@ export default async function ZimmerplanSeite({ params, searchParams }: PageProp
             <section className="karte mt-6">
               <div className="flex flex-wrap items-center gap-3">
                 <h2 className="font-display mr-auto text-2xl font-bold">Aktueller Zimmerplan</h2>
-                <Link href={`/team/module/${id}/hotel/`} className="knopf-hell">Einzeln umsetzen (Logistik)</Link>
-                <Link href={`/team/module/${id}/zimmerliste/`} target="_blank" className="knopf-hell">Zimmerliste als PDF (fürs Hotel)</Link>
+                <Link href={mitHotel({}, `/team/module/${id}/hotel/`)} className="knopf-hell">Einzeln umsetzen (Logistik)</Link>
+                <Link href={mitHotel({}, `/team/module/${id}/zimmerliste/`)} target="_blank" className="knopf-hell">Zimmerliste als PDF (fürs Hotel)</Link>
+                <a href={mitHotel({}, `/team/module/${id}/zimmerplan/liste/`)} className="knopf-hell">Zimmerliste als Excel</a>
                 {eingeteilt.some((p) => p.source === "auto") && (
                   <form action={vorschlagZuruecksetzen}>
                     <input type="hidden" name="module_id" value={id} /><input type="hidden" name="hotel_id" value={d.hotel.id} />
@@ -265,7 +286,7 @@ export default async function ZimmerplanSeite({ params, searchParams }: PageProp
                         </span>
                         {auswahl ? (
                           <form action={wunschKorrigieren} className="inline-flex gap-1">
-                            <input type="hidden" name="module_id" value={id} /><input type="hidden" name="participant_id" value={p.participant_id} /><input type="hidden" name="token" value={t.schluessel} />
+                            <input type="hidden" name="module_id" value={id} /><input type="hidden" name="participant_id" value={p.participant_id} /><input type="hidden" name="token" value={t.schluessel} />{hotelFeld}
                             <label className="sr-only" htmlFor={`k-${p.participant_id}-${t.schluessel}`}>Wer ist mit „{t.text}“ gemeint?</label>
                             <select id={`k-${p.participant_id}-${t.schluessel}`} name="wished_id" defaultValue={t.art === "korrigiert" ? t.ziel?.id : t.art === "ignoriert" ? "-" : t.kandidaten?.[0]?.id ?? t.ziel?.id ?? "auto"} className="feld !w-56 !py-1 text-sm">
                               <option value="auto">automatisch erkennen</option>
@@ -280,7 +301,7 @@ export default async function ZimmerplanSeite({ params, searchParams }: PageProp
                     );
                   })}
                   {teile.some((t) => t.art === "sicher") && korrigieren !== p.participant_id && (
-                    <Link href={`/team/module/${id}/zimmerplan/?korrigieren=${p.participant_id}#w-${p.participant_id}`} className="text-xs font-semibold text-ink-soft underline">ändern</Link>
+                    <Link href={`${mitHotel({ korrigieren: p.participant_id })}#w-${p.participant_id}`} className="text-xs font-semibold text-ink-soft underline">ändern</Link>
                   )}
                 </div>
                 {probleme.length > 0 && <ul className="mt-1.5 space-y-0.5 text-sm text-amber-900">{probleme.map((t, i) => <li key={i}>⚠ {t}</li>)}</ul>}

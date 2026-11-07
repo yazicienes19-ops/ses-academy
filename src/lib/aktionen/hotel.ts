@@ -8,9 +8,10 @@ import { istToken } from "@/lib/codes";
 import { createClient } from "@/lib/supabase/server";
 import { berlinerZeit } from "@/lib/zeit";
 
-function zurueck(modulId: string, hinweis: string): never {
+function zurueck(modulId: string, hinweis: string, hotel?: string | null): never {
   revalidatePath(`/team/module/${modulId}/hotel/`);
-  redirect(`/team/module/${modulId}/hotel/?hinweis=${hinweis}`);
+  revalidatePath(`/team/module/${modulId}/zimmerplan/`);
+  redirect(`/team/module/${modulId}/hotel/?hinweis=${hinweis}${hotel && istToken(hotel) ? `&hotel=${hotel}` : ""}`);
 }
 
 /** Abfrage in „Mein Bereich“ öffnen oder schließen (Admin/Vorstand, wie die übrigen Moduleinstellungen). */
@@ -41,7 +42,7 @@ export async function hotelSpeichern(formData: FormData) {
   roh.price_per_night = roh.price_per_night.replace(/\s|€|eur(o)?/gi, "");
   roh.quota_rooms = roh.quota_rooms.replace(/\s|zimmer/gi, "");
   const d = hotelSchema.safeParse(roh);
-  if (!istToken(modulId) || !d.success) zurueck(modulId, "eingabe");
+  if (!istToken(modulId) || !d.success) zurueck(modulId, "eingabe", id);
   const werte = {
     module_id: modulId,
     name: d.data.name,
@@ -53,8 +54,11 @@ export async function hotelSpeichern(formData: FormData) {
     notes: d.data.notes,
   };
   const supabase = await createClient();
-  const { error } = istToken(id) ? await supabase.from("hotels").update(werte).eq("id", id) : await supabase.from("hotels").insert(werte);
-  zurueck(modulId, error ? "fehler" : "hotel");
+  // Ohne id ein weiteres Hotel des Moduls (mehrere Hotels je Modul, z. B. Hotel und Pension)
+  const { data, error } = istToken(id)
+    ? await supabase.from("hotels").update(werte).eq("id", id).eq("module_id", modulId).select("id").single()
+    : await supabase.from("hotels").insert(werte).select("id").single();
+  zurueck(modulId, error ? "fehler" : "hotel", data?.id ?? id);
 }
 
 /** Mehrere Zimmer auf einmal: „101-110“ oder „101, 102, 205“, alle mit derselben Bettenzahl. */
@@ -65,17 +69,17 @@ export async function zimmerAnlegen(formData: FormData) {
   const betten = Number(formData.get("capacity"));
   const bereich = String(formData.get("section") ?? "").trim().slice(0, 100);
   const eingabe = String(formData.get("labels") ?? "").trim();
-  if (!istToken(hotel) || !Number.isInteger(betten) || betten < 1 || betten > 12 || !eingabe) zurueck(modulId, "eingabe");
+  if (!istToken(hotel) || !Number.isInteger(betten) || betten < 1 || betten > 12 || !eingabe) zurueck(modulId, "eingabe", hotel);
   const namen = eingabe.split(/[,;\s]+/).flatMap((teil) => {
     const bereichNr = teil.match(/^(\d+)-(\d+)$/);
     if (!bereichNr) return teil ? [teil.slice(0, 40)] : [];
     const [von, bis] = [Number(bereichNr[1]), Number(bereichNr[2])];
     return bis >= von && bis - von < 200 ? Array.from({ length: bis - von + 1 }, (_, i) => String(von + i)) : [];
   });
-  if (namen.length === 0) zurueck(modulId, "eingabe");
+  if (namen.length === 0) zurueck(modulId, "eingabe", hotel);
   const supabase = await createClient();
   const { error } = await supabase.from("rooms").upsert(namen.map((label) => ({ hotel_id: hotel, label, capacity: betten, section: bereich || null })), { onConflict: "hotel_id,label", ignoreDuplicates: true });
-  zurueck(modulId, error ? "fehler" : "zimmer");
+  zurueck(modulId, error ? "fehler" : "zimmer", hotel);
 }
 
 export async function zimmerEntfernen(formData: FormData) {
@@ -85,27 +89,43 @@ export async function zimmerEntfernen(formData: FormData) {
   if (!istToken(id)) zurueck(modulId, "eingabe");
   const supabase = await createClient();
   const { error } = await supabase.from("rooms").delete().eq("id", id);
-  zurueck(modulId, error ? "fehler" : "zimmer-entfernt");
+  zurueck(modulId, error ? "fehler" : "zimmer-entfernt", String(formData.get("hotel_id") ?? ""));
 }
 
-/** Person einem Zimmer zuteilen (leer = Zuteilung im Hotel aufheben). */
+/**
+ * Person einem Zimmer zuteilen, auch in ein anderes Hotel des Moduls (Umzug in einem Schritt, assign_room).
+ * Leer = Zuteilung im Modul aufheben. Ist das Zimmer voll, bleibt die bisherige Zuteilung.
+ */
 export async function zimmerZuteilen(formData: FormData) {
   await requireStaff("orga");
   const modulId = String(formData.get("module_id"));
   const person = String(formData.get("participant_id"));
-  const hotel = String(formData.get("hotel_id"));
+  const hotel = String(formData.get("hotel_id") ?? "");
   const zimmer = String(formData.get("room_id") ?? "");
-  if (!istToken(person) || !istToken(hotel)) zurueck(modulId, "eingabe");
+  if (!istToken(person) || !istToken(modulId)) zurueck(modulId, "eingabe", hotel);
   const supabase = await createClient();
   if (istToken(zimmer)) {
-    // In einem Schritt umziehen: Ist das neue Zimmer voll, bleibt die bisherige Zuteilung stehen
-    const { error } = await supabase.from("room_assignments")
-      .upsert({ room_id: zimmer, participant_id: person, hotel_id: hotel, source: "manual" }, { onConflict: "hotel_id,participant_id" });
-    if (error) zurueck(modulId, error.message.includes("room_full") ? "zimmer-voll" : "fehler");
+    const { data, error } = await supabase.rpc("assign_room", { p_participant_id: person, p_room_id: zimmer });
+    if (error || data !== "ok") zurueck(modulId, data === "room_full" ? "zimmer-voll" : "fehler", hotel);
   } else {
-    await supabase.from("room_assignments").delete().eq("participant_id", person).eq("hotel_id", hotel);
+    const { data: hotels } = await supabase.from("hotels").select("id").eq("module_id", modulId);
+    await supabase.from("room_assignments").delete().eq("participant_id", person).in("hotel_id", (hotels ?? []).map((h) => h.id));
   }
-  zurueck(modulId, "zugeteilt");
+  zurueck(modulId, "zugeteilt", hotel);
+}
+
+/** Ein Hotel des Moduls entfernen (nach Rückfrage), nur solange niemand darin eingeteilt ist; seine Zimmer gehen mit. */
+export async function hotelEntfernen(formData: FormData) {
+  await requireStaff("orga");
+  const modulId = String(formData.get("module_id"));
+  const hotel = String(formData.get("hotel_id"));
+  if (!istToken(modulId) || !istToken(hotel)) zurueck(modulId, "eingabe");
+  if (formData.get("bestaetigt") !== "ja") zurueck(modulId, "eingabe", hotel);
+  const supabase = await createClient();
+  const { count } = await supabase.from("room_assignments").select("participant_id", { count: "exact", head: true }).eq("hotel_id", hotel);
+  if (count) zurueck(modulId, "hotel-belegt", hotel);
+  const { error } = await supabase.from("hotels").delete().eq("id", hotel).eq("module_id", modulId);
+  zurueck(modulId, error ? "fehler" : "hotel-entfernt");
 }
 
 /** Zimmer in „Mein Bereich“ zeigen oder verbergen (z. B. solange der Zimmerplan noch ein ungeprüfter Vorschlag ist). */
@@ -117,7 +137,7 @@ export async function zimmerSichtbarUmschalten(formData: FormData) {
   const sichtbar = formData.get("sichtbar") === "1";
   const supabase = await createClient();
   const { error } = await supabase.from("hotels").update({ rooms_visible: sichtbar }).eq("id", hotel);
-  zurueck(modulId, error ? "fehler" : sichtbar ? "zimmer-sichtbar" : "zimmer-verborgen");
+  zurueck(modulId, error ? "fehler" : sichtbar ? "zimmer-sichtbar" : "zimmer-verborgen", hotel);
 }
 
 // ---------------------------------------------------------------------------
