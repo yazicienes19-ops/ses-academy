@@ -391,6 +391,49 @@ if (teil("freigaben")) {
   sql("delete from approvals where summary like '%TestNach%'");
 }
 
+// ---------------------------------------------------------------------------
+// 10. Regieplan: Programmpunkte und Einsätze bearbeiten
+// ---------------------------------------------------------------------------
+if (teil("regieplan")) {
+  const tag = sql("select d.id from module_days d join modules m on m.id = d.module_id where m.slug = 'demokratie' order by d.day limit 1");
+  sql(`delete from program_items where module_day_id = '${tag}' and title like 'TestNach%'; delete from duty_assignments where module_day_id = '${tag}' and person_name like 'TestNach%'`);
+  sql(`insert into program_items (module_day_id, starts_at, ends_at, title, room, note) values ('${tag}', '2026-11-14 09:00+00', '2026-11-14 10:00+00', 'TestNach Vortrag', 'Saal 1', 'Referent')`);
+  sql(`insert into duty_assignments (module_day_id, person_name, phone, task) values ('${tag}', 'TestNach Helferin', '0170 1', 'Einlass')`);
+  for (const breite of [1280, 390]) {
+    const orga = await teamLogin(browser, "orga@ses.test", breite);
+    await orga.goto(`${BASIS}/team/regieplan/?tag=${tag}`);
+    const zeile = orga.locator("li", { hasText: "TestNach Vortrag" });
+    await zeile.locator("summary").click();
+    await zeile.getByRole("link", { name: "Bearbeiten" }).click();
+    await orga.getByText("Programmpunkt bearbeiten").waitFor();
+    ok(await orga.inputValue("#b-title") === "TestNach Vortrag" && await orga.inputValue("#b-von") === "10:00", `(${breite}px) Bearbeiten-Formular vorausgefüllt`);
+    await orga.fill("#b-bis", "09:30");
+    await orga.getByRole("button", { name: "Speichern" }).click();
+    await orga.getByText("Bitte die Angaben prüfen").waitFor();
+    ok(await orga.getByText("Programmpunkt bearbeiten").isVisible(), `(${breite}px) Ende vor Beginn abgelehnt, Formular bleibt offen`);
+    await orga.fill("#b-title", `TestNach Vortrag geändert ${breite}`);
+    await orga.fill("#b-von", "10:15");
+    await orga.fill("#b-bis", "11:15");
+    await orga.getByRole("button", { name: "Speichern" }).click();
+    await orga.getByText("Programmpunkt geändert.").waitFor();
+    ok(sql(`select title || ' ' || to_char(starts_at at time zone 'Europe/Berlin', 'HH24:MI') from program_items where module_day_id = '${tag}' and title like 'TestNach%'`) === `TestNach Vortrag geändert ${breite} 10:15`, `(${breite}px) Programmpunkt gespeichert`);
+    sql(`update program_items set title = 'TestNach Vortrag', starts_at = '2026-11-14 09:00+00' where module_day_id = '${tag}' and title like 'TestNach%'`);
+    await orga.goto(`${BASIS}/team/regieplan/?tag=${tag}`);
+    const einsatz = orga.locator("li", { hasText: "TestNach Helferin" });
+    await einsatz.locator("summary").click();
+    await einsatz.getByRole("link", { name: "Bearbeiten" }).click();
+    await orga.getByText("Einsatz bearbeiten").waitFor();
+    await orga.fill("#eb-phone", "+49 170 5550009");
+    await orga.check("#einsatz-" + sql(`select id from duty_assignments where module_day_id = '${tag}' and person_name like 'TestNach%'`) + " input[name=is_lead]");
+    await orga.getByRole("button", { name: "Speichern" }).click();
+    await orga.getByText("Einsatz geändert.").waitFor();
+    ok(sql(`select phone || ' ' || is_lead from duty_assignments where module_day_id = '${tag}' and person_name like 'TestNach%'`) === "+49 170 5550009 true", `(${breite}px) Einsatz gespeichert (Telefon, Leitung)`);
+    sql(`update duty_assignments set phone = '0170 1', is_lead = false where module_day_id = '${tag}' and person_name like 'TestNach%'`);
+    ok(await keinUeberlauf(orga), `(${breite}px) Regieplan ohne seitliches Scrollen`);
+  }
+  sql(`delete from program_items where module_day_id = '${tag}' and title like 'TestNach%'; delete from duty_assignments where module_day_id = '${tag}' and person_name like 'TestNach%'`);
+}
+
 await browser.close();
 console.log(fehler ? `\n${fehler} Fehler` : "\nAlles in Ordnung.");
 process.exit(fehler ? 1 : 0);

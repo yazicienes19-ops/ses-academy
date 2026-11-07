@@ -7,7 +7,8 @@ import { TagWahl } from "@/components/team/TagWahl";
 import { TeamKopf } from "@/components/team/TeamKopf";
 import { punktEnde, punktZustand, telLink, zustaendigWaehrend } from "@/lib/ablauf";
 import {
-  einsaetzeUebernehmen, einsatzAnlegen, einsatzEntfernen, programmpunktAnlegen, programmpunktEntfernen, programmpunktStatus, programmVerschieben, regieplanPdfSetzen,
+  einsaetzeUebernehmen, einsatzAnlegen, einsatzBearbeiten, einsatzEntfernen, programmpunktAnlegen, programmpunktBearbeiten, programmpunktEntfernen, programmpunktStatus,
+  programmVerschieben, regieplanPdfSetzen,
 } from "@/lib/aktionen/eventtag";
 import { darf, requireStaff } from "@/lib/auth";
 import { uhrzeit } from "@/lib/einlass";
@@ -20,6 +21,8 @@ export const metadata: Metadata = { title: "Regieplan | SES Academy" };
 const hinweise: Record<string, { text: string; gut: boolean }> = {
   "punkt-angelegt": { text: "Programmpunkt eingetragen.", gut: true },
   "punkt-entfernt": { text: "Programmpunkt entfernt.", gut: true },
+  "punkt-geaendert": { text: "Programmpunkt geändert.", gut: true },
+  "einsatz-geaendert": { text: "Einsatz geändert.", gut: true },
   status: { text: "Geändert.", gut: true },
   verschoben: { text: "Verschoben. Alle sehen die neuen Zeiten.", gut: true },
   "einsatz-angelegt": { text: "Einsatz eingetragen.", gut: true },
@@ -40,7 +43,7 @@ const zeitspanne = (von: string | null, bis: string | null) => (von ? `${uhrzeit
  */
 export default async function Regieplan({ searchParams }: PageProps<"/team/regieplan">) {
   const staff = await requireStaff("einlass");
-  const { tag: gewaehlt, hinweis } = await searchParams;
+  const { tag: gewaehlt, hinweis, bearbeiten, einsatz: einsatzBearbeitet } = await searchParams;
   const { tage, vorschlag } = await ladeModultage();
   const tag = tage.find((t) => t.id === gewaehlt) ?? vorschlag;
   const darfPflegen = darf.orga(staff.role);
@@ -80,7 +83,8 @@ export default async function Regieplan({ searchParams }: PageProps<"/team/regie
   return (
     <>
       <TeamKopf staff={staff} aktiv="regieplan" />
-      <AutoAktualisieren />
+      {/* Beim Bearbeiten nicht alle 30 Sekunden neu laden */}
+      {!bearbeiten && !einsatzBearbeitet && <AutoAktualisieren />}
       <main className={`mx-auto px-4 py-6 ${darfPflegen ? "max-w-6xl" : "max-w-3xl"}`}>
         <div className="flex flex-wrap items-end justify-between gap-3">
           <h1 className="font-display text-3xl font-bold">Regieplan</h1>
@@ -175,6 +179,25 @@ export default async function Regieplan({ searchParams }: PageProps<"/team/regie
                   {liste.map((p, i) => {
                     const z = zustand(i);
                     const wer = darfPflegen ? zustaendigWaehrend(liste, i, einsaetze) : [];
+                    if (darfPflegen && bearbeiten === p.id)
+                      return (
+                        <li key={p.id} id={`punkt-${p.id}`} className="border-b border-line bg-gelb-hell/40 px-4 py-4 first:rounded-t-3xl last:rounded-b-3xl last:border-b-0">
+                          <form action={programmpunktBearbeiten} className="grid gap-3 sm:grid-cols-4">
+                            <input type="hidden" name="tag" value={tag.id} /><input type="hidden" name="id" value={p.id} />
+                            <p className="font-semibold sm:col-span-4">Programmpunkt bearbeiten</p>
+                            <div><label htmlFor="b-von" className="etikett">Beginn</label><input id="b-von" name="von" type="time" required defaultValue={uhrzeit(p.starts_at, false)} className="feld" /></div>
+                            <div><label htmlFor="b-bis" className="etikett">Ende</label><input id="b-bis" name="bis" type="time" defaultValue={p.ends_at ? uhrzeit(p.ends_at, false) : ""} className="feld" /></div>
+                            <div className="sm:col-span-2"><label htmlFor="b-title" className="etikett">Titel</label><input id="b-title" name="title" required maxLength={200} defaultValue={p.title} className="feld" /></div>
+                            <div><label htmlFor="b-room" className="etikett">Raum</label><input id="b-room" name="room" maxLength={100} defaultValue={p.room ?? ""} className="feld" /></div>
+                            <div><label htmlFor="b-responsible" className="etikett">Verantwortlich</label><input id="b-responsible" name="responsible" maxLength={200} defaultValue={p.responsible ?? ""} className="feld" /></div>
+                            <div className="sm:col-span-2"><label htmlFor="b-note" className="etikett">Untertitel</label><input id="b-note" name="note" maxLength={1000} defaultValue={p.note ?? ""} className="feld" /></div>
+                            <div className="flex flex-wrap gap-2 sm:col-span-4">
+                              <button type="submit" className="knopf">Speichern</button>
+                              <Link href={`/team/regieplan/?tag=${tag.id}`} className="knopf-hell">Abbrechen</Link>
+                            </div>
+                          </form>
+                        </li>
+                      );
                     return (
                       <li key={p.id} className={`relative flex gap-4 border-b border-line px-4 py-3.5 first:rounded-t-3xl last:rounded-b-3xl last:border-b-0 has-[details[open]]:z-30 ${z === "jetzt" ? "bg-gruen-hell" : ""} ${z === "vorbei" ? "opacity-50" : ""}`}>
                         {z === "jetzt" && <span aria-hidden className="absolute inset-y-0 left-0 w-1 rounded-l-3xl bg-forest" />}
@@ -208,6 +231,7 @@ export default async function Regieplan({ searchParams }: PageProps<"/team/regie
                                 <input type="hidden" name="status" value={p.status === "entfaellt" ? "geplant" : "entfaellt"} />
                                 <button type="submit" className="w-full rounded-xl px-3 py-2 text-left text-sm hover:bg-paper">{p.status === "entfaellt" ? "Findet doch statt" : "Entfällt"}</button>
                               </form>
+                              <Link href={`/team/regieplan/?tag=${tag.id}&bearbeiten=${p.id}#punkt-${p.id}`} className="block w-full rounded-xl px-3 py-2 text-left text-sm hover:bg-paper">Bearbeiten</Link>
                               {z !== "vorbei" && z !== "entfaellt" && [10, 15].map((min) => (
                                 <form key={min} action={programmVerschieben}>
                                   <input type="hidden" name="tag" value={tag.id} /><input type="hidden" name="id" value={p.id} />
@@ -264,7 +288,24 @@ export default async function Regieplan({ searchParams }: PageProps<"/team/regie
                     <h2 className="font-display px-5 pt-5 text-xl font-bold">Team heute</h2>
                     {einsaetze.length ? (
                       <ul className="mt-2 divide-y divide-line">
-                        {einsaetze.map((e) => (
+                        {einsaetze.map((e) => einsatzBearbeitet === e.id ? (
+                          <li key={e.id} id={`einsatz-${e.id}`} className="bg-gelb-hell/40 px-5 py-4">
+                            <form action={einsatzBearbeiten} className="grid grid-cols-2 gap-3">
+                              <input type="hidden" name="tag" value={tag.id} /><input type="hidden" name="id" value={e.id} />
+                              <p className="col-span-2 font-semibold">Einsatz bearbeiten</p>
+                              <div className="col-span-2"><label htmlFor="eb-name" className="etikett">Name</label><input id="eb-name" name="person_name" required maxLength={200} defaultValue={e.person_name} className="feld" /></div>
+                              <div className="col-span-2"><label htmlFor="eb-task" className="etikett">Aufgabe</label><input id="eb-task" name="task" required maxLength={300} defaultValue={e.task ?? ""} className="feld" /></div>
+                              <div className="col-span-2"><label htmlFor="eb-phone" className="etikett">Telefon</label><input id="eb-phone" name="phone" type="tel" maxLength={40} defaultValue={e.phone ?? ""} className="feld" /></div>
+                              <div><label htmlFor="eb-von" className="etikett">von</label><input id="eb-von" name="von" type="time" defaultValue={e.starts_at ? uhrzeit(e.starts_at, false) : ""} className="feld" /></div>
+                              <div><label htmlFor="eb-bis" className="etikett">bis</label><input id="eb-bis" name="bis" type="time" defaultValue={e.ends_at ? uhrzeit(e.ends_at, false) : ""} className="feld" /></div>
+                              <label className="col-span-2 flex items-center gap-2 text-sm font-semibold"><input type="checkbox" name="is_lead" defaultChecked={e.is_lead} className="h-4 w-4 accent-ink" /> Entscheidet bei Problemen vor Ort</label>
+                              <div className="col-span-2 flex flex-wrap gap-2">
+                                <button type="submit" className="knopf">Speichern</button>
+                                <Link href={`/team/regieplan/?tag=${tag.id}`} className="knopf-hell">Abbrechen</Link>
+                              </div>
+                            </form>
+                          </li>
+                        ) : (
                           <li key={e.id} className="group flex items-center gap-3 px-5 py-2.5 has-[details[open]]:relative has-[details[open]]:z-30">
                             <div className="min-w-0 flex-1">
                               <p className="truncate font-semibold">{e.person_name}{e.is_lead && <span className="chip ml-1.5 bg-gelb-hell">Leitung</span>}</p>
@@ -273,10 +314,13 @@ export default async function Regieplan({ searchParams }: PageProps<"/team/regie
                             {e.phone && <a href={telLink(e.phone)} title={e.phone} aria-label={`${e.person_name} anrufen`} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-paper text-ink-soft ring-1 ring-line hover:bg-forest hover:text-paper"><Phone className="h-4 w-4" /></a>}
                             <details className="relative shrink-0">
                               <summary aria-label={`Optionen für ${e.person_name}`} className="flex h-8 w-8 cursor-pointer list-none items-center justify-center rounded-full text-ink-soft hover:bg-paper hover:text-ink [&::-webkit-details-marker]:hidden"><Ellipsis aria-hidden className="h-5 w-5" /></summary>
-                              <form action={einsatzEntfernen} className="absolute right-0 z-20 mt-1 w-44 rounded-2xl bg-weiss p-1.5 shadow-xl ring-1 ring-ink/10">
-                                <input type="hidden" name="tag" value={tag.id} /><input type="hidden" name="id" value={e.id} />
-                                <button type="submit" className="w-full rounded-xl px-3 py-2 text-left text-sm text-rot hover:bg-rot-hell">Entfernen</button>
-                              </form>
+                              <div className="absolute right-0 z-20 mt-1 w-44 rounded-2xl bg-weiss p-1.5 shadow-xl ring-1 ring-ink/10">
+                                <Link href={`/team/regieplan/?tag=${tag.id}&einsatz=${e.id}#einsatz-${e.id}`} className="block w-full rounded-xl px-3 py-2 text-left text-sm hover:bg-paper">Bearbeiten</Link>
+                                <form action={einsatzEntfernen}>
+                                  <input type="hidden" name="tag" value={tag.id} /><input type="hidden" name="id" value={e.id} />
+                                  <button type="submit" className="w-full rounded-xl px-3 py-2 text-left text-sm text-rot hover:bg-rot-hell">Entfernen</button>
+                                </form>
+                              </div>
                             </details>
                           </li>
                         ))}

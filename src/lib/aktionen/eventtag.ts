@@ -120,6 +120,31 @@ export async function programmVerschieben(formData: FormData) {
   zurueck(pfad, "verschoben");
 }
 
+/** Programmpunkt nachträglich ändern (Zeit, Titel, Raum, Verantwortlich, Untertitel); der Status bleibt. */
+export async function programmpunktBearbeiten(formData: FormData) {
+  const staff = await requireStaff("orga");
+  const tagId = String(formData.get("tag"));
+  const id = String(formData.get("id"));
+  const pfad = `/team/regieplan/?tag=${tagId}`;
+  const tag = await ladeTag(tagId);
+  const d = punktSchema.safeParse({
+    von: formData.get("von"), bis: formData.get("bis") ?? "", title: formData.get("title"),
+    room: formData.get("room") ?? "", responsible: formData.get("responsible") ?? "", note: formData.get("note") ?? "",
+  });
+  if (!tag || !istToken(id) || !d.success || (d.data.bis && d.data.bis <= d.data.von)) zurueck(`${pfad}&bearbeiten=${istToken(id) ? id : ""}`, "eingabe");
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("program_items").update({
+    starts_at: berlinerZeit(tag.day, d.data.von),
+    ends_at: d.data.bis ? berlinerZeit(tag.day, d.data.bis) : null,
+    title: d.data.title,
+    room: d.data.room || null,
+    responsible: d.data.responsible || null,
+    note: d.data.note,
+    updated_by: staff.userId,
+  }).eq("id", id).eq("module_day_id", tag.id).select("id");
+  zurueck(pfad, error || !data?.length ? "fehler" : "punkt-geaendert");
+}
+
 export async function programmpunktEntfernen(formData: FormData) {
   await requireStaff("orga");
   const tagId = String(formData.get("tag"));
@@ -164,6 +189,30 @@ export async function einsatzAnlegen(formData: FormData) {
     is_lead: d.data.is_lead,
   });
   zurueck(pfad, error ? "fehler" : "einsatz-angelegt");
+}
+
+/** Einsatz nachträglich ändern (Name, Aufgabe, Telefon, Zeit, Leitung). */
+export async function einsatzBearbeiten(formData: FormData) {
+  await requireStaff("orga");
+  const tagId = String(formData.get("tag"));
+  const id = String(formData.get("id"));
+  const pfad = `/team/regieplan/?tag=${tagId}`;
+  const tag = await ladeTag(tagId);
+  const d = einsatzSchema.safeParse({
+    person_name: formData.get("person_name"), phone: formData.get("phone") ?? "", task: formData.get("task"),
+    von: formData.get("von") ?? "", bis: formData.get("bis") ?? "", is_lead: formData.get("is_lead") === "on",
+  });
+  if (!tag || !istToken(id) || !d.success || (d.data.von && d.data.bis && d.data.bis <= d.data.von)) zurueck(`${pfad}&einsatz=${istToken(id) ? id : ""}`, "eingabe");
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("duty_assignments").update({
+    person_name: d.data.person_name,
+    phone: d.data.phone || null,
+    task: d.data.task,
+    starts_at: d.data.von ? berlinerZeit(tag.day, d.data.von) : null,
+    ends_at: d.data.bis ? berlinerZeit(tag.day, d.data.bis) : null,
+    is_lead: d.data.is_lead,
+  }).eq("id", id).eq("module_day_id", tag.id).select("id");
+  zurueck(pfad, error || !data?.length ? "fehler" : "einsatz-geaendert");
 }
 
 export async function einsatzEntfernen(formData: FormData) {
