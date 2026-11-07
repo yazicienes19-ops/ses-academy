@@ -2,6 +2,7 @@
 // Erwartet: frische DB (supabase db reset) und einen laufenden Server, z. B. `npx next dev -p 3031`.
 // Aufruf aus dem Projektordner: BASIS=http://127.0.0.1:3031 node scripts/e2e-nachbesserung.mjs [teil …]
 import { execFileSync } from "node:child_process";
+import { createHmac } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { chromium } from "playwright";
@@ -458,6 +459,44 @@ if (teil("uebernachtung")) {
   ok(true, "Richtige Reihenfolge wird gespeichert");
   sql("delete from stay_requests s using registrations r, participants p where r.id = s.registration_id and p.id = r.participant_id and p.email = 'amina@example.test'");
   sql("update modules set stay_form_open = false where slug = 'demokratie'");
+}
+
+// ---------------------------------------------------------------------------
+// 13. Zweiter Faktor: Ansehen legt keinen Faktor an, Einrichten erst auf Knopfdruck
+// ---------------------------------------------------------------------------
+/** TOTP-Code (RFC 6238, SHA-1, 30 s, 6 Ziffern) aus dem Base32-Schlüssel der Einrichtung. */
+function totp(geheimnis) {
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  let bits = "";
+  for (const z of geheimnis.replace(/=+$/, "").toUpperCase()) bits += alphabet.indexOf(z).toString(2).padStart(5, "0");
+  const schluessel = Buffer.from(bits.match(/.{8}/g).map((b) => parseInt(b, 2)));
+  const zaehler = Buffer.alloc(8);
+  zaehler.writeBigUInt64BE(BigInt(Math.floor(Date.now() / 30000)));
+  const h = createHmac("sha1", schluessel).update(zaehler).digest();
+  const o = h[h.length - 1] & 15;
+  return String((h.readUInt32BE(o) & 0x7fffffff) % 1_000_000).padStart(6, "0");
+}
+if (teil("faktor")) {
+  const faktoren = () => Number(sql("select count(*) from auth.mfa_factors f join auth.users u on u.id = f.user_id where u.email = 'orga@ses.test'"));
+  sql("delete from auth.mfa_factors f using auth.users u where u.id = f.user_id and u.email = 'orga@ses.test'");
+  const orga = await teamLogin(browser, "orga@ses.test", 390);
+  await orga.goto(`${BASIS}/team/zweiter-faktor/`);
+  await orga.getByRole("button", { name: "Einrichtung starten" }).waitFor();
+  await orga.waitForTimeout(1500);
+  ok(faktoren() === 0, "Bloßes Ansehen legt keinen Faktor an");
+  await orga.reload();
+  await orga.waitForTimeout(1000);
+  ok(faktoren() === 0, "Auch nach Neuladen kein Faktor");
+  await orga.getByRole("button", { name: "Einrichtung starten" }).click();
+  await orga.getByAltText("QR-Code für die Authenticator-App").waitFor();
+  ok(faktoren() === 1, "Nach „Einrichtung starten“ ein (noch unbestätigter) Faktor");
+  const geheimnis = await orga.locator("code").innerText();
+  await orga.fill("#code", totp(geheimnis));
+  await orga.getByRole("button", { name: "Bestätigen" }).click();
+  await orga.waitForURL(`${BASIS}/team/`);
+  ok(sql("select status from auth.mfa_factors f join auth.users u on u.id = f.user_id where u.email = 'orga@ses.test'") === "verified", "Einrichtung mit Code aus der App bestätigt");
+  ok(await keinUeberlauf(orga), "Startseite am Handy ohne seitliches Scrollen");
+  sql("delete from auth.mfa_factors f using auth.users u where u.id = f.user_id and u.email = 'orga@ses.test'");
 }
 
 await browser.close();

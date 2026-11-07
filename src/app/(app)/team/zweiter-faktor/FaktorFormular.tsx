@@ -1,17 +1,14 @@
 "use client";
 
-import { useActionState, useEffect, useTransition } from "react";
+import { useActionState } from "react";
 import { faktorEinrichten, faktorPruefen, type FaktorZustand } from "@/lib/aktionen/team";
 
 /** Einrichten (QR-Code scannen, Code bestätigen) oder Anmelden mit dem Code aus der Authenticator-App. */
 export function FaktorFormular({ vorhandenerFaktor }: { vorhandenerFaktor: string | null }) {
   const start: FaktorZustand = vorhandenerFaktor ? { schritt: "pruefen", faktorId: vorhandenerFaktor } : { schritt: "start" };
   const [zustand, pruefen, laeuft] = useActionState(faktorPruefen, start);
-  const [einrichtung, setzeEinrichtung] = useActionState(async () => faktorEinrichten(), null as FaktorZustand | null);
-  const [, starte] = useTransition();
-  useEffect(() => {
-    if (!vorhandenerFaktor && !einrichtung) starte(() => setzeEinrichtung());
-  }, [vorhandenerFaktor, einrichtung, setzeEinrichtung]);
+  // Erst auf Knopfdruck einrichten: bloßes Ansehen der Seite legt keinen (unbestätigten) Faktor an
+  const [einrichtung, einrichten, bereitet] = useActionState(async () => faktorEinrichten(), null as FaktorZustand | null);
   const aktiv = vorhandenerFaktor ? zustand : { ...(einrichtung ?? { schritt: "start" as const }), fehler: zustand.fehler ?? einrichtung?.fehler };
 
   return (
@@ -24,7 +21,12 @@ export function FaktorFormular({ vorhandenerFaktor }: { vorhandenerFaktor: strin
           <p className="mt-4">2. Den 6-stelligen Code aus der App eingeben:</p>
         </div>
       )}
-      {aktiv.schritt === "start" && !aktiv.fehler && <p className="text-ink-soft">Einrichtung wird vorbereitet …</p>}
+      {aktiv.schritt === "start" && (
+        <form action={einrichten} className="space-y-3">
+          <p>Du brauchst eine Authenticator-App auf dem Handy (z. B. Google Authenticator, Microsoft Authenticator, 1Password). Danach zeigt die Seite einen QR-Code zum Scannen.</p>
+          <button type="submit" disabled={bereitet} className="knopf">{bereitet ? "Wird vorbereitet …" : "Einrichtung starten"}</button>
+        </form>
+      )}
       {(aktiv.schritt === "einrichten" || aktiv.schritt === "pruefen") && (
         <form action={pruefen} className="flex flex-wrap items-end gap-2">
           <input type="hidden" name="faktor_id" value={aktiv.faktorId} />
