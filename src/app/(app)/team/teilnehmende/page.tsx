@@ -6,10 +6,13 @@ import { Ergebnis, kontaktHinweise, wann } from "@/components/team/Kontakt";
 import { TeamKopf } from "@/components/team/TeamKopf";
 import { Leer, Rueckmeldung, Titel } from "@/components/team/Ui";
 import { MailHinweis } from "@/components/team/MailHinweis";
+import { AuswahlKnoepfe } from "@/components/team/AuswahlKnoepfe";
+import { RundmailFormular } from "@/components/team/RundmailFormular";
 import { darf, requireStaff } from "@/lib/auth";
 import { mentorSpeichern, willkommenAnAlle } from "@/lib/aktionen/teilnehmende";
 import { createClient } from "@/lib/supabase/server";
-import { herkunft, kontakte, ladeListe, leseFilter, punkt, termine, uebernachtungen, zusagen } from "@/lib/teilnehmende-liste";
+import { mailBereit } from "@/lib/mail";
+import { filterBeschreibung, herkunft, kontakte, ladeListe, leseFilter, punkt, termine, uebernachtungen, zusagen } from "@/lib/teilnehmende-liste";
 import { telLink } from "@/lib/telefon";
 import { nachtName } from "@/lib/uebernachtung";
 
@@ -26,11 +29,13 @@ export default async function Teilnehmende({ searchParams }: PageProps<"/team/te
   const sp = await searchParams;
   const s = (k: string) => (typeof sp[k] === "string" ? (sp[k] as string) : "");
   const supabase = await createClient();
-  const { jahrgang, modulListe, modul, jetzt, alle, grundmenge, liste, zusage, kontakt, ueb, gruppe } = await ladeListe(leseFilter(sp), alles);
-  const [{ data: aufgaben }, { data: abgaben }, { data: mentoren }] = await Promise.all([
+  const filter = leseFilter(sp);
+  const { jahrgang, modulListe, modul, jetzt, alle, grundmenge, liste, zusage, kontakt, ueb, gruppe } = await ladeListe(filter, alles);
+  const [{ data: aufgaben }, { data: abgaben }, { data: mentoren }, { data: vorlagen }] = await Promise.all([
     alles ? supabase.from("assignments").select("id,number").eq("cohort_id", jahrgang?.id ?? "").order("number") : Promise.resolve({ data: [] }),
     alles ? supabase.from("submission_participants").select("participant_id, submissions(assignment_id)") : Promise.resolve({ data: [] }),
     alles ? supabase.from("mentors").select("id,name,email,user_id").order("name") : Promise.resolve({ data: [] }),
+    alles ? supabase.from("message_templates").select("id, name, subject_de, body_de, subject_tr, body_tr").order("name") : Promise.resolve({ data: [] }),
   ]);
   const haVon = new Map<string, Set<string>>();
   for (const a of (abgaben ?? []) as { participant_id: string; submissions: { assignment_id: string } | null }[]) {
@@ -180,6 +185,19 @@ export default async function Teilnehmende({ searchParams }: PageProps<"/team/te
               <p className="mr-auto text-sm text-ink-soft">{liste.length} {liste.length === 1 ? "Person" : "Personen"} in dieser Auswahl{alles ? "" : " (ohne E-Mail-Adressen)"}</p>
               {liste.length > 0 && <a href={adresse({}, "/team/teilnehmende/export/")} className="knopf-hell" download>Als Excel herunterladen</a>}
             </div>
+            {alles && liste.length > 0 && (
+              <details id="rundmail" className="karte mb-4">
+                <summary className="cursor-pointer font-display text-lg font-bold">Rundmail an diese Auswahl</summary>
+                <p className="mt-2 max-w-3xl text-sm text-ink-soft">
+                  Geht an alle angehakten Personen der Liste unten (anfangs alle {liste.length}). Einzelne lassen sich in der ersten Spalte abwählen.
+                  Wie jede Nachricht an viele gibt sie eine zweite Person unter „Freigaben“ frei.
+                </p>
+                <div className="mt-4">
+                  <RundmailFormular vorlagen={vorlagen ?? []} mailBereit={mailBereit()} email={staff.email}
+                    auswahl={{ beschreibung: filterBeschreibung(filter, modul?.title ?? null) || (gruppe === "jahrgang" ? "ganzer Jahrgang" : "") }} />
+                </div>
+              </details>
+            )}
 
             {liste.length === 0 ? (
               <Leer>Niemand in dieser Auswahl.</Leer>
@@ -188,6 +206,7 @@ export default async function Teilnehmende({ searchParams }: PageProps<"/team/te
                 <table className="tabelle">
                   <thead>
                     <tr>
+                      {alles && <th className="whitespace-nowrap"><span className="sr-only">Für die Rundmail ausgewählt</span><AuswahlKnoepfe /></th>}
                       <th>Name</th><th>Telefon</th><th>Region</th><th>Sorumlu</th>
                       {modul && <th>Übernachtung</th>}
                       {modulListe.map((m) => (
@@ -201,6 +220,11 @@ export default async function Teilnehmende({ searchParams }: PageProps<"/team/te
                   <tbody>
                     {liste.map((p) => (
                       <tr key={p.participant_id}>
+                        {alles && (
+                          <td>
+                            <input type="checkbox" data-rundmail value={p.participant_id} defaultChecked aria-label={`${p.name} für die Rundmail auswählen`} className="h-4 w-4 accent-ink" />
+                          </td>
+                        )}
                         <td className="whitespace-nowrap">
                           <Link href={personLink(p.participant_id)} className="font-semibold hover:underline">{p.name}</Link>
                           {herkunft(p) && <span className="chip ml-1.5 bg-paper-deep align-middle">{herkunft(p)}</span>}

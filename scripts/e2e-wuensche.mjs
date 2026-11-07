@@ -109,6 +109,57 @@ if (teil("export")) {
 }
 
 // ---------------------------------------------------------------------------
+// 2. Mehrfachauswahl in Teilnehmende: Rundmail an die gefilterte Gruppe
+// ---------------------------------------------------------------------------
+if (teil("auswahl")) {
+  await mailsLeeren();
+  const admin = await teamLogin(browser, "admin@ses.test");
+  await admin.goto(`${BASIS}/team/teilnehmende/?gruppe=alle`);
+  const zeilen = await admin.locator("tbody tr").count();
+  await admin.locator("summary", { hasText: "Rundmail an diese Auswahl" }).click();
+  ok(await admin.getByText(`An die Auswahl in der Liste: ${zeilen} Personen angehakt.`).isVisible(), `Anfangs alle ${zeilen} angehakt`);
+  await admin.getByLabel("Yusuf Demir für die Rundmail auswählen").uncheck();
+  ok(await admin.getByText(`${zeilen - 1} Personen angehakt`).isVisible(), "Abwählen zählt mit");
+  await admin.locator("th").getByRole("button", { name: "keine" }).click();
+  ok(await admin.getByText("0 Personen angehakt").isVisible(), "„keine“ wählt alle ab");
+  await admin.locator("th").getByRole("button", { name: "alle" }).click();
+  await admin.getByLabel("Yusuf Demir für die Rundmail auswählen").uncheck();
+  await admin.fill("#betreff", "TestWunsch Auswahl");
+  await admin.fill("#text", "Nur für die Auswahl.");
+  await admin.getByRole("button", { name: "Empfänger zählen und prüfen" }).click();
+  const erwartet = zeilen - 1;
+  await admin.getByText(`${erwartet} Empfänger:innen`).waitFor();
+  ok(true, `Empfängerzahl ${erwartet} (ohne Yusuf)`);
+  await admin.getByRole("button", { name: "Testmail an mich" }).click();
+  await admin.getByText("Testmail an admin@ses.test verschickt.").waitFor();
+  ok((await mailsWarten("admin@ses.test", "[Test] TestWunsch Auswahl")).length === 1, "Testmail an mich angekommen");
+  await admin.getByRole("button", { name: "Zur Freigabe vorlegen" }).click();
+  await admin.waitForURL(/\/team\/nachrichten\/\?hinweis=beantragt/);
+  const yusuf = sql("select id from participants where email = 'yusuf@example.test'");
+  ok(sql("select (payload -> 'filter' -> 'participant_ids') ? '" + yusuf + "' from approvals where summary like '%TestWunsch Auswahl%'") === "f", "Antrag enthält Yusuf nicht");
+  ok(sql("select summary like '%Auswahl aus Teilnehmende: " + erwartet + " Personen (mit Gästen und Walk-ins)%' from approvals where summary like '%TestWunsch Auswahl%'") === "t", "Beschreibung nennt Auswahl und Filter");
+  ok((await mailsAn("amina@example.test", "TestWunsch")).length === 0, "Vor der Freigabe geht nichts raus");
+
+  const vorstand = await teamLogin(browser, "vorstand@ses.test");
+  await vorstand.goto(`${BASIS}/team/freigaben/`);
+  await vorstand.locator("li", { hasText: "TestWunsch Auswahl" }).getByRole("button", { name: "Freigeben" }).click();
+  await vorstand.getByText("Freigegeben.").waitFor();
+  await admin.goto(`${BASIS}/team/nachrichten/`);
+  await admin.getByRole("button", { name: `Jetzt an ${erwartet} Personen senden` }).click();
+  await admin.waitForURL(/gesendet-/);
+  ok((await mailsWarten("amina@example.test", "TestWunsch Auswahl")).length === 1 && (await mailsAn("yusuf@example.test", "TestWunsch")).length === 0, "Versand nur an die Auswahl");
+
+  const orga = await teamLogin(browser, "orga@ses.test");
+  await orga.goto(`${BASIS}/team/teilnehmende/`);
+  ok(await orga.locator("input[data-rundmail]").count() === 0 && await orga.getByText("Rundmail an diese Auswahl").count() === 0, "Orga-Team: keine Rundmail (wie bisher nur Admin/Vorstand)");
+  const handy = await teamLogin(browser, "admin@ses.test", 390);
+  await handy.goto(`${BASIS}/team/teilnehmende/`);
+  await handy.locator("summary", { hasText: "Rundmail an diese Auswahl" }).click();
+  ok(await keinUeberlauf(handy), "Rundmail in Teilnehmende am Handy ohne seitliches Scrollen");
+  sql("delete from email_log where kind like 'nachricht:%'; delete from approvals where summary like '%TestWunsch%'");
+}
+
+// ---------------------------------------------------------------------------
 // 3. Rundmails: Vorlage, Sprache nach Konto, Empfängerzahl, Testmail, Vier-Augen, Versand je Sprache
 // ---------------------------------------------------------------------------
 if (teil("rundmail")) {
