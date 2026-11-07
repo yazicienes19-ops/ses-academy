@@ -6,7 +6,7 @@ import { ModulReiter } from "@/components/team/ModulReiter";
 import { TeamKopf } from "@/components/team/TeamKopf";
 import { SendeKnopf } from "@/components/team/SendeKnopf";
 import { planUebernehmen, probeUebernehmen, vorschlagZuruecksetzen, wunschKorrigieren, zuteilungFestlegen } from "@/lib/aktionen/zimmerplan";
-import { requireStaff } from "@/lib/auth";
+import { darf, requireStaff } from "@/lib/auth";
 import { istToken } from "@/lib/codes";
 import { nachtName } from "@/lib/uebernachtung";
 import { wuenschtEinzelzimmer, type Grund, type Teil } from "@/lib/zimmerplan";
@@ -98,7 +98,7 @@ export default async function ZimmerplanSeite({ params, searchParams }: PageProp
 
   return (
     <>
-      <TeamKopf staff={staff} aktiv="module" breit />
+      <TeamKopf staff={staff} aktiv={darf.alles(staff.role) ? "module" : "logistik"} breit />
       <main className="mx-auto max-w-7xl px-4 py-8">
         <ModulReiter id={id} titel={d.modul.title} aktiv="zimmerplan/" />
         <Hinweis code={sp.hinweis} texte={hinweise} />

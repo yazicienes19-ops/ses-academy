@@ -6,7 +6,7 @@ import { ModulReiter } from "@/components/team/ModulReiter";
 import { Rueckfrage } from "@/components/team/Rueckfrage";
 import { TeamKopf } from "@/components/team/TeamKopf";
 import { kostenEntfernen, kostenSpeichern } from "@/lib/aktionen/logistik";
-import { requireStaff } from "@/lib/auth";
+import { darf, requireStaff } from "@/lib/auth";
 import { euro } from "@/lib/betrag";
 import { istToken } from "@/lib/codes";
 import { createClient } from "@/lib/supabase/server";
@@ -66,7 +66,7 @@ export default async function Kosten({ params, searchParams }: PageProps<"/team/
 
   return (
     <>
-      <TeamKopf staff={staff} aktiv="module" breit />
+      <TeamKopf staff={staff} aktiv={darf.alles(staff.role) ? "module" : "logistik"} breit />
       <main className="mx-auto max-w-6xl px-4 py-8">
         <ModulReiter id={id} titel={modul.title} aktiv="kosten/" />
         <Hinweis code={hinweis} texte={hinweise} />

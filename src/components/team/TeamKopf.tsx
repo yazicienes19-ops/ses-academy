@@ -1,6 +1,6 @@
 import Link from "next/link";
 import {
-  BookOpen, CalendarClock, ChartColumn, Contact, FolderOpen, House, Inbox, KeyRound, Layers, LogOut,
+  BedDouble, BookOpen, CalendarClock, ChartColumn, Contact, FolderOpen, House, Inbox, KeyRound, Layers, LogOut,
   MessagesSquare, ScanLine, Send, ShieldCheck, Upload, UserCog, Users, type LucideIcon,
 } from "lucide-react";
 import { HandyMenue } from "@/components/team/HandyMenue";
@@ -9,7 +9,7 @@ import { darf, modulBereiche, rollenName, type Staff, type StaffRole } from "@/l
 
 type Bereich =
   | "start" | "einlass" | "regieplan" | "rollenplan" | "gruppen" | "module" | "bewerbungen" | "teilnehmende" | "anrufe" | "hausaufgaben"
-  | "mitglieder" | "auswertung" | "import" | "dokumente" | "sitzungen" | "nachrichten" | "freigaben" | "team";
+  | "mitglieder" | "auswertung" | "import" | "logistik" | "dokumente" | "sitzungen" | "nachrichten" | "freigaben" | "team";
 
 type Eintrag = { id: Bereich; name: string; href: string; icon: LucideIcon; recht: (r: StaffRole) => boolean };
 
@@ -43,6 +43,7 @@ const gruppen: { titel: string; eintraege: Eintrag[] }[] = [
   {
     titel: "Organisation",
     eintraege: [
+      { id: "logistik", name: "Logistik", href: "/team/logistik/", icon: BedDouble, recht: darf.orga },
       { id: "dokumente", name: "Dokumente", href: "/team/dokumente/", icon: FolderOpen, recht: darf.orga },
       { id: "sitzungen", name: "Sitzungen", href: "/team/sitzungen/", icon: MessagesSquare, recht: darf.orga },
       { id: "nachrichten", name: "Nachrichten", href: "/team/nachrichten/", icon: Send, recht: darf.alles },

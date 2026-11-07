@@ -557,6 +557,47 @@ if (teil("kosten")) {
   sql(`delete from stay_requests s using registrations r where r.id = s.registration_id and r.module_id = '${demo}'; delete from email_log where kind = 'zimmerliste'`);
 }
 
+// ---------------------------------------------------------------------------
+// 8. Orga-Team: eigener Menüpunkt „Logistik“; Modulbegrenzung gilt auch hier und im Export
+// ---------------------------------------------------------------------------
+if (teil("logistik")) {
+  const demo = sql("select id from modules where slug = 'demokratie'");
+  sql(`insert into module_materials (module_id, label) values ('${demo}', 'TestWunsch Namensschilder')`);
+  for (const breite of [1280, 390]) {
+    const orga = await teamLogin(browser, "orga@ses.test", breite);
+    if (breite < 600) await orga.getByRole("button", { name: /Menü/ }).click();
+    await orga.getByRole("link", { name: "Logistik" }).first().click();
+    await orga.waitForURL(/\/team\/logistik\/$/);
+    const karte = orga.locator("section", { hasText: "Demokratie" });
+    ok(await karte.getByText("1 von 1 offen").isVisible(), `(${breite}px) Logistik zeigt das kommende Modul mit offener Materialliste`);
+    ok(await keinUeberlauf(orga), `(${breite}px) Logistik ohne seitliches Scrollen`);
+    await karte.getByRole("link", { name: "Hotel und Zimmer" }).click();
+    await orga.waitForURL(/\/hotel\/$/);
+    ok(await orga.getByRole("link", { name: "← Logistik" }).isVisible(), `(${breite}px) Modul-Reiter führen zurück zur Logistik`);
+    ok(await orga.getByRole("link", { name: "Logistik", exact: true }).first().getAttribute("aria-current") === "page" || breite < 600, `(${breite}px) Menüpunkt Logistik bleibt markiert`);
+  }
+  const helfer = await teamLogin(browser, "helfer@ses.test");
+  ok(await helfer.getByRole("link", { name: "Logistik" }).count() === 0, "Einlass-Helfer sieht keine Logistik");
+  await helfer.goto(`${BASIS}/team/logistik/`);
+  ok(helfer.url().includes("fehler=rechte"), "Einlass-Helfer: Logistik gesperrt");
+
+  // Auf ein Modul begrenztes Orga-Konto: nur Einlass und Regieplan (wie bisher), auch kein Export
+  sql(`update staff_members set module_id = '${demo}' where user_id = (select id from auth.users where email = 'orga@ses.test')`);
+  try {
+    const modul = await teamLogin(browser, "orga@ses.test");
+    ok(await modul.getByRole("link", { name: "Logistik" }).count() === 0, "Modul-Konto: kein Menüpunkt Logistik");
+    for (const pfad of ["/team/logistik/", `/team/module/${demo}/kosten/`, `/team/module/${demo}/material/`]) {
+      await modul.goto(`${BASIS}${pfad}`);
+      ok(modul.url().includes("fehler=rechte"), `Modul-Konto: ${pfad} gesperrt`);
+    }
+    const r = await modul.request.get(`${BASIS}/team/teilnehmende/export/`, { maxRedirects: 0 });
+    ok(r.status() >= 300 && r.status() < 400, "Modul-Konto: kein Excel-Export der Teilnehmenden");
+  } finally {
+    sql("update staff_members set module_id = null where user_id = (select id from auth.users where email = 'orga@ses.test')");
+  }
+  sql("delete from module_materials where label like 'TestWunsch%'");
+}
+
 await browser.close();
 console.log(fehler ? `\n${fehler} Fehler` : "\nAlles in Ordnung.");
 process.exit(fehler ? 1 : 0);

@@ -68,7 +68,7 @@ export default async function HotelSeite({ params, searchParams }: PageProps<"/t
 
   return (
     <>
-      <TeamKopf staff={staff} aktiv="module" breit />
+      <TeamKopf staff={staff} aktiv={darf.alles(staff.role) ? "module" : "logistik"} breit />
       <main className="mx-auto max-w-7xl px-4 py-8">
         <ModulReiter id={id} titel={modul.title} aktiv="hotel/" />
         <Hinweis code={hinweis} texte={hinweise} />

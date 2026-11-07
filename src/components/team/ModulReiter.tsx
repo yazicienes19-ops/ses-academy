@@ -24,7 +24,7 @@ export async function ModulReiter({ id, titel, aktiv }: { id: string; titel: str
     <div className="mb-6">
       {alles
         ? <Link href="/team/module/" className="text-sm font-semibold text-ink-soft hover:text-ink">← Alle Module</Link>
-        : <Link href="/team/" className="text-sm font-semibold text-ink-soft hover:text-ink">← Start</Link>}
+        : <Link href="/team/logistik/" className="text-sm font-semibold text-ink-soft hover:text-ink">← Logistik</Link>}
       <h1 className="font-display mt-2 text-3xl font-bold">{titel}</h1>
       <nav aria-label="Bereiche des Moduls" className="mt-4 flex gap-1 overflow-x-auto border-b border-line pb-px">
         {reiter.filter((r) => alles || r.pfad !== "").map((r) => (

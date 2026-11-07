@@ -6,7 +6,7 @@ import { ModulReiter } from "@/components/team/ModulReiter";
 import { Rueckfrage } from "@/components/team/Rueckfrage";
 import { TeamKopf } from "@/components/team/TeamKopf";
 import { materialAbhaken, materialEntfernen, materialSpeichern, materialUebernehmen } from "@/lib/aktionen/logistik";
-import { requireStaff } from "@/lib/auth";
+import { darf, requireStaff } from "@/lib/auth";
 import { istToken } from "@/lib/codes";
 import { createClient } from "@/lib/supabase/server";
 
@@ -49,7 +49,7 @@ export default async function Material({ params, searchParams }: PageProps<"/tea
   const quellen = [...new Map((andere ?? []).map((a) => [a.module_id, a.modules?.title ?? "?"])).entries()];
   return (
     <>
-      <TeamKopf staff={staff} aktiv="module" breit />
+      <TeamKopf staff={staff} aktiv={darf.alles(staff.role) ? "module" : "logistik"} breit />
       <main className="mx-auto max-w-6xl px-4 py-8">
         <ModulReiter id={id} titel={modul.title} aktiv="material/" />
         <Hinweis code={hinweis} texte={hinweise} />
