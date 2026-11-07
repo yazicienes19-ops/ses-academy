@@ -78,6 +78,17 @@ RESET ROLE;
 DELETE FROM antrag;
 INSERT INTO antrag SELECT id FROM public.deletion_requests WHERE status = 'offen' AND participant_id = (SELECT amina FROM t);
 
+-- 2b) Interne Zählfunktion ist nicht direkt aufrufbar (auch nicht für angemeldete Teilnehmende oder Admins)
+SELECT pg_temp.login('leila@example.test');
+SELECT pg_temp.fehler('Teilnehmende: deletion_counts mit fremder ID gesperrt', $q$SELECT public.deletion_counts((SELECT amina FROM t))$q$, 'permission denied');
+SELECT pg_temp.login('vorstand@ses.test');
+SELECT pg_temp.fehler('Vorstand: deletion_counts gesperrt', $q$SELECT public.deletion_counts((SELECT amina FROM t))$q$, 'permission denied');
+SELECT pg_temp.login('admin@ses.test');
+SELECT pg_temp.fehler('Admin: deletion_counts nur über die Vorschau', $q$SELECT public.deletion_counts((SELECT amina FROM t))$q$, 'permission denied');
+RESET ROLE;
+SELECT pg_temp.ok('authenticated hat kein EXECUTE auf deletion_counts', has_function_privilege('authenticated', 'public.deletion_counts(uuid)', 'EXECUTE')::text, 'false');
+SELECT pg_temp.ok('anon hat kein EXECUTE auf deletion_counts', has_function_privilege('anon', 'public.deletion_counts(uuid)', 'EXECUTE')::text, 'false');
+
 -- 3) Nur Admin bearbeitet
 SELECT pg_temp.login('vorstand@ses.test');
 SELECT pg_temp.ok('Vorstand sieht keine Löschanträge', (SELECT count(*)::text FROM public.deletion_requests), '0');

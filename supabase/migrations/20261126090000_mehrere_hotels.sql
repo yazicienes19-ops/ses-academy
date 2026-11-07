@@ -158,6 +158,9 @@ REVOKE ALL ON FUNCTION public.assign_room(uuid, uuid), public.get_room_planning(
 GRANT EXECUTE ON FUNCTION public.assign_room(uuid, uuid), public.get_room_planning(uuid), public.get_stay_overview(uuid),
   public.apply_probe_rooms(uuid, integer, jsonb, uuid) TO authenticated;
 
+-- Trigger-Funktion: nur als Trigger (EXECUTE wird beim Auslösen nicht geprüft), direkt aufrufbar für niemanden
+REVOKE ALL ON FUNCTION public.room_assignments_check() FROM PUBLIC, anon, authenticated;
+
 -- Hinweis für den Betrieb: Gibt es aus alter Zeit Personen mit Zimmern in zwei Hotels desselben Moduls? (Nur Meldung.)
 DO $$
 DECLARE doppelt integer;

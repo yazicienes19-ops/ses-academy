@@ -99,10 +99,14 @@ BEGIN
   RETURN 'withdrawn';
 END $$;
 
--- Was beim Bestätigen passiert, in Zahlen (für die Anzeige im Team-Bereich und das Ergebnis im Antrag)
+-- Was beim Bestätigen passiert, in Zahlen (für die Anzeige im Team-Bereich und das Ergebnis im Antrag).
+-- Interne Hilfsfunktion: nur für Admins (eigene Prüfung) und für niemanden direkt aufrufbar (siehe REVOKE unten);
+-- aufgerufen wird sie aus deletion_preview und execute_deletion.
 CREATE FUNCTION public.deletion_counts(pid uuid)
-RETURNS jsonb LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
-  SELECT jsonb_build_object(
+RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = '' AS $$
+BEGIN
+  IF NOT public.is_admin() THEN RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'admin_required'; END IF;
+  RETURN jsonb_build_object(
     -- wird gelöscht
     'konto',          (SELECT p.user_id IS NOT NULL FROM public.participants p WHERE p.id = pid),
     'team_konto',     (SELECT EXISTS (SELECT 1 FROM public.staff_members s JOIN public.participants p ON p.user_id = s.user_id WHERE p.id = pid)),
@@ -124,8 +128,8 @@ RETURNS jsonb LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
     'entschuldigungen', (SELECT count(*) FROM public.assignment_excusals WHERE participant_id = pid),
     'feedback',       (SELECT count(*) FROM public.feedback_responses WHERE participant_id = pid),
     'gruppen',        (SELECT count(*) FROM public.group_members WHERE participant_id = pid),
-    'mitgliedschaften', (SELECT count(*) FROM public.memberships WHERE participant_id = pid))
-$$;
+    'mitgliedschaften', (SELECT count(*) FROM public.memberships WHERE participant_id = pid));
+END $$;
 
 CREATE FUNCTION public.deletion_preview(p_request_id uuid)
 RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = '' AS $$
@@ -214,4 +218,6 @@ REVOKE ALL ON FUNCTION public.set_my_directory_opt_out(boolean), public.is_admin
 GRANT EXECUTE ON FUNCTION public.set_my_directory_opt_out(boolean), public.is_admin(), public.request_my_deletion(text),
   public.withdraw_my_deletion(), public.deletion_preview(uuid), public.execute_deletion(uuid, text),
   public.reject_deletion(uuid, text) TO authenticated;
--- deletion_counts nur intern (über deletion_preview bzw. execute_deletion)
+-- deletion_counts nur intern (über deletion_preview bzw. execute_deletion): Supabase vergibt EXECUTE auf neue
+-- Funktionen standardmäßig auch an authenticated, deshalb ausdrücklich auch dort entziehen
+REVOKE ALL ON FUNCTION public.deletion_counts(uuid) FROM PUBLIC, anon, authenticated;

@@ -95,11 +95,12 @@ BEGIN
     inhalt := jsonb_build_object('betreff', left(trim(coalesce(inhalt ->> 'betreff', '')), 200), 'text', left(coalesce(inhalt ->> 'text', ''), 10000),
                                  'betreff_tr', left(trim(coalesce(inhalt ->> 'betreff_tr', '')), 200), 'text_tr', left(coalesce(inhalt ->> 'text_tr', ''), 10000),
                                  'sprache', sprache, 'filter', f, 'anzahl', anzahl, 'anzahl_tr', anzahl_tr);
-    beschreibung := format('Nachricht „%s“ an %s Personen (%s) · %s',
+    -- Deutsch wie bisher ohne Zusatz; Türkisch bzw. nach Kontosprache wird genannt
+    beschreibung := format('Nachricht „%s“ an %s Personen (%s)%s',
                            CASE WHEN sprache = 'tr' THEN inhalt ->> 'betreff_tr' ELSE inhalt ->> 'betreff' END, anzahl,
                            CASE WHEN cardinality(teile) = 0 THEN 'alle aktiven mit E-Mail' ELSE array_to_string(teile, ', ') END,
-                           CASE sprache WHEN 'de' THEN 'auf Deutsch' WHEN 'tr' THEN 'auf Türkisch'
-                                ELSE format('nach Kontosprache: %s auf Türkisch, %s auf Deutsch', anzahl_tr, anzahl - anzahl_tr) END);
+                           CASE sprache WHEN 'de' THEN '' WHEN 'tr' THEN ' · auf Türkisch'
+                                ELSE format(' · nach Kontosprache: %s auf Türkisch, %s auf Deutsch', anzahl_tr, anzahl - anzahl_tr) END);
   ELSIF p_action = 'export' THEN
     inhalt := jsonb_build_object('filter', coalesce(inhalt -> 'filter', '{}'));
     beschreibung := 'Export der Auswertung als CSV mit Namen und E-Mail-Adressen aller Teilnehmenden';
