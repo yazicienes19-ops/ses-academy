@@ -5,9 +5,6 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireStaff } from "@/lib/auth";
 import { istToken } from "@/lib/codes";
-import { versandrundeSeit } from "@/lib/eventtag";
-import { sendeTicketMail } from "@/lib/mail";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { berlinerZeit, jetztMs } from "@/lib/zeit";
 
@@ -207,43 +204,4 @@ export async function einsaetzeUebernehmen(formData: FormData) {
   if (fehlend.length === 0) zurueck(pfad, "schon-uebernommen");
   const { error } = await supabase.from("duty_assignments").insert(fehlend);
   zurueck(pfad, error ? "fehler" : `uebernommen-${fehlend.length}`);
-}
-
-// ---------------------------------------------------------------------------
-// Tickets an alle Angemeldeten eines Moduls
-// ---------------------------------------------------------------------------
-type TicketZeile = { participant_id: string; ticket_status: string };
-
-/**
- * Schickt allen Angemeldeten mit E-Mail-Adresse ihr Ticket, die in dieser Runde noch keines erfolgreich bekommen haben.
- * Jeder Versuch landet in email_log. Ein zweiter Klick schickt nur noch an die, bei denen es fehlgeschlagen ist.
- */
-export async function ticketsAnAlle(formData: FormData) {
-  const staff = await requireStaff("alles");
-  const modulId = String(formData.get("module_id"));
-  const pfad = `/team/module/${modulId}/`;
-  if (!istToken(modulId)) zurueck(pfad, "eingabe");
-  const supabase = await createClient();
-  const { data } = await supabase.rpc("get_ticket_status", { p_module_id: modulId, p_since: await versandrundeSeit(modulId) });
-  const offen = ((data ?? []) as TicketZeile[]).filter((z) => z.ticket_status === "offen" || z.ticket_status === "fehlgeschlagen");
-
-  // Wenige parallel, damit der Mailserver nicht drosselt
-  let gesendet = 0;
-  let fehler = 0;
-  const warteschlange = [...offen];
-  async function arbeiter() {
-    for (let z = warteschlange.shift(); z; z = warteschlange.shift()) {
-      const ergebnis = await sendeTicketMail(z.participant_id, staff.userId);
-      if (ergebnis.ok) gesendet++;
-      else fehler++;
-    }
-  }
-  await Promise.all(Array.from({ length: 3 }, arbeiter));
-
-  // audit_log ist für Teamkonten nicht beschreibbar; geschrieben wird serverseitig wie bei email_log
-  await createAdminClient().from("audit_log").insert({
-    actor_id: staff.userId, action: "tickets_an_alle", entity_type: "module", entity_id: modulId, metadata: { gesendet, fehler },
-  });
-  revalidatePath(pfad);
-  redirect(`${pfad}?hinweis=tickets-${gesendet}-${fehler}#tickets`);
 }

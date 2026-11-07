@@ -2,14 +2,6 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 
-/** Beginn der Ticket-Versandrunde: 30 Tage vor dem ersten Tag des Moduls. Ältere Tickets gelten als nicht verschickt. */
-export async function versandrundeSeit(modulId: string): Promise<string> {
-  const supabase = await createClient();
-  const { data } = await supabase.from("module_days").select("starts_at").eq("module_id", modulId).order("starts_at").limit(1).maybeSingle();
-  const beginn = data ? Date.parse(data.starts_at) : Date.now();
-  return new Date(beginn - 30 * 86_400_000).toISOString();
-}
-
 export const programmStatus = {
   geplant: { name: "geplant", farbe: "bg-white" },
   laeuft: { name: "läuft", farbe: "bg-gruen-hell" },
