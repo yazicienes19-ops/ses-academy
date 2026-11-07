@@ -48,8 +48,10 @@ export async function statusSetzen(formData: FormData) {
     .select("email, first_name, language");
   if (error) zurueck("fehler", formData.get("filter"));
   const b = data?.[0];
-  if (!b || status === "in_pruefung" || formData.get("mail") !== "ja") zurueck("gespeichert", formData.get("filter"));
+  if (!b || status === "in_pruefung") zurueck("gespeichert", formData.get("filter"));
+  // Ohne Mailversand klar sagen, dass die Person nichts bekommen hat (die Rückfrage bietet dann keine Mail an)
   if (!mailBereit()) zurueck("status-mail-aus", formData.get("filter"));
+  if (formData.get("mail") !== "ja") zurueck("gespeichert", formData.get("filter"));
   const mail = await sendeBewerbungStatus({ email: b.email, vorname: b.first_name, sprache: b.language, status }, staff.userId);
   zurueck(mail.ok ? `${status}-mail` : "status-mail-fehler", formData.get("filter"));
 }

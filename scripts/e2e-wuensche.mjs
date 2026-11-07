@@ -317,6 +317,38 @@ if (teil("bewerbungen")) {
 }
 
 // ---------------------------------------------------------------------------
+// 5b. Ohne Mailversand (Server mit leerem SMTP_HOST starten): keine Mail, klarer Hinweis
+//     Aufruf z. B.: SMTP_HOST= npx next start -p 3100, dann BASIS=… node scripts/e2e-wuensche.mjs ohnemail
+// ---------------------------------------------------------------------------
+if (teil("ohnemail")) {
+  const admin = await teamLogin(browser, "admin@ses.test");
+  if (!(await admin.getByText("Mailversand ist noch nicht eingerichtet.").count())) {
+    console.log("–    ohne Mailversand übersprungen (Server hat SMTP-Zugangsdaten)");
+  } else {
+    await mailsLeeren();
+    sql("delete from applications where last_name = 'TestWunschOhneMail'");
+    sql(`insert into applications (cohort_id, first_name, last_name, email, birth_year, country, city, motivation, consent_at, language) values
+      ('00000000-0000-4000-8000-000000002026', 'Ohne', 'TestWunschOhneMail', 'ohne.tw@example.test', 2003, 'Deutschland', 'Köln', 'x', now(), 'tr')`);
+    await admin.goto(`${BASIS}/team/bewerbungen/`);
+    const karte = admin.locator("li", { hasText: "TestWunschOhneMail" });
+    await karte.getByRole("button", { name: "Ablehnen" }).click();
+    ok(await karte.getByText("Mailversand ist nicht eingerichtet: Die Person bekommt keine Mail").isVisible(), "Ohne Mailversand: Rückfrage sagt, dass keine Mail rausgeht");
+    await karte.getByRole("button", { name: "Ja, ablehnen" }).click();
+    await admin.getByText("Es ist keine Mail rausgegangen").waitFor();
+    await warte(500);
+    ok(sql("select status from applications where last_name = 'TestWunschOhneMail'") === "abgelehnt" && (await mailsAn("ohne.tw@example.test")).length === 0,
+      "Ohne Mailversand: abgelehnt, keine Mail, klarer Hinweis");
+    await admin.goto(`${BASIS}/team/nachrichten/`);
+    await admin.fill("#betreff", "TestWunsch ohne Mail");
+    await admin.fill("#text", "x");
+    await admin.getByRole("button", { name: "Empfänger zählen und prüfen" }).click();
+    await admin.getByRole("button", { name: "Testmail an mich" }).waitFor();
+    ok(await admin.getByRole("button", { name: "Testmail an mich" }).isDisabled(), "Ohne Mailversand: Testmail-Knopf gesperrt, Hinweis sichtbar");
+    sql("delete from applications where last_name = 'TestWunschOhneMail'");
+  }
+}
+
+// ---------------------------------------------------------------------------
 // 6. Rückfragen: Willkommensmail an alle, Import, Entfernen
 // ---------------------------------------------------------------------------
 if (teil("rueckfragen")) {
