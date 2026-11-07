@@ -138,7 +138,9 @@ export default async function ModulDetail({ params, searchParams }: PageProps<"/
             {infoAnzahl("keine_mail") > 0 && ` · ${infoAnzahl("keine_mail")} ohne E-Mail-Adresse`}
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
-            <Link href={`/team/module/${m.id}/infomail/`} className="rounded-full bg-ink px-5 py-3 font-semibold text-paper">Info-Mail: Vorschau und Versand</Link>
+            {m.cancelled_at
+              ? <span className="rounded-full bg-paper-deep px-5 py-3 font-semibold text-ink-soft" aria-disabled="true">Info-Mail: Modul abgesagt</span>
+              : <Link href={`/team/module/${m.id}/infomail/`} className="rounded-full bg-ink px-5 py-3 font-semibold text-paper">Info-Mail: Vorschau und Versand</Link>}
             <Link href={`/team/module/${m.id}/tagesordnung/`} target="_blank" className="rounded-full bg-white px-5 py-3 font-semibold ring-1 ring-line">Tagesordnung drucken</Link>
             <Link href={`/team/module/${m.id}/notfall/`} className="rounded-full bg-white px-5 py-3 font-semibold ring-1 ring-line">Notfall-Liste drucken</Link>
             <Link href={`/team/module/${m.id}/namensschilder/`} className="rounded-full bg-white px-5 py-3 font-semibold ring-1 ring-line">Namensschilder drucken</Link>

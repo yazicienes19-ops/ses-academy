@@ -25,6 +25,9 @@ export async function infoMailAnAlle(formData: FormData) {
   if (formData.get("bestaetigt") !== "ja") zurueck(pfad, "bestaetigen");
   const nurZugesagt = formData.get("empfaenger") === "zugesagt";
   const supabase = await createClient();
+  // Abgesagtes Modul: keine Info-Mail mehr (das Ticket gilt dafür nicht)
+  const { data: modul } = await supabase.from("modules").select("cancelled_at").eq("id", modulId).maybeSingle();
+  if (!modul || modul.cancelled_at) zurueck(pfad, "abgesagt");
   const { data } = await supabase.rpc("get_info_status", { p_module_id: modulId });
   const offen = (data ?? []).filter((z) => (z.info_status === "offen" || z.info_status === "fehlgeschlagen")
     && z.rsvp !== "abgesagt" && (!nurZugesagt || z.rsvp === "zugesagt"));

@@ -88,12 +88,14 @@ export default async function MeinBereich({ searchParams }: PageProps<"/mein-ber
     .map((r) => ({ ...r, tage: [...r.modules.module_days].sort((a, b) => a.starts_at.localeCompare(b.starts_at)) }))
     .sort((a, b) => (a.tage[0]?.starts_at ?? "").localeCompare(b.tage[0]?.starts_at ?? ""));
   // Auch Warteliste zeigen (mit Vermerk), sonst heißt es fälschlich „für kein Modul angemeldet“
-  const kommend = meineModule.filter((m) => m.tage.some((t) => t.ends_at >= jetzt) && (m.status === "confirmed" || m.status === "waitlist"));
+  const kommend = meineModule.filter((m) => !m.modules.cancelled_at && m.tage.some((t) => t.ends_at >= jetzt) && (m.status === "confirmed" || m.status === "waitlist"));
+  // Vom Team abgesagt: nicht unter „Kommende Module“, aber als Hinweis sichtbar (bis zum ursprünglichen Termin)
+  const vomTeamAbgesagt = meineModule.filter((m) => m.modules.cancelled_at && m.tage.some((t) => t.ends_at >= jetzt) && (m.status === "confirmed" || m.status === "waitlist"));
   // Selbst abgesagt, Modul noch nicht begonnen: mit „Doch teilnehmen“
   const abgesagtKommend = meineModule.filter((m) => !m.modules.cancelled_at && m.tage.length > 0 && m.tage[0].starts_at > jetzt && (m.status === "excused" || m.status === "cancelled"));
   const vorbei = meineModule.filter((m) => m.tage.length && m.tage.every((t) => t.ends_at < jetzt)).reverse();
   const abgaben = (subs ?? []) as unknown as Sub[];
-  const mitAbfrage = meineModule.filter((m) => m.modules.stay_form_open && (m.status === "confirmed" || m.status === "waitlist") && m.tage.some((t) => t.ends_at >= jetzt));
+  const mitAbfrage = meineModule.filter((m) => m.modules.stay_form_open && !m.modules.cancelled_at && (m.status === "confirmed" || m.status === "waitlist") && m.tage.some((t) => t.ends_at >= jetzt));
   const [{ data: angaben }, { data: zimmer }, { data: mitgliedschaften }] = await Promise.all([
     mitAbfrage.length ? supabase.from("stay_requests").select("*") : Promise.resolve({ data: [] }),
     supabase.rpc("get_my_rooms"),
@@ -131,10 +133,9 @@ export default async function MeinBereich({ searchParams }: PageProps<"/mein-ber
                   <li key={m.modules.id} className="karte">
                     <p className="font-display text-xl font-bold">{m.modules.title}</p>
                     <p className="text-sm text-ink-soft">{zeitraum(m.tage)}{m.modules.location ? ` · ${m.modules.location}` : ""}</p>
-                    {m.modules.cancelled_at && <p className="mt-2 chip bg-rot-hell text-rot">Dieses Modul wurde abgesagt.</p>}
-                    {!m.modules.cancelled_at && m.status === "waitlist" && <p className="mt-2 chip bg-gelb-hell">Warteliste: Wir melden uns, sobald ein Platz frei ist.</p>}
+                    {m.status === "waitlist" && <p className="mt-2 chip bg-gelb-hell">Warteliste: Wir melden uns, sobald ein Platz frei ist.</p>}
                     {m.attendances.length > 0 && <p className="mt-2 chip bg-gruen-hell">✓ eingecheckt</p>}
-                    {!m.modules.cancelled_at && m.tage[0].starts_at > jetzt && (
+                    {m.tage[0].starts_at > jetzt && (
                       <details className="mt-3">
                         <summary className="cursor-pointer text-sm font-semibold">Ich kann nicht teilnehmen</summary>
                         <form action={meinAbmelden} className="mt-3 grid gap-2">
@@ -149,6 +150,17 @@ export default async function MeinBereich({ searchParams }: PageProps<"/mein-ber
                 ))}
               </ul>
             ) : <p className="karte text-ink-soft">Gerade bist du für kein kommendes Modul angemeldet.</p>}
+            {vomTeamAbgesagt.length > 0 && (
+              <ul className="mt-3 space-y-3">
+                {vomTeamAbgesagt.map((m) => (
+                  <li key={m.modules.id} className="karte bg-rot-hell/60">
+                    <p className="font-display text-xl font-bold">{m.modules.title}</p>
+                    <p className="text-sm text-ink-soft">{zeitraum(m.tage)}</p>
+                    <p className="mt-2 font-semibold text-rot">Dieses Modul wurde abgesagt. Dein Ticket gilt dafür nicht mehr.</p>
+                  </li>
+                ))}
+              </ul>
+            )}
             {abgesagtKommend.length > 0 && (
               <ul className="mt-3 space-y-3">
                 {abgesagtKommend.map((m) => (

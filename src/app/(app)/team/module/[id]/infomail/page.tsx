@@ -21,6 +21,7 @@ const hinweise: Record<string, { text: string; gut: boolean }> = {
   "test-fehler": { text: "Die Testmail konnte nicht verschickt werden.", gut: false },
   "keine-eigene-mail": { text: "Für dein Konto ist keine E-Mail-Adresse hinterlegt.", gut: false },
   eingabe: { text: "Bitte die Angaben prüfen.", gut: false },
+  abgesagt: { text: "Das Modul ist abgesagt. Es wurde nichts verschickt.", gut: false },
 };
 
 /**
@@ -34,7 +35,7 @@ export default async function InfoMail({ params, searchParams }: PageProps<"/tea
   if (!istToken(id)) notFound();
   const supabase = await createClient();
   const [{ data: modul }, { data: status }] = await Promise.all([
-    supabase.from("modules").select("id, title").eq("id", id).maybeSingle(),
+    supabase.from("modules").select("id, title, cancelled_at").eq("id", id).maybeSingle(),
     supabase.rpc("get_info_status", { p_module_id: id }),
   ]);
   if (!modul) notFound();
@@ -79,7 +80,9 @@ export default async function InfoMail({ params, searchParams }: PageProps<"/tea
 
             <section className="karte">
               <h3 className="font-display text-xl font-bold">An alle senden</h3>
-              {!mailBereit() ? <MailHinweis knapp className="mt-3" /> : (
+              {modul.cancelled_at ? (
+                <p className="mt-3 rounded-2xl bg-rot-hell p-3 text-sm font-semibold text-rot">Das Modul ist abgesagt. Info-Mails gehen dafür nicht mehr raus.</p>
+              ) : !mailBereit() ? <MailHinweis knapp className="mt-3" /> : (
                 <form action={infoMailAnAlle} className="mt-3 space-y-3">
                   <input type="hidden" name="module_id" value={id} />
                   <fieldset className="space-y-1.5 text-sm">

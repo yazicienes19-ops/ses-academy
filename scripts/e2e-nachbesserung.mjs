@@ -145,6 +145,59 @@ if (teil("ticket")) {
   ok(await keinUeberlauf(mb), "Mein Bereich am Handy ohne seitliches Scrollen");
 }
 
+// ---------------------------------------------------------------------------
+// 2./15. Info-Mail statt „Tickets an alle“: kein Doppelversand, Bestätigung, gesperrt nach Absage
+// ---------------------------------------------------------------------------
+if (teil("infomail")) {
+  await mailsLeeren();
+  const winter = sql("select id from modules where slug = 'winter-school'");
+  sql(`delete from email_log where kind in ('info', 'ticket') and module_id = '${winter}'`); // frühere Läufe
+  const admin = await teamLogin(browser, "admin@ses.test");
+  await admin.goto(`${BASIS}/team/module/${winter}/infomail/`);
+  const form = admin.locator("form", { hasText: "Info-Mail jetzt senden" });
+  ok(await form.locator("input[name=bestaetigt][required]").count() === 1, "Versand nur mit ausdrücklicher Bestätigung (Pflichthäkchen)");
+  await form.locator("input[value=alle]").check();
+  await form.locator("input[name=bestaetigt]").check();
+  await form.getByRole("button", { name: "Info-Mail jetzt senden" }).click();
+  await admin.getByText(/Info-Mails verschickt/).waitFor();
+  const erste = (await fetch(`${MAILPIT}/messages`).then((x) => x.json())).messages_count;
+  ok(erste >= 3, `Erster Versand für ein Modul in mehr als 30 Tagen: ${erste} Mails`);
+  await form.locator("input[value=alle]").check();
+  await form.locator("input[name=bestaetigt]").check();
+  await form.getByRole("button", { name: "Info-Mail jetzt senden" }).click();
+  await admin.getByText("0 Info-Mails verschickt").waitFor();
+  const zweite = (await fetch(`${MAILPIT}/messages`).then((x) => x.json())).messages_count;
+  ok(zweite === erste, "Zweiter Klick schickt nichts doppelt");
+
+  // Absagen: Versand gesperrt, Modul in Mein Bereich nicht mehr unter „Kommende Module“
+  const alteSeite = await admin.context().newPage(); // vor der Absage geöffnet, danach abgeschickt
+  await alteSeite.goto(`${BASIS}/team/module/${winter}/infomail/`);
+  await admin.goto(`${BASIS}/team/module/${winter}/`);
+  const absage = admin.locator("form", { hasText: "Ja, das Modul wirklich absagen" });
+  await absage.locator("input[name=benachrichtigen]").uncheck();
+  await absage.locator("input[name=bestaetigt]").check();
+  await absage.getByRole("button", { name: "Absagen" }).click();
+  await admin.getByText("Modul abgesagt.").waitFor();
+  ok(await admin.getByText("Info-Mail: Modul abgesagt").isVisible() && await admin.getByRole("link", { name: "Info-Mail: Vorschau und Versand" }).count() === 0, "Modulseite: Info-Mail nach Absage nicht mehr klickbar");
+  sql(`delete from email_log where kind = 'info' and module_id = '${winter}'`);
+  const altForm = alteSeite.locator("form", { hasText: "Info-Mail jetzt senden" });
+  await altForm.locator("input[value=alle]").check();
+  await altForm.locator("input[name=bestaetigt]").check();
+  await altForm.getByRole("button", { name: "Info-Mail jetzt senden" }).click();
+  await alteSeite.getByText("Das Modul ist abgesagt. Es wurde nichts verschickt.").waitFor();
+  ok((await fetch(`${MAILPIT}/messages`).then((x) => x.json())).messages_count === zweite, "Server lehnt Versand nach Absage ab (veraltete Seite)");
+  await admin.goto(`${BASIS}/team/module/${winter}/infomail/`);
+  ok(await admin.getByText("Das Modul ist abgesagt. Info-Mails gehen dafür nicht mehr raus.").isVisible()
+    && await admin.getByRole("button", { name: "Info-Mail jetzt senden" }).count() === 0, "Info-Mail-Seite: kein Versandknopf nach Absage");
+  const mb = await portalLogin(browser, "yusuf@example.test");
+  const kommende = mb.locator("#module");
+  ok(await kommende.getByText("Dieses Modul wurde abgesagt. Dein Ticket gilt dafür nicht mehr.").isVisible(), "Mein Bereich: Absage sichtbar");
+  ok(await kommende.locator("li", { hasText: "Winter School" }).locator("details").count() === 0, "Mein Bereich: abgesagtes Modul nicht als kommendes Modul mit Abmelden");
+  await admin.goto(`${BASIS}/team/module/${winter}/`);
+  await admin.getByRole("button", { name: "Absage zurücknehmen" }).click();
+  await admin.getByText("Absage zurückgenommen.").waitFor();
+}
+
 await browser.close();
 console.log(fehler ? `\n${fehler} Fehler` : "\nAlles in Ordnung.");
 process.exit(fehler ? 1 : 0);
