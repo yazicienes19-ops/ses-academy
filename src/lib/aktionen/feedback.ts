@@ -86,14 +86,16 @@ export async function feedbackEinladen(formData: FormData) {
   zurModulseite(modulId, `feedback-${gesendet}-${fehler}`);
 }
 
-export type FeedbackZustand = { ergebnis: "saved" | "closed" | "not_attended" | "not_found" | "fehler" | null };
+export type FeedbackAntworten = Record<string, number | string>;
+/** antworten: was gerade abgeschickt wurde bzw. schon gespeichert ist, damit das Formular es weiter zeigt. */
+export type FeedbackZustand = { ergebnis: "saved" | "empty" | "closed" | "not_attended" | "not_found" | "fehler" | null; antworten?: FeedbackAntworten; runde?: number };
 
-/** Antwort aus dem Formular /feedback/<token>/<umfrage>/. Der Ticket-Token ist der Nachweis. */
-export async function feedbackAbsenden(_vorher: FeedbackZustand, formData: FormData): Promise<FeedbackZustand> {
+/** Antwort aus dem Formular /feedback/<token>/<umfrage>/. Der Link-Token aus der Mail ist der Nachweis. */
+export async function feedbackAbsenden(vorher: FeedbackZustand, formData: FormData): Promise<FeedbackZustand> {
   const token = String(formData.get("token") ?? "").toLowerCase();
   const umfrage = String(formData.get("survey_id") ?? "");
   if (!istToken(token) || !istToken(umfrage)) return { ergebnis: "not_found" };
-  const antworten: Record<string, number | string> = {};
+  const antworten: FeedbackAntworten = {};
   for (const [schluessel, wert] of formData.entries()) {
     if (!schluessel.startsWith("q_") || typeof wert !== "string" || !wert.trim()) continue;
     const id = schluessel.slice(2);
@@ -101,6 +103,8 @@ export async function feedbackAbsenden(_vorher: FeedbackZustand, formData: FormD
     antworten[id] = /^[1-5]$/.test(wert) && formData.get(`art_${id}`) === "skala" ? Number(wert) : wert.slice(0, 2000);
   }
   const { data, error } = await createAdminClient().rpc("submit_feedback", { p_token: token, p_survey_id: umfrage, p_answers: antworten });
-  if (error) return { ergebnis: "fehler" };
-  return { ergebnis: data as FeedbackZustand["ergebnis"] };
+  const runde = (vorher.runde ?? 0) + 1;
+  if (error) return { ergebnis: "fehler", antworten, runde };
+  // Leer abgeschickt: die bisher gespeicherten Antworten bleiben stehen
+  return { ergebnis: data as FeedbackZustand["ergebnis"], antworten: data === "empty" ? vorher.antworten : antworten, runde };
 }

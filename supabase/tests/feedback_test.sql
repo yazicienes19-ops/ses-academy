@@ -80,6 +80,13 @@ SELECT pg_temp.ok('Leila (entschuldigt, nicht da) kann nicht antworten',
   public.submit_feedback((SELECT leila FROM t), (SELECT id FROM s), '{}'), 'not_attended');
 SELECT pg_temp.ok('Umfrage noch nicht offen', public.submit_feedback((SELECT amina FROM t), (SELECT id FROM s_zu), '{}'), 'closed');
 SELECT pg_temp.ok('Unbekannter Token', public.submit_feedback(gen_random_uuid(), (SELECT id FROM s), '{}'), 'not_found');
+-- Leeres Formular (Migration 20261120090000_feedback_leer): keine Antwort, bestehende bleibt
+SELECT pg_temp.ok('Leeres Formular zählt nicht', public.submit_feedback((SELECT yusuf FROM t), (SELECT id FROM s), '{}'), 'empty');
+SELECT pg_temp.ok('Nur ungültige Werte zählen nicht', public.submit_feedback((SELECT yusuf FROM t), (SELECT id FROM s),
+  jsonb_build_object((SELECT id FROM q WHERE position = 1)::text, 9, (SELECT id FROM q WHERE position = 6)::text, '   ')), 'empty');
+SELECT pg_temp.ok('Yusufs Antwort bleibt erhalten',
+  (SELECT answers ->> (SELECT id FROM q WHERE position = 1)::text FROM public.feedback_responses
+    WHERE survey_id = (SELECT id FROM s) AND participant_id = (SELECT id FROM public.participants WHERE email = 'yusuf@example.test')), '2');
 
 -- 3) Ergebnisse nur zusammengefasst und nur für Admin/Vorstand
 SELECT pg_temp.login('vorstand@ses.test');

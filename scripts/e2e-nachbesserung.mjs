@@ -198,6 +198,39 @@ if (teil("infomail")) {
   await admin.getByText("Absage zurückgenommen.").waitFor();
 }
 
+// ---------------------------------------------------------------------------
+// 5. Feedback-Umfrage: leeres Formular zählt nicht, gespeicherte Antworten sichtbar
+// ---------------------------------------------------------------------------
+if (teil("feedback")) {
+  sql("delete from feedback_surveys where module_id = (select id from modules where slug = 'skills-workshop')");
+  const umfrage = sql(`select set_config('request.jwt.claims', json_build_object('sub', (select user_id from staff_members where role = 'admin' limit 1), 'role', 'authenticated')::text, false);
+    select public.create_feedback_survey((select id from modules where slug = 'skills-workshop'), now() - interval '1 hour', now() + interval '7 days')`).split("\n").at(-1);
+  const amina = sql("select link_token from participants where email = 'amina@example.test'");
+  const leila = sql("select link_token from participants where email = 'leila@example.test'");
+  const antworten = () => Number(sql(`select count(*) from feedback_responses where survey_id = '${umfrage}'`));
+  const seite = await (await browser.newContext({ viewport: { width: 390, height: 844 } })).newPage();
+  await seite.goto(`${BASIS}/feedback/${amina}/${umfrage}/`);
+  await seite.getByRole("button", { name: "Antwort absenden" }).click();
+  await seite.getByText("Bitte beantworte mindestens eine Frage").waitFor();
+  ok(antworten() === 0, "Leeres Formular wird nicht gespeichert");
+  await seite.locator("fieldset").nth(0).getByText("gut", { exact: true }).click();
+  await seite.locator("fieldset textarea").first().fill("Die Gruppenarbeit");
+  await seite.getByRole("button", { name: "Antwort absenden" }).click();
+  await seite.getByText("Deine Antwort ist gespeichert").waitFor();
+  ok(antworten() === 1, "Antwort gespeichert");
+  ok(await seite.locator("fieldset").nth(0).locator("input[value='4']").isChecked() && (await seite.locator("fieldset textarea").first().inputValue()) === "Die Gruppenarbeit",
+    "Nach dem Absenden bleiben die Antworten im Formular stehen");
+  await seite.reload();
+  ok(await seite.getByText("Deine Antwort ist schon gespeichert").isVisible(), "Beim erneuten Öffnen: Hinweis auf gespeicherte Antwort");
+  ok(await seite.locator("fieldset").nth(0).locator("input[value='4']").isChecked() && (await seite.locator("fieldset textarea").first().inputValue()) === "Die Gruppenarbeit",
+    "Beim erneuten Öffnen sind die Antworten vorausgefüllt");
+  ok(await keinUeberlauf(seite), "Feedback am Handy ohne seitliches Scrollen");
+  await seite.goto(`${BASIS}/feedback/${leila}/${umfrage}/`);
+  ok(await seite.getByText("Antworten können nur Personen, die beim Modul eingecheckt waren").isVisible() && await seite.locator("form").count() === 0,
+    "Nicht anwesend: Hinweis gleich zu Beginn, kein Formular");
+  sql(`delete from feedback_surveys where id = '${umfrage}'`);
+}
+
 await browser.close();
 console.log(fehler ? `\n${fehler} Fehler` : "\nAlles in Ordnung.");
 process.exit(fehler ? 1 : 0);
