@@ -168,7 +168,7 @@ export const fr: Texte = {
       "nous."
     ],
     "intro": "Tu as entre 18 et 30 ans, tu veux comprendre comment fonctionne la politique – et faire bouger les choses ? Alors la SES Academy est faite pour toi.",
-    "status": "Les candidatures pour la promotion actuelle ont été clôturées le 15 janvier 2026. Tu peux déjà t’inscrire – nous te contacterons dès qu’une nouvelle phase de candidature s’ouvrira.",
+    "status": "Les candidatures pour la promotion actuelle ont été clôturées le 15 janvier 2026. Dès qu’une nouvelle phase de candidature s’ouvrira, tu pourras postuler ici.",
     "voraussetzungenTitel": "Ce que tu apportes",
     "voraussetzungen": [
       "Tu as entre 18 et 30 ans.",
@@ -215,6 +215,7 @@ export const fr: Texte = {
     "danke": "Merci ! Nous avons bien reçu ta candidature. Une confirmation arrive dans ta boîte mail.",
     "fehler": "Une erreur s’est produite. Vérifie tes informations ou écris-nous à ses@islamrat.de.",
     "doppelt": "Une candidature existe déjà pour cette promotion avec cette adresse e-mail.",
+    "geschlossen": "Les candidatures pour la promotion actuelle sont closes. Nous n’en acceptons de nouvelles qu’à l’ouverture d’une nouvelle phase. Tu veux être informé·e ? Écris-nous à ses@islamrat.de.",
     "mailBetreff": "Candidature SES Academy"
   },
   stimmen: {

@@ -348,6 +348,19 @@ if (teil("tuerkisch")) {
   sql("update participants set preferred_language = 'de' where email in ('amina@example.test', 'gast1@example.test')");
 }
 
+// ---------------------------------------------------------------------------
+// 7. Bewerbung: Phase beendet, kein Formular (der Server lehnt ebenfalls ab, siehe Bericht)
+// ---------------------------------------------------------------------------
+if (teil("bewerbung")) {
+  const seite = await (await browser.newContext({ viewport: { width: 390, height: 844 } })).newPage();
+  for (const [pfad, text] of [["/bewerbung/", "Die Bewerbungsphase für den aktuellen Jahrgang ist beendet"], ["/tr/bewerbung/", "Mevcut dönem için başvuru süreci sona erdi"]]) {
+    await seite.goto(`${BASIS}${pfad}`);
+    ok(await seite.getByText(text).isVisible() && await seite.locator("#formular form").count() === 0, `${pfad}: Phase beendet, kein Formular`);
+    ok(!(await seite.content()).includes("trotzdem schon jetzt eintragen"), `${pfad}: kein widersprüchliches „trotzdem eintragen“`);
+    ok(await keinUeberlauf(seite), `${pfad}: Handy ohne seitliches Scrollen`);
+  }
+}
+
 await browser.close();
 console.log(fehler ? `\n${fehler} Fehler` : "\nAlles in Ordnung.");
 process.exit(fehler ? 1 : 0);

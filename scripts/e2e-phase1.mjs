@@ -1,4 +1,5 @@
-// Ende-zu-Ende-Test Phase 1 (headless). Erwartet: frische DB (supabase db reset), `next start -p 3100`.
+// Ende-zu-Ende-Test Phase 1 (headless). Erwartet: frische DB (supabase db reset), `next start -p 3100`, gebaut und
+// gestartet mit BEWERBUNG_OFFEN=ja (sonst ist die Bewerbungsphase geschlossen, siehe src/i18n/daten.ts).
 // Aufruf aus dem Projektordner: node <dieses-skript>
 import { chromium } from "playwright";
 

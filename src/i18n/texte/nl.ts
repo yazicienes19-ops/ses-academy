@@ -161,7 +161,7 @@ export const nl: Texte = {
       "mee."
     ],
     "intro": "Ben je tussen 18 en 30, wil je begrijpen hoe politiek werkt – en zelf iets veranderen? Dan is de SES Academy jouw plek.",
-    "status": "De aanmelding voor de huidige lichting sloot op 15 januari 2026. Je kunt je nu al opgeven – we nemen contact met je op zodra een nieuwe aanmeldingsronde start.",
+    "status": "De aanmelding voor de huidige lichting sloot op 15 januari 2026. Zodra er een nieuwe aanmeldingsronde start, kun je je hier aanmelden.",
     "voraussetzungenTitel": "Wat je meebrengt",
     "voraussetzungen": [
       "Je bent tussen 18 en 30 jaar oud.",
@@ -208,6 +208,7 @@ export const nl: Texte = {
     "danke": "Bedankt! We hebben je aanmelding ontvangen. Er is een bevestiging onderweg naar je inbox.",
     "fehler": "Er ging iets mis. Controleer je gegevens of schrijf ons op ses@islamrat.de.",
     "doppelt": "Met dit e-mailadres is er al een aanmelding voor deze lichting.",
+    "geschlossen": "De aanmelding voor de huidige lichting is gesloten. We nemen pas weer aanmeldingen aan als er een nieuwe ronde start. Wil je op de hoogte blijven? Schrijf ons op ses@islamrat.de.",
     "mailBetreff": "Aanmelding SES Academy"
   },
   stimmen: {

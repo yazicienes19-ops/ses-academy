@@ -7,7 +7,7 @@ import { StimmenListe, YoutubeKlick, type Karte } from "./Stimmen";
 import { beitraege } from "@/i18n/stimmen";
 import { Faq } from "./Faq";
 import { Naechstes, NaechstesSticker, ProgrammListe, type Eintrag } from "./Programm";
-import { fotos, gaeste, modulplan } from "@/i18n/daten";
+import { bewerbungOffen, fotos, gaeste, modulplan } from "@/i18n/daten";
 import { locale, pfad, sprachen, texte, zeitraum, zeitraumKurz, type ModulSlug, type Sprache, type Texte } from "@/i18n";
 import { Pfeil } from "./Pfeil";
 
@@ -490,7 +490,9 @@ export function Bewerbungsseite({ l }: { l: Sprache }) {
       <section id="formular" className="mx-auto max-w-4xl scroll-mt-20 px-4 py-20 sm:px-6">
         <h2 className="font-display text-[clamp(2.2rem,5vw,3.8rem)] leading-none font-extrabold">{b.formTitel}</h2>
         <div className="mt-10">
-          <BewerbungsFormular t={b} l={l} />
+          {bewerbungOffen
+            ? <BewerbungsFormular t={b} l={l} />
+            : <p className="rounded-3xl bg-white/80 p-8 text-lg ring-1 ring-line">{b.geschlossen}</p>}
         </div>
       </section>
     </>

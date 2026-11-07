@@ -161,7 +161,7 @@ export const en: Texte = {
       "us."
     ],
     "intro": "You are between 18 and 30, want to understand how politics works – and make a difference yourself? Then the SES Academy is your place.",
-    "status": "Applications for the current cohort closed on 15 January 2026. You can still register your interest now – we will get in touch as soon as a new application phase opens.",
+    "status": "Applications for the current cohort closed on 15 January 2026. As soon as a new application phase opens, you can apply here.",
     "voraussetzungenTitel": "What you bring",
     "voraussetzungen": [
       "You are between 18 and 30 years old.",
@@ -208,6 +208,7 @@ export const en: Texte = {
     "danke": "Thank you! We have received your application. A confirmation is on its way to your inbox.",
     "fehler": "Something went wrong. Please check your details or write to us at ses@islamrat.de.",
     "doppelt": "There is already an application for this year with this email address.",
+    "geschlossen": "Applications for the current cohort are closed. We will only accept applications again once a new phase opens. Want to be kept informed? Write to ses@islamrat.de.",
     "mailBetreff": "Application SES Academy"
   },
   stimmen: {

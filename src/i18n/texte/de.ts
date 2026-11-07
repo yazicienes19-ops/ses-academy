@@ -164,7 +164,7 @@ export const de: Texte = {
       "dabei."
     ],
     "intro": "Du bist zwischen 18 und 30, willst verstehen, wie Politik funktioniert – und selbst etwas bewegen? Dann ist die SES Academy dein Ort.",
-    "status": "Die Bewerbungsphase für den aktuellen Jahrgang endete am 15. Januar 2026. Du kannst dich trotzdem schon jetzt eintragen – wir melden uns, sobald eine neue Bewerbungsphase startet.",
+    "status": "Die Bewerbungsphase für den aktuellen Jahrgang endete am 15. Januar 2026. Sobald eine neue Bewerbungsphase startet, kannst du dich hier bewerben.",
     "voraussetzungenTitel": "Das bringst du mit",
     "voraussetzungen": [
       "Du bist zwischen 18 und 30 Jahre alt.",
@@ -211,6 +211,7 @@ export const de: Texte = {
     "danke": "Danke! Deine Bewerbung ist bei uns eingegangen. Eine Bestätigung ist unterwegs in dein Postfach.",
     "fehler": "Das hat leider nicht geklappt. Bitte prüfe deine Angaben oder schreib uns an ses@islamrat.de.",
     "doppelt": "Mit dieser E-Mail-Adresse liegt bereits eine Bewerbung für diesen Jahrgang vor.",
+    "geschlossen": "Die Bewerbungsphase für den aktuellen Jahrgang ist beendet. Bewerbungen nehmen wir erst wieder an, wenn eine neue Phase startet. Du willst informiert werden? Schreib uns an ses@islamrat.de.",
     "mailBetreff": "Bewerbung SES Academy"
   },
   stimmen: {

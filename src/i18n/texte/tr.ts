@@ -161,7 +161,7 @@ export const tr: Texte = {
       "katıl."
     ],
     "intro": "18 ile 30 yaş arasındaysan, siyasetin nasıl işlediğini anlamak ve bir şeyleri değiştirmek istiyorsan, SES Academy tam sana göre.",
-    "status": "Mevcut dönem için başvurular 15 Ocak 2026’da sona erdi. Yine de şimdiden kaydolabilirsin – yeni başvuru dönemi başladığında seninle iletişime geçeceğiz.",
+    "status": "Mevcut dönem için başvurular 15 Ocak 2026’da sona erdi. Yeni başvuru dönemi başladığında buradan başvurabilirsin.",
     "voraussetzungenTitel": "Aradığımız özellikler",
     "voraussetzungen": [
       "18 ile 30 yaş arasındasın.",
@@ -208,6 +208,7 @@ export const tr: Texte = {
     "danke": "Teşekkürler! Başvurun bize ulaştı. Onay e-postası yolda.",
     "fehler": "Maalesef bir sorun oluştu. Lütfen bilgilerini kontrol et veya ses@islamrat.de adresine yaz.",
     "doppelt": "Bu e-posta adresiyle bu dönem için zaten bir başvuru var.",
+    "geschlossen": "Mevcut dönem için başvuru süreci sona erdi. Yeni başvuru dönemi başlayana kadar başvuru kabul etmiyoruz. Haberdar olmak ister misin? ses@islamrat.de adresine yaz.",
     "mailBetreff": "SES Academy Başvurusu"
   },
   stimmen: {

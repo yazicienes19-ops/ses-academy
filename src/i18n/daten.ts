@@ -14,6 +14,14 @@ export type Modul = {
 };
 
 // [WEB] Veranstaltungsplan
+/**
+ * Bewerbungsphase: geschlossen, solange nicht BEWERBUNG_OFFEN=ja gesetzt ist. Dann ist das Formular auf /bewerbung/
+ * ausgeblendet und der Server nimmt keine Bewerbung an (auch nicht über ein noch offenes Formular).
+ * Für eine neue Phase BEWERBUNG_OFFEN=ja beim Bauen und Starten setzen und den Satz „status“ in src/i18n/texte/*.ts
+ * anpassen. Die Ende-zu-Ende-Tests mit Bewerbung (scripts/e2e-phase1.mjs) brauchen es ebenfalls.
+ */
+export const bewerbungOffen = process.env.BEWERBUNG_OFFEN === "ja";
+
 export const modulplan: Modul[] = [
   {
     slug: "auftakt", art: "auftakt", von: "2026-04-11", bis: "2026-04-12", ort: "Colonia-Allee 3, 51067 Köln",

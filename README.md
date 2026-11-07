@@ -6,7 +6,7 @@ Fünfsprachige Website der SES Academy, dazu Bewerbung, Teilnahme und Einlass (C
 
 | Pfad | Für wen | Was |
 | --- | --- | --- |
-| `/`, `/bewerbung/`, `/seminar/…`, `/en/…` | Öffentlich | Website. Das Bewerbungsformular speichert in Supabase und schickt eine Eingangsbestätigung. Ist ein Modul im Team-Bereich „offen für Gäste“, erscheint auf seiner Seminarseite ein Anmeldeformular (gleicher Kurzname wie in der Adresse). |
+| `/`, `/bewerbung/`, `/seminar/…`, `/en/…` | Öffentlich | Website. Das Bewerbungsformular speichert in Supabase und schickt eine Eingangsbestätigung; es ist nur während einer Bewerbungsphase da (`BEWERBUNG_OFFEN=ja` beim Bauen und Starten), sonst nimmt auch der Server nichts an. Ist ein Modul im Team-Bereich „offen für Gäste“, erscheint auf seiner Seminarseite ein Anmeldeformular (gleicher Kurzname wie in der Adresse). |
 | `/ticket/` | Öffentlich | „Ticket verloren?“: schickt das Ticket erneut an die angegebene Adresse. |
 | `/ticket/<token>/` | Teilnehmende | Persönliches Ticket: QR-Code, Kurzcode, Module. Über den Link aus der Mail (`link_token`) auch selbst abmelden bzw. entschuldigen und das bis zum Modulbeginn wieder zurücknehmen; nach dem Abmelden kommt eine Bestätigung per Mail. Der QR-Code enthält einen anderen Token (`checkin_token`): Wer nur den QR kennt (Foto, ältere Links), sieht das Ticket, kann aber nicht abmelden. |
 | `/team/` | Team (Login) | Übersicht je nach Rolle. |

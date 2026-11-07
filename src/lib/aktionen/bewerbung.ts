@@ -1,10 +1,11 @@
 "use server";
 
 import { z } from "zod";
+import { bewerbungOffen } from "@/i18n/daten";
 import { sendeBewerbungEingang } from "@/lib/mail";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-export type BewerbungZustand = { status: "leer" | "ok" | "fehler" | "doppelt" };
+export type BewerbungZustand = { status: "leer" | "ok" | "fehler" | "doppelt" | "geschlossen" };
 
 const jahr = new Date().getFullYear();
 const text = (max: number) => z.string().trim().max(max);
@@ -27,6 +28,8 @@ const schema = z.object({
 export async function bewerbungAbsenden(_vorher: BewerbungZustand, formData: FormData): Promise<BewerbungZustand> {
   // Spam-Falle: Dieses Feld ist für Menschen unsichtbar. Ist es gefüllt, tun wir so, als hätte es geklappt.
   if (String(formData.get("webseite") ?? "") !== "") return { status: "ok" };
+  // Bewerbungsphase beendet: auch ein noch offenes Formular oder ein direkter Aufruf wird nicht gespeichert
+  if (!bewerbungOffen) return { status: "geschlossen" };
 
   const roh = Object.fromEntries(formData.entries());
   const geprueft = schema.safeParse({ ...roh, sprachen: formData.getAll("sprachen").map(String) });

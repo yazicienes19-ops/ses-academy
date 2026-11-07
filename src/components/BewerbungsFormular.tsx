@@ -19,6 +19,14 @@ export function BewerbungsFormular({ t, l }: { t: Texte["bewerbungSeite"]; l: Sp
   }
   const jahr = new Date().getFullYear();
 
+  if (zustand.status === "geschlossen") {
+    return (
+      <p role="status" className="rounded-3xl bg-white/80 p-8 text-lg ring-1 ring-line">
+        {t.geschlossen}
+      </p>
+    );
+  }
+
   if (zustand.status === "ok") {
     return (
       <p role="status" className="rounded-3xl bg-white/80 p-8 text-lg ring-1 ring-line">
