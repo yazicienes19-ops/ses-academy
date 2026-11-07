@@ -461,14 +461,14 @@ isOneToOne: false
                   ]
                 },"hotels": {
                   Row: {
-                    "address": string | null,"cancellation_deadline": string | null,"contact": string | null,"created_at": string,"id": string,"module_id": string,"name": string,"notes": string,"price_per_night": number | null,"quota_rooms": number | null,"rooms_visible": boolean
+                    "address": string | null,"cancellation_deadline": string | null,"contact": string | null,"created_at": string,"id": string,"module_id": string,"name": string,"notes": string,"price_per_night": number | null,"quota_rooms": number | null,"room_list_sent_at": string | null,"room_list_sent_to": string | null,"rooms_visible": boolean
                   }
                   ComputedFields: never
                   Insert: {
-                    "address"?: string | null,"cancellation_deadline"?: string | null,"contact"?: string | null,"created_at"?: string,"id"?: string,"module_id": string,"name": string,"notes"?: string,"price_per_night"?: number | null,"quota_rooms"?: number | null,"rooms_visible"?: boolean
+                    "address"?: string | null,"cancellation_deadline"?: string | null,"contact"?: string | null,"created_at"?: string,"id"?: string,"module_id": string,"name": string,"notes"?: string,"price_per_night"?: number | null,"quota_rooms"?: number | null,"room_list_sent_at"?: string | null,"room_list_sent_to"?: string | null,"rooms_visible"?: boolean
                   }
                   Update: {
-                    "address"?: string | null,"cancellation_deadline"?: string | null,"contact"?: string | null,"created_at"?: string,"id"?: string,"module_id"?: string,"name"?: string,"notes"?: string,"price_per_night"?: number | null,"quota_rooms"?: number | null,"rooms_visible"?: boolean
+                    "address"?: string | null,"cancellation_deadline"?: string | null,"contact"?: string | null,"created_at"?: string,"id"?: string,"module_id"?: string,"name"?: string,"notes"?: string,"price_per_night"?: number | null,"quota_rooms"?: number | null,"room_list_sent_at"?: string | null,"room_list_sent_to"?: string | null,"rooms_visible"?: boolean
                   }
                   Relationships: [
                     {
@@ -599,6 +599,26 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"module_costs": {
+                  Row: {
+                    "amount": number,"category": string,"created_at": string,"created_by": string | null,"id": string,"label": string,"module_id": string,"note": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount": number,"category"?: string,"created_at"?: string,"created_by"?: string | null,"id"?: string,"label": string,"module_id": string,"note"?: string
+                  }
+                  Update: {
+                    "amount"?: number,"category"?: string,"created_at"?: string,"created_by"?: string | null,"id"?: string,"label"?: string,"module_id"?: string,"note"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "module_costs_module_id_fkey"
+      columns: ["module_id"]
+isOneToOne: false
+      referencedRelation: "modules"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"module_day_speakers": {
                   Row: {
                     "affiliation": string,"created_at": string,"created_by": string | null,"display_name": string,"id": string,"kind": string,"module_day_id": string,"participant_id": string | null,"topic": string
@@ -665,6 +685,26 @@ isOneToOne: false
                   Relationships: [
                     {
       foreignKeyName: "module_groups_module_id_fkey"
+      columns: ["module_id"]
+isOneToOne: false
+      referencedRelation: "modules"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"module_materials": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"done_at": string | null,"done_by": string | null,"id": string,"label": string,"module_id": string,"note": string,"quantity": string,"responsible": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"done_at"?: string | null,"done_by"?: string | null,"id"?: string,"label": string,"module_id": string,"note"?: string,"quantity"?: string,"responsible"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"done_at"?: string | null,"done_by"?: string | null,"id"?: string,"label"?: string,"module_id"?: string,"note"?: string,"quantity"?: string,"responsible"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "module_materials_module_id_fkey"
       columns: ["module_id"]
 isOneToOne: false
       referencedRelation: "modules"
@@ -1188,6 +1228,9 @@ isOneToOne: false
                            },
 "claim_info_mail":
 { Args: { "p_module_id": string,"p_participant_id": string }; Returns: boolean
+                           },
+"copy_materials":
+{ Args: { "p_from": string,"p_to": string }; Returns: number
                            },
 "create_approval":
 { Args: { "p_action": string,"p_payload": Json }; Returns: string

@@ -232,6 +232,26 @@ export async function sendeBewerbungStatus(an: { email: string; vorname: string;
   return ergebnis;
 }
 
+/** Zimmerliste ans Hotel (Excel-Datei im Anhang), förmlich, mit Absender aus dem Team. */
+export async function sendeZimmerliste(an: string, inhalt: { modul: string; hotel: string; zimmer: number; gaeste: number; csv: string; datei: string; absender: string }, von?: string, moduleId?: string): Promise<Ergebnis> {
+  const stand = new Intl.DateTimeFormat("de-DE", { dateStyle: "long", timeZone: "Europe/Berlin" }).format(new Date());
+  const text = [
+    "Guten Tag,", "",
+    `anbei die Zimmerliste für „${inhalt.modul}“${inhalt.hotel ? ` im ${inhalt.hotel}` : ""} als Excel-Datei: ${inhalt.zimmer} Zimmer, ${inhalt.gaeste} Gäste (Stand ${stand}).`, "",
+    "Bei Fragen antworten Sie bitte einfach auf diese Mail.", "",
+    "Mit freundlichen Grüßen", inhalt.absender, "SES Academy · Islamrat für die Bundesrepublik Deutschland",
+  ].join("\n");
+  const ergebnis = await senden({
+    to: an,
+    subject: `Zimmerliste ${inhalt.modul}${inhalt.hotel ? ` · ${inhalt.hotel}` : ""} (Stand ${stand})`,
+    text,
+    html: `<div style="font-family:Arial,Helvetica,sans-serif;color:#13201a;max-width:560px;line-height:1.6;white-space:pre-line">${html(text)}</div>`,
+    attachments: [{ filename: inhalt.datei, content: inhalt.csv, contentType: "text/csv; charset=utf-8" }],
+  });
+  await protokolliere({ participantId: null, art: "zimmerliste", an, ergebnis, von, moduleId });
+  return ergebnis;
+}
+
 /** Schutz vor Mail-Flut: Wurde dieser Person in den letzten Minuten schon ein Ticket geschickt? */
 export async function ticketKuerzlichGesendet(participantId: string, minuten = 10): Promise<boolean> {
   const seit = new Date(Date.now() - minuten * 60_000).toISOString();

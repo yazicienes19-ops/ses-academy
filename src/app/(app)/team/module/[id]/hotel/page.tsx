@@ -5,6 +5,8 @@ import { Hinweis } from "@/components/team/Hinweis";
 import { ModulReiter } from "@/components/team/ModulReiter";
 import { TeamKopf } from "@/components/team/TeamKopf";
 import { Rueckfrage } from "@/components/team/Rueckfrage";
+import { zimmerlisteSenden } from "@/lib/aktionen/logistik";
+import { mailBereit } from "@/lib/mail";
 import { abfrageUmschalten, hotelEntfernen, hotelSpeichern, zimmerAnlegen, zimmerEntfernen, zimmerSichtbarUmschalten, zimmerZuteilen } from "@/lib/aktionen/hotel";
 import { darf, requireStaff } from "@/lib/auth";
 import { istToken } from "@/lib/codes";
@@ -21,6 +23,11 @@ const hinweise: Record<string, { text: string; gut: boolean }> = {
   zugeteilt: { text: "Zuteilung gespeichert.", gut: true },
   "zimmer-voll": { text: "Das Zimmer ist schon voll. Die bisherige Zuteilung bleibt.", gut: false },
   "hotel-entfernt": { text: "Hotel entfernt.", gut: true },
+  "liste-gesendet": { text: "Zimmerliste ans Hotel verschickt (Excel-Datei im Anhang).", gut: true },
+  "liste-adresse": { text: "Bitte eine gültige E-Mail-Adresse des Hotels angeben.", gut: false },
+  "liste-mail-aus": { text: "Mailversand ist nicht eingerichtet: Die Zimmerliste wurde nicht verschickt. Bitte herunterladen und selbst schicken.", gut: false },
+  "liste-leer": { text: "In diesem Hotel ist noch niemand eingeteilt. Es wurde nichts verschickt.", gut: false },
+  "liste-fehler": { text: "Die Mail konnte nicht verschickt werden: Der Mailserver hat sie abgelehnt oder war nicht erreichbar.", gut: false },
   "hotel-belegt": { text: "In diesem Hotel sind noch Personen eingeteilt. Bitte erst umsetzen, dann entfernen.", gut: false },
   "zimmer-sichtbar": { text: "Die Zimmer stehen jetzt bei den Teilnehmenden in „Mein Bereich“.", gut: true },
   "zimmer-verborgen": { text: "Die Zimmer sind in „Mein Bereich“ verborgen.", gut: true },
@@ -166,6 +173,24 @@ export default async function HotelSeite({ params, searchParams }: PageProps<"/t
                     </li>
                   ))}
                 </ul>
+                {belegt > 0 && (
+                  <form id="zimmerliste" action={zimmerlisteSenden} className="mt-4 flex scroll-mt-4 flex-wrap items-end gap-2 rounded-2xl bg-paper p-3">
+                    <input type="hidden" name="module_id" value={id} /><input type="hidden" name="hotel_id" value={hotel.id} />
+                    <div className="min-w-52 flex-1">
+                      <label className="etikett" htmlFor="an">Zimmerliste per Mail ans Hotel</label>
+                      <input id="an" name="an" type="email" required defaultValue={hotel.contact?.match(/[^\s<>(),;]+@[^\s<>(),;]+\.[a-z]{2,}/i)?.[0] ?? ""} placeholder="reservierung@hotel.de" className="feld" />
+                    </div>
+                    <Rueckfrage knopf="Senden" ja="Ja, jetzt senden"
+                      frage={`Zimmerliste von „${hotel.name}“ (${belegt} Gäste) jetzt an die eingetragene Adresse schicken? Sie enthält nur Namen und Zimmer, keine Kontaktdaten.`}>
+                      {!mailBereit() && <p className="font-semibold text-rot">Mailversand ist nicht eingerichtet: Es geht keine Mail raus. Bitte die Liste herunterladen und selbst schicken.</p>}
+                    </Rueckfrage>
+                    <p className="basis-full text-xs text-ink-soft">
+                      {hotel.room_list_sent_at
+                        ? `Zuletzt verschickt am ${new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Berlin" }).format(new Date(hotel.room_list_sent_at))} Uhr an ${hotel.room_list_sent_to}.`
+                        : "Noch nicht per Mail verschickt."}
+                    </p>
+                  </form>
+                )}
                 <form action={zimmerAnlegen} className="mt-4 flex flex-wrap items-end gap-2">
                   <input type="hidden" name="module_id" value={id} /><input type="hidden" name="hotel_id" value={hotel.id} />
                   <div className="min-w-40 flex-1"><label className="etikett" htmlFor="labels">Zimmer</label><input id="labels" name="labels" required className="feld" placeholder="101-110 oder 101, 102, 205" /></div>

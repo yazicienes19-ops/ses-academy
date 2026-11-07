@@ -75,3 +75,33 @@ export function probeplan(d: Zimmerplan, groesse: 2 | 3) {
     }));
   return { zimmer, hinweise: e.hinweise };
 }
+
+const datumKurz = new Intl.DateTimeFormat("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC" });
+const tagNach = (iso: string, plus = 0) => datumKurz.format(new Date(Date.parse(`${iso}T12:00:00Z`) + plus * 86_400_000));
+
+/**
+ * Zimmerliste fürs Hotel als Tabelle (Excel und Mail ans Hotel): nur Namen und Zimmer, keine Kontaktdaten. Sind im Hotel
+ * Zimmer angelegt, die echte Zuteilung; sonst die automatische Einteilung. Jedes Zimmer wird einmal gebucht (erste bis
+ * letzte Nacht seiner Gäste); wer später dazukommt, hat eine eigene Anreise.
+ */
+export function zimmerlisteTabelle(d: Zimmerplan, groesse: 2 | 3) {
+  const personen = new Map(d.personen.map((p) => [p.participant_id, p]));
+  const art = (kap: number) => (kap === 2 || kap === 3 ? zimmerArt[kap] : `${kap}-Bett-Zimmer`);
+  const liste = d.zimmer.length
+    ? d.zimmer.map((z) => ({ label: z.label, art: art(z.capacity), bereich: z.section ?? "", ids: d.personen.filter((p) => p.room_id === z.id).map((p) => p.participant_id) }))
+    : probeplan(d, groesse).zimmer.map((z) => ({ label: z.label, art: zimmerArt[groesse], bereich: z.bereich, ids: z.belegung.map((b) => b.id) }));
+  const hotelName = d.hotel && d.hotel.name !== "Hotel (Name folgt)" ? d.hotel.name : "";
+  const zeilen: string[][] = [["Hotel", "Zimmer", "Zimmerart", "Bereich", "Zimmer ab", "Zimmer bis", "Nächte", "Name", "Anreise der Person"]];
+  let zimmer = 0;
+  for (const z of liste) {
+    if (z.ids.length) zimmer++;
+    const n = [...new Set(z.ids.flatMap((id) => personen.get(id)?.nights ?? []))].sort();
+    const an = n[0] ? tagNach(n[0]) : "", ab = n.length ? tagNach(n.at(-1)!, 1) : "";
+    for (const id of z.ids) {
+      const eigene = [...(personen.get(id)?.nights ?? [])].sort();
+      zeilen.push([hotelName, z.label, z.art, z.bereich, an, ab, String(n.length), personen.get(id)?.name ?? "", eigene[0] && eigene[0] !== n[0] ? tagNach(eigene[0]) : an]);
+    }
+  }
+  const datei = `Zimmerliste ${d.modul?.title ?? ""}${d.hotels.length > 1 && hotelName ? ` ${hotelName}` : ""}${d.zimmer.length ? "" : ` ${groesse}er-Zimmer`}.csv`;
+  return { zeilen, datei, hotelName, zimmer, gaeste: zeilen.length - 1 };
+}

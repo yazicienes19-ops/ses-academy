@@ -469,6 +469,94 @@ if (teil("hotels")) {
   sql(`delete from hotels where module_id = '${demo}'; delete from stay_requests s using registrations r where r.id = s.registration_id and r.module_id = '${demo}'`);
 }
 
+// ---------------------------------------------------------------------------
+// 7b. Logistik: Kostenübersicht, Materialliste, Zimmerliste per Mail ans Hotel
+// ---------------------------------------------------------------------------
+if (teil("kosten")) {
+  await mailsLeeren();
+  const demo = sql("select id from modules where slug = 'demokratie'");
+  const probe = sql("select id from modules where slug = 'probe-einlass'");
+  const nacht = sql(`select (min(day) - 1)::text from module_days where module_id = '${demo}'`);
+  sql(`delete from hotels where module_id = '${demo}'; delete from module_costs where module_id = '${demo}'; delete from module_materials where module_id in ('${demo}', '${probe}')`);
+  sql(`delete from module_speakers where module_id = '${demo}'; delete from speakers where name like 'TestWunsch%'`);
+  sql(`insert into stay_requests (registration_id, nights) select r.id, array['${nacht}']::date[] from registrations r join participants p on p.id = r.participant_id
+       where r.module_id = '${demo}' and p.email in ('amina@example.test', 'leila@example.test') on conflict (registration_id) do update set nights = excluded.nights`);
+  sql(`insert into hotels (module_id, name, price_per_night, contact) values ('${demo}', 'TestWunsch Hotel', 80, 'Frau Berg, reservierung@testhotel.example, 0221 123')`);
+  sql(`insert into rooms (hotel_id, label, capacity) select id, '101', 2 from hotels where name = 'TestWunsch Hotel'`);
+  sql(`insert into room_assignments (room_id, participant_id, hotel_id) select r.id, p.id, r.hotel_id from rooms r join hotels h on h.id = r.hotel_id, participants p
+       where h.name = 'TestWunsch Hotel' and p.email in ('amina@example.test', 'leila@example.test')`);
+  sql(`insert into speakers (name) values ('TestWunsch Referentin')`);
+  sql(`insert into module_speakers (module_id, speaker_id, status, fee, travel_costs) select '${demo}', id, 'zugesagt', 500, 120.50 from speakers where name = 'TestWunsch Referentin'`);
+  sql(`insert into module_materials (module_id, label, quantity) values ('${probe}', 'TestWunsch Verlängerungskabel', '3')`);
+
+  const orga = await teamLogin(browser, "orga@ses.test");
+  await orga.goto(`${BASIS}/team/module/${demo}/kosten/`);
+  await orga.fill("#label", "TestWunsch Mittagessen");
+  await orga.selectOption("#category", { label: "Verpflegung" });
+  await orga.fill("#amount", "1.250,50");
+  await orga.getByRole("button", { name: "Hinzufügen" }).click();
+  await orga.getByText("Posten gespeichert.").waitFor();
+  const kpi = await orga.locator("main").innerText();
+  ok(/80,00\s€\s*Hotel/.test(kpi), "Hotel: 1 Zimmer × 1 Nacht × 80 €");
+  ok(/500,00\s€\s*Honorare/.test(kpi) && /120,50\s€\s*Reisekosten/.test(kpi), "Honorar und Reisekosten der Referentin");
+  ok(/1\.250,50\s€\s*Sonstiges/.test(kpi) && /1\.951,00\s€\s*Gesamt/.test(kpi), "Sonstige Posten und Gesamtsumme 1.951,00 €");
+  await orga.fill("#amount", "abc");
+  await orga.fill("#label", "Falsch");
+  await orga.getByRole("button", { name: "Hinzufügen" }).click();
+  await orga.getByText("Bitte Bezeichnung und Betrag angeben").waitFor();
+  ok(sql(`select count(*) from module_costs where module_id = '${demo}'`) === "1", "Ungültiger Betrag wird abgelehnt");
+  await orga.locator("li", { hasText: "TestWunsch Mittagessen" }).getByRole("button", { name: "entfernen" }).click();
+  await orga.getByRole("button", { name: "Ja, entfernen" }).click();
+  await orga.getByText("Posten entfernt.").waitFor();
+  ok(sql(`select count(*) from module_costs where module_id = '${demo}'`) === "0", "Posten nach Rückfrage entfernt");
+
+  // Materialliste
+  await orga.goto(`${BASIS}/team/module/${demo}/material/`);
+  const neu = orga.locator("#materialliste > form").first();
+  await neu.getByLabel("Neues Material").fill("TestWunsch Beamer");
+  await neu.getByLabel("Menge").fill("1");
+  await neu.getByLabel("Wer kümmert sich").fill("Orga Test");
+  await orga.getByRole("button", { name: "Hinzufügen" }).click();
+  await orga.getByText("Materialliste gespeichert.").waitFor();
+  ok(await orga.getByText("1 von 1 offen").isVisible(), "Material angelegt, offen");
+  await orga.getByRole("button", { name: "„TestWunsch Beamer“ abhaken" }).click();
+  await orga.getByText("alles erledigt").waitFor();
+  ok(sql(`select done_by is not null from module_materials where label = 'TestWunsch Beamer'`) === "t", "Abgehakt mit Person");
+  await orga.selectOption("#von", { label: "Probe-Einlass (lokal)" }).catch(async () => orga.selectOption("#von", { index: 0 }));
+  await orga.getByRole("button", { name: "Übernehmen" }).click();
+  await orga.getByText("1 Einträge übernommen.").waitFor();
+  ok(sql(`select count(*) from module_materials where module_id = '${demo}' and label = 'TestWunsch Verlängerungskabel' and done_at is null`) === "1", "Liste aus anderem Modul übernommen, ohne Haken");
+
+  // Zimmerliste per Mail ans Hotel
+  await orga.goto(`${BASIS}/team/module/${demo}/hotel/`);
+  ok(await orga.inputValue("#an") === "reservierung@testhotel.example", "Adresse aus der Ansprechperson übernommen");
+  await orga.locator("#zimmerliste").getByRole("button", { name: "Senden" }).click();
+  ok(await orga.getByText("(2 Gäste) jetzt an die eingetragene Adresse schicken?").isVisible(), "Rückfrage vor dem Versand");
+  await orga.getByRole("button", { name: "Ja, jetzt senden" }).click();
+  await orga.getByText("Zimmerliste ans Hotel verschickt").waitFor();
+  const mail = (await mailsWarten("reservierung@testhotel.example"))[0];
+  const anhang = mail?.Attachments?.[0];
+  ok(mail?.Subject.startsWith("Zimmerliste Demokratie · TestWunsch Hotel") && anhang?.FileName.endsWith(".csv"), "Mail ans Hotel mit Excel-Anhang");
+  if (anhang) {
+    const inhalt = await fetch(`${MAILPIT}/message/${mail.ID}/part/${anhang.PartID}`).then((x) => x.text());
+    ok(inhalt.includes("Amina Yilmaz") && inhalt.includes("Leila Haddad") && !inhalt.includes("@example.test"), "Anhang: Namen und Zimmer, keine Kontaktdaten");
+  }
+  ok(await orga.getByText(/Zuletzt verschickt am .* an reservierung@testhotel\.example/).isVisible(), "Seite zeigt, wann und an wen");
+
+  const handy = await teamLogin(browser, "orga@ses.test", 390);
+  for (const pfad of [`/team/module/${demo}/kosten/`, `/team/module/${demo}/material/`, `/team/module/${demo}/hotel/`]) {
+    await handy.goto(`${BASIS}${pfad}`);
+    ok(await keinUeberlauf(handy), `${pfad.split("/").at(-2)} am Handy ohne seitliches Scrollen`);
+  }
+  const helfer = await teamLogin(browser, "helfer@ses.test");
+  await helfer.goto(`${BASIS}/team/module/${demo}/kosten/`);
+  ok(helfer.url().includes("fehler=rechte"), "Einlass-Helfer: keine Kosten");
+
+  sql(`delete from hotels where module_id = '${demo}'; delete from module_costs where module_id = '${demo}'; delete from module_materials where module_id in ('${demo}', '${probe}')`);
+  sql(`delete from module_speakers where module_id = '${demo}'; delete from speakers where name like 'TestWunsch%'`);
+  sql(`delete from stay_requests s using registrations r where r.id = s.registration_id and r.module_id = '${demo}'; delete from email_log where kind = 'zimmerliste'`);
+}
+
 await browser.close();
 console.log(fehler ? `\n${fehler} Fehler` : "\nAlles in Ordnung.");
 process.exit(fehler ? 1 : 0);

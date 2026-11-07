@@ -103,4 +103,27 @@ SELECT pg_temp.login('modul.orga@ses.test');
 SELECT pg_temp.fehler('Modul-Konto kann nicht zuteilen', $q$SELECT public.assign_room((SELECT leila FROM t), (SELECT b1 FROM t))$q$, 'orga_access_required');
 SELECT pg_temp.ok('Modul-Konto: Übersicht leer', (SELECT count(*)::text FROM public.get_room_planning((SELECT demo FROM t))), '0');
 
+-- 6) Kosten und Materialliste: ab Orga-Team, nicht für Helfer und Modul-Konten
+SELECT pg_temp.login('orga@ses.test');
+INSERT INTO public.module_costs (module_id, label, category, amount) SELECT demo, 'Mittagessen', 'verpflegung', 1250.50 FROM t;
+SELECT pg_temp.ok('Orga legt Kostenposten an', (SELECT amount::text FROM public.module_costs WHERE label = 'Mittagessen'), '1250.50');
+SELECT pg_temp.fehler('Negativer Betrag abgelehnt', $q$INSERT INTO public.module_costs (module_id, label, amount) SELECT demo, 'Minus', -1 FROM t$q$, 'check');
+SELECT pg_temp.fehler('Unbekannte Art abgelehnt', $q$INSERT INTO public.module_costs (module_id, label, category, amount) SELECT demo, 'X', 'urlaub', 1 FROM t$q$, 'check');
+INSERT INTO public.module_materials (module_id, label, quantity) SELECT id, 'Beamer', '1' FROM public.modules WHERE slug = 'probe-einlass';
+INSERT INTO public.module_materials (module_id, label, done_at) SELECT id, 'Kabel', now() FROM public.modules WHERE slug = 'probe-einlass';
+INSERT INTO public.module_materials (module_id, label) SELECT demo, 'beamer' FROM t;
+SELECT pg_temp.ok('Liste übernehmen: nur Neues', public.copy_materials((SELECT id FROM public.modules WHERE slug = 'probe-einlass'), (SELECT demo FROM t))::text, '1');
+SELECT pg_temp.ok('… ohne Haken', (SELECT (done_at IS NULL)::text FROM public.module_materials WHERE module_id = (SELECT demo FROM t) AND label = 'Kabel'), 'true');
+UPDATE public.hotels SET room_list_sent_at = now(), room_list_sent_to = 'hotel@example.test' WHERE id = (SELECT ha FROM t);
+SELECT pg_temp.ok('Orga trägt Versand der Zimmerliste ein', (SELECT room_list_sent_to FROM public.hotels WHERE id = (SELECT ha FROM t)), 'hotel@example.test');
+SELECT pg_temp.login('helfer@ses.test');
+SELECT pg_temp.ok('Helfer sieht keine Kosten', (SELECT count(*)::text FROM public.module_costs), '0');
+SELECT pg_temp.ok('Helfer sieht keine Materialliste', (SELECT count(*)::text FROM public.module_materials), '0');
+SELECT pg_temp.fehler('Helfer legt keine Kosten an', $q$INSERT INTO public.module_costs (module_id, label, amount) SELECT demo, 'X', 1 FROM t$q$, 'row-level security');
+SELECT pg_temp.fehler('Helfer übernimmt keine Liste', $q$SELECT public.copy_materials((SELECT id FROM public.modules WHERE slug = 'probe-einlass'), (SELECT demo FROM t))$q$, 'orga_access_required');
+SELECT pg_temp.login('modul.orga@ses.test');
+SELECT pg_temp.ok('Modul-Konto sieht keine Kosten', (SELECT count(*)::text FROM public.module_costs), '0');
+SELECT pg_temp.ok('Modul-Konto sieht keine Materialliste', (SELECT count(*)::text FROM public.module_materials), '0');
+SELECT pg_temp.fehler('Modul-Konto legt kein Material an', $q$INSERT INTO public.module_materials (module_id, label) SELECT demo, 'X' FROM t$q$, 'row-level security');
+
 ROLLBACK;

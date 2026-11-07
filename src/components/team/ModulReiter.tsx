@@ -9,7 +9,8 @@ const reiter = [
   { pfad: "gruppen/", name: "Gruppen" },
   { pfad: "hotel/", name: "Logistik" },
   { pfad: "zimmerplan/", name: "Zimmerplan" },
-  { pfad: "material/", name: "Material und Medien" },
+  { pfad: "kosten/", name: "Kosten" },
+  { pfad: "material/", name: "Material" },
 ] as const;
 
 /**

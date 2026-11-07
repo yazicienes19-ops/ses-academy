@@ -1,5 +1,6 @@
 "use server";
 
+import { betragLesen } from "@/lib/betrag";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -52,15 +53,6 @@ export async function referentEinladen(formData: FormData) {
 }
 
 const statusSchema = z.enum(["idee", "angefragt", "zugesagt", "abgesagt", "bestaetigt"]);
-/** Betrag wie man ihn tippt: „1.250,50“, „1250,5“, „250.50“, „250 €“. Ungültig oder negativ → NaN (wird abgelehnt). */
-function zahl(v: string): number | null {
-  const t = v.replace(/\s|€|eur(o)?/gi, "");
-  if (!t) return null;
-  const norm = /,\d{1,2}$/.test(t) ? t.replace(/\./g, "").replace(",", ".") : t.replace(/,/g, "");
-  const n = Number(norm);
-  return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) / 100 : NaN;
-}
-
 /** Status und Gästeblatt einer Einladung speichern. */
 export async function gaesteblattSpeichern(formData: FormData) {
   await requireStaff("orga");
@@ -70,8 +62,8 @@ export async function gaesteblattSpeichern(formData: FormData) {
   const status = statusSchema.safeParse(formData.get("status"));
   if (!istToken(id) || !status.success) zurueck(pfad, "eingabe");
   const zeitpunkt = (tag: string, uhr: string) => (tag ? berlinerZeit(tag, uhr || "12:00") : null);
-  const fee = zahl(text(formData, "fee", 12));
-  const travel = zahl(text(formData, "travel_costs", 12));
+  const fee = betragLesen(text(formData, "fee", 12));
+  const travel = betragLesen(text(formData, "travel_costs", 12));
   if (Number.isNaN(fee) || Number.isNaN(travel)) zurueck(pfad, "betrag");
   const supabase = await createClient();
   const { error } = await supabase.from("module_speakers").update({
