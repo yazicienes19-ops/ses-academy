@@ -267,6 +267,87 @@ if (teil("login")) {
   ok(await keinUeberlauf(seite), "Mein Bereich am Handy ohne seitliches Scrollen");
 }
 
+// ---------------------------------------------------------------------------
+// 3. Türkisch: Login, Login-Mail (GoTrue-Vorlage), Mein Bereich, Verzeichnis, Feedback, Adressänderung
+// ---------------------------------------------------------------------------
+if (teil("tuerkisch")) {
+  await mailsLeeren();
+  sql("update participants set preferred_language = 'tr' where email in ('leila@example.test', 'gast1@example.test')");
+  sql("update participants set preferred_language = 'de' where email = 'amina@example.test'");
+  // a) Login-Seite: Browser auf Türkisch, Umschalter auf Deutsch
+  const trCtx = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: "tr-TR" });
+  const seite = await trCtx.newPage();
+  await seite.goto(`${BASIS}/mein-bereich/login/`);
+  ok(await seite.getByRole("button", { name: "Giriş bağlantısını gönder" }).isVisible() && (await seite.locator("main").getAttribute("lang")) === "tr", "Login-Seite auf Türkisch (Browsersprache)");
+  await seite.getByRole("link", { name: "Deutsch" }).click();
+  await seite.getByRole("button", { name: "Anmeldelink schicken" }).waitFor();
+  ok(true, "Umschalten auf Deutsch");
+  await seite.getByRole("link", { name: "Türkçe" }).click();
+  await seite.waitForURL(/sprache=tr/);
+  await seite.getByRole("button", { name: "Giriş bağlantısını gönder" }).waitFor();
+  await seite.fill("#email", "leila@example.test");
+  await seite.getByRole("button", { name: "Giriş bağlantısını gönder" }).click();
+  await seite.getByText("E-posta gelmedi mi?").waitFor();
+  ok(await seite.getByText("spam ya da reklam klasörüne").isVisible(), "Spam-Hinweis auf Türkisch");
+  let mail = null;
+  for (let i = 0; i < 20 && !mail; i++) { mail = (await mailsAn("leila@example.test"))[0]; if (!mail) await seite.waitForTimeout(500); }
+  ok(mail?.Subject === "„Mein Bereich“ giriş bağlantın – SES Academy" && mail.Text.includes("Şimdi giriş yap"), `Login-Mail Türkisch: „${mail?.Subject}“`);
+  await seite.fill("#code", mail.Text.match(/\b(\d{6})\b/)[1]);
+  await seite.getByRole("button", { name: "Giriş yap", exact: true }).click();
+  await seite.waitForURL(/\/mein-bereich\/$/);
+  ok(await seite.getByRole("heading", { name: "Selam, Leila!" }).isVisible() && await seite.getByText("Yaklaşan modüller").isVisible() && await seite.getByText("Ödevler", { exact: true }).isVisible(),
+    "Mein Bereich auf Türkisch");
+  ok(!(await seite.locator("main").innerText()).match(/Kommende Module|Hausaufgaben|Mein Profil|Meine Anwesenheit/), "Keine deutschen Überschriften mehr");
+  ok(await keinUeberlauf(seite), "Mein Bereich (Türkisch) am Handy ohne seitliches Scrollen");
+  await seite.getByRole("link", { name: "Üye rehberi" }).click();
+  await seite.getByRole("heading", { name: "Üyeler" }).waitFor();
+  ok(await seite.getByPlaceholder("İsim ara").isVisible(), "Mitgliederverzeichnis auf Türkisch");
+  // Adresse ändern: beide Bestätigungsmails Türkisch
+  await mailsLeeren();
+  await seite.goto(`${BASIS}/mein-bereich/#profil`);
+  await seite.fill("#email", "leila.neu@example.test");
+  await seite.getByRole("button", { name: "Adresi değiştir" }).click();
+  await seite.getByText("Eski ve yeni adresine birer onay bağlantısı gönderdik").waitFor();
+  await seite.waitForTimeout(1500);
+  const aenderung = [...(await mailsAn("leila@example.test")), ...(await mailsAn("leila.neu@example.test"))];
+  ok(aenderung.length === 2 && aenderung.every((m) => m.Subject === "Yeni e-posta adresini onayla – SES Academy"), `Adressänderung: ${aenderung.length} Mails auf Türkisch`);
+  // b) Neues Konto (erster Login, Bestätigungs-Vorlage) auf Türkisch, auch von der deutschen Seite
+  const gast = await (await browser.newContext({ viewport: { width: 1280, height: 900 } })).newPage();
+  await gast.goto(`${BASIS}/mein-bereich/login/?sprache=de`);
+  await gast.fill("#email", "gast1@example.test");
+  await gast.getByRole("button", { name: "Anmeldelink schicken" }).click();
+  await gast.locator("#code").waitFor();
+  let gastMail = null;
+  for (let i = 0; i < 20 && !gastMail; i++) { gastMail = (await mailsAn("gast1@example.test"))[0]; if (!gastMail) await gast.waitForTimeout(500); }
+  ok(gastMail?.Subject === "„Mein Bereich“ giriş bağlantın – SES Academy", "Erster Login (neues Konto) mit türkischem Profil: Mail Türkisch");
+  // c) Deutsches Profil bleibt Deutsch
+  const de = await portalLogin(browser, "amina@example.test");
+  ok(await de.getByText("Kommende Module").isVisible(), "Deutsches Profil: Mein Bereich auf Deutsch");
+  ok((await mailsAn("amina@example.test"))[0]?.Subject === "Dein Zugang zu „Mein Bereich“ – SES Academy", "Deutsches Profil: Login-Mail Deutsch");
+  // d) Feedback-Umfrage und Einladung auf Türkisch (Amina war beim Skills-Workshop)
+  sql("update participants set preferred_language = 'tr' where email = 'amina@example.test'");
+  sql("delete from feedback_surveys where module_id = (select id from modules where slug = 'skills-workshop')");
+  const umfrage = sql(`select set_config('request.jwt.claims', json_build_object('sub', (select user_id from staff_members where role = 'admin' limit 1), 'role', 'authenticated')::text, false);
+    select public.create_feedback_survey((select id from modules where slug = 'skills-workshop'), now() - interval '1 hour', now() + interval '7 days')`).split("\n").at(-1);
+  const skills = sql("select id from modules where slug = 'skills-workshop'");
+  const admin = await teamLogin(browser, "admin@ses.test");
+  await mailsLeeren();
+  await admin.goto(`${BASIS}/team/module/${skills}/`);
+  await admin.getByRole("button", { name: "Einladung an alle Anwesenden ohne Antwort senden" }).click();
+  await admin.getByText(/Einladungen verschickt/).waitFor();
+  const einladung = (await mailsAn("amina@example.test"))[0];
+  const link = sql("select link_token from participants where email = 'amina@example.test'");
+  ok(einladung?.Subject === "„Skills-Workshop“ hakkında geri bildirimin – SES Academy" && einladung.Text.includes(`/feedback/${link}/${umfrage}/`), "Feedback-Einladung Türkisch mit Mail-Link");
+  const fb = await (await browser.newContext({ viewport: { width: 390, height: 844 } })).newPage();
+  await fb.goto(`${BASIS}/feedback/${link}/${umfrage}/`);
+  ok(await fb.getByRole("heading", { name: "Geri bildirimin" }).isVisible() && await fb.getByText("çok iyi").first().isVisible(), "Feedback-Umfrage auf Türkisch");
+  await fb.getByRole("button", { name: "Cevabı gönder" }).click();
+  await fb.getByText("Lütfen en az bir soruyu cevapla").waitFor();
+  ok(true, "Leeres Formular: türkische Meldung");
+  sql(`delete from feedback_surveys where id = '${umfrage}'`);
+  sql("update participants set preferred_language = 'de' where email in ('amina@example.test', 'gast1@example.test')");
+}
+
 await browser.close();
 console.log(fehler ? `\n${fehler} Fehler` : "\nAlles in Ordnung.");
 process.exit(fehler ? 1 : 0);

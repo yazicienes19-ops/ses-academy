@@ -2,6 +2,7 @@ import "server-only";
 
 import nodemailer, { type SendMailOptions } from "nodemailer";
 import { locale } from "@/i18n/typ";
+import { bereichSprache, bereichTexte, datumsSprache } from "@/lib/bereich-texte";
 import { portalTexte, sprachOder } from "@/lib/portal-texte";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { infoMailInhalt, ladeInfoMail } from "@/lib/infomail";
@@ -170,29 +171,28 @@ export async function ticketKuerzlichGesendet(participantId: string, minuten = 1
 export async function sendeFeedbackMail(participantId: string, surveyId: string, ausgeloestVon?: string): Promise<Ergebnis> {
   const db = createAdminClient();
   const [{ data: p }, { data: umfrage }] = await Promise.all([
-    db.from("participants").select("id, first_name, email, link_token").eq("id", participantId).maybeSingle(),
+    db.from("participants").select("id, first_name, email, link_token, preferred_language").eq("id", participantId).maybeSingle(),
     db.from("feedback_surveys").select("closes_at, module:modules(title)").eq("id", surveyId).maybeSingle(),
   ]);
   if (!p?.email || !umfrage) return { ok: false, fehler: "Keine E-Mail-Adresse hinterlegt." };
+  // Deutsch oder Türkisch nach Profil (wie „Mein Bereich“ und die Umfrage selbst)
+  const l = bereichSprache(p.preferred_language);
+  const t = bereichTexte[l];
+  const pt = portalTexte[l];
   const link = seitenUrl(`/feedback/${p.link_token}/${surveyId}/`);
-  const bis = new Intl.DateTimeFormat("de-DE", { day: "numeric", month: "long", timeZone: "Europe/Berlin" }).format(new Date(umfrage.closes_at));
-  const titel = umfrage.module?.title ?? "Modul";
-  const text = [
-    `Hallo ${p.first_name},`, "",
-    `danke, dass du beim Modul „${titel}“ dabei warst. Wie fandest du es? Die Umfrage dauert etwa drei Minuten und hilft uns, das nächste Modul besser zu machen.`, "",
-    `Zur Umfrage (bis ${bis}): ${link}`, "",
-    "Herzliche Grüße", "Dein SES-Academy-Team",
-  ].join("\n");
+  const bis = new Intl.DateTimeFormat(datumsSprache[l], { day: "numeric", month: "long", timeZone: "Europe/Berlin" }).format(new Date(umfrage.closes_at));
+  const titel = umfrage.module?.title ?? t.modul;
+  const text = [pt.mailAnrede(p.first_name), "", t.feedbackMailText(titel), "", `${t.feedbackMailLink}: ${link}`, t.feedbackMailBis(bis), "", pt.mailGruss].join("\n");
   const ergebnis = await senden({
     to: p.email,
-    subject: `Dein Feedback zu „${titel}“ – SES Academy`,
+    subject: t.feedbackMailBetreff(titel),
     text,
-    html: `<div style="font-family:Arial,Helvetica,sans-serif;color:#13201a;max-width:560px;line-height:1.6">
-<p>Hallo ${html(p.first_name)},</p>
-<p>danke, dass du beim Modul „${html(titel)}“ dabei warst. Wie fandest du es? Die Umfrage dauert etwa drei Minuten und hilft uns, das nächste Modul besser zu machen.</p>
-<p style="margin:28px 0"><a href="${html(link)}" style="display:inline-block;background:#13201a;color:#f3efe4;text-decoration:none;padding:14px 28px;border-radius:999px;font-weight:bold">Zur Umfrage</a></p>
-<p style="color:#3c4a42;font-size:14px">Die Umfrage ist bis ${html(bis)} offen.</p>
-<p>Herzliche Grüße<br>Dein SES-Academy-Team</p></div>`,
+    html: `<div lang="${l}" style="font-family:Arial,Helvetica,sans-serif;color:#13201a;max-width:560px;line-height:1.6">
+<p>${html(pt.mailAnrede(p.first_name))}</p>
+<p>${html(t.feedbackMailText(titel))}</p>
+<p style="margin:28px 0"><a href="${html(link)}" style="display:inline-block;background:#13201a;color:#f3efe4;text-decoration:none;padding:14px 28px;border-radius:999px;font-weight:bold">${html(t.feedbackMailLink)}</a></p>
+<p style="color:#3c4a42;font-size:14px">${html(t.feedbackMailBis(bis))}</p>
+<p style="white-space:pre-line">${html(pt.mailGruss)}</p></div>`,
   });
   await protokolliere({ participantId: p.id, art: "feedback", an: p.email, ergebnis, von: ausgeloestVon });
   return ergebnis;

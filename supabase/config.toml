@@ -255,15 +255,15 @@ otp_expiry = 3600
 
 # Anmeldung für Teilnehmende („Mein Bereich“): Link und 6-stelliger Code in einer Mail
 [auth.email.template.magic_link]
-subject = "Dein Zugang zu „Mein Bereich“ – SES Academy"
+subject = "{{ if eq (printf \"%v\" .Data.sprache) \"tr\" }}„Mein Bereich“ giriş bağlantın{{ else }}Dein Zugang zu „Mein Bereich“{{ end }} – SES Academy"
 content_path = "./supabase/templates/anmeldung.html"
 
 [auth.email.template.email_change]
-subject = "Neue E-Mail-Adresse bestätigen – SES Academy"
+subject = "{{ if eq (printf \"%v\" .Data.sprache) \"tr\" }}Yeni e-posta adresini onayla{{ else }}Neue E-Mail-Adresse bestätigen{{ end }} – SES Academy"
 content_path = "./supabase/templates/email-aendern.html"
 
 [auth.email.template.confirmation]
-subject = "Dein Zugang zu „Mein Bereich“ – SES Academy"
+subject = "{{ if eq (printf \"%v\" .Data.sprache) \"tr\" }}„Mein Bereich“ giriş bağlantın{{ else }}Dein Zugang zu „Mein Bereich“{{ end }} – SES Academy"
 content_path = "./supabase/templates/anmeldung.html"
 
 [auth.sms]

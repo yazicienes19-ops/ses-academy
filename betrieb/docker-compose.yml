@@ -72,11 +72,12 @@ services:
       GOTRUE_SMTP_ADMIN_EMAIL: ${SMTP_FROM_ADDRESS:-ses@islamrat.de}
       GOTRUE_SMTP_SENDER_NAME: SES Academy
       GOTRUE_SMTP_MAX_FREQUENCY: 1s
-      GOTRUE_MAILER_SUBJECTS_MAGIC_LINK: "Dein Zugang zu „Mein Bereich“ – SES Academy"
-      GOTRUE_MAILER_SUBJECTS_CONFIRMATION: "Dein Zugang zu „Mein Bereich“ – SES Academy"
+      # Betreff wie die Vorlagen: Türkisch, wenn user_metadata.sprache = „tr“ (setzt die App vor dem Versand)
+      GOTRUE_MAILER_SUBJECTS_MAGIC_LINK: '{{ if eq (printf "%v" .Data.sprache) "tr" }}„Mein Bereich“ giriş bağlantın{{ else }}Dein Zugang zu „Mein Bereich“{{ end }} – SES Academy'
+      GOTRUE_MAILER_SUBJECTS_CONFIRMATION: '{{ if eq (printf "%v" .Data.sprache) "tr" }}„Mein Bereich“ giriş bağlantın{{ else }}Dein Zugang zu „Mein Bereich“{{ end }} – SES Academy'
       GOTRUE_MAILER_TEMPLATES_MAGIC_LINK: http://kong:8088/email/anmeldung.html
       GOTRUE_MAILER_TEMPLATES_CONFIRMATION: http://kong:8088/email/anmeldung.html
-      GOTRUE_MAILER_SUBJECTS_EMAIL_CHANGE: "Neue E-Mail-Adresse bestätigen – SES Academy"
+      GOTRUE_MAILER_SUBJECTS_EMAIL_CHANGE: '{{ if eq (printf "%v" .Data.sprache) "tr" }}Yeni e-posta adresini onayla{{ else }}Neue E-Mail-Adresse bestätigen{{ end }} – SES Academy'
       GOTRUE_MAILER_TEMPLATES_EMAIL_CHANGE: http://kong:8088/email/email-aendern.html
 
   rest:

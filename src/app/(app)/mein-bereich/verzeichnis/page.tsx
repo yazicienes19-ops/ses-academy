@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { Mail, MessageCircle, Phone, Search } from "lucide-react";
 import { TeamKopf } from "@/components/team/TeamKopf";
 import { getStaff } from "@/lib/auth";
+import { bereichSprache, bereichTexte, datumsSprache } from "@/lib/bereich-texte";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Mitglieder | SES Academy", robots: { index: false, follow: false } };
@@ -25,7 +26,7 @@ function whatsapp(nummer: string) {
   return n.startsWith("+") ? `https://wa.me/${n.slice(1)}` : null;
 }
 
-const anfang = (name: string) => (name.trim().split(/\s+/).at(-1)?.[0] ?? "#").toLocaleUpperCase("de-DE");
+const anfang = (name: string, locale: string) => (name.trim().split(/\s+/).at(-1)?.[0] ?? "#").toLocaleUpperCase(locale);
 
 function Rund({ href, label, children, extern }: { href: string; label: string; children: React.ReactNode; extern?: boolean }) {
   return (
@@ -45,6 +46,11 @@ export default async function Verzeichnis({ searchParams }: PageProps<"/mein-ber
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) redirect("/mein-bereich/login/");
   const staff = await getStaff();
+  // Teilnehmende sehen das Verzeichnis in ihrer Sprache (Türkisch oder Deutsch), das Team auf Deutsch
+  const { data: ich } = staff ? { data: null } : await supabase.from("participants").select("preferred_language").eq("user_id", auth.user.id).maybeSingle();
+  const l = bereichSprache(ich?.preferred_language);
+  const t = bereichTexte[l];
+  const locale = datumsSprache[l];
   const { suche, region, abzeichen } = await searchParams;
   const { data } = await supabase.rpc("get_member_directory");
   const alle = data ?? [];
@@ -60,37 +66,37 @@ export default async function Verzeichnis({ searchParams }: PageProps<"/mein-ber
     (typeof region !== "string" || !region || m.region === region) &&
     (typeof abzeichen !== "string" || !abzeichen || (m.badges ?? []).includes(abzeichen)));
   const gruppen = new Map<string, typeof liste>();
-  liste.forEach((m) => gruppen.set(anfang(m.name), [...(gruppen.get(anfang(m.name)) ?? []), m]));
+  liste.forEach((m) => gruppen.set(anfang(m.name, locale), [...(gruppen.get(anfang(m.name, locale)) ?? []), m]));
   const gefiltert = Boolean(s || region || abzeichen);
 
   return (
     <>
     {staff && <TeamKopf staff={staff} aktiv="mitglieder" />}
-    <main className="mx-auto max-w-6xl px-4 py-8">
-      {!staff && <Link href="/mein-bereich/" className="text-sm font-semibold text-ink-soft hover:text-ink">← Mein Bereich</Link>}
+    <main lang={l} className="mx-auto max-w-6xl px-4 py-8">
+      {!staff && <Link href="/mein-bereich/" className="text-sm font-semibold text-ink-soft hover:text-ink">{t.zurueck}</Link>}
       <div className="mt-2 flex flex-wrap items-end justify-between gap-3">
-        <h1 className="font-display text-4xl font-extrabold">Mitglieder</h1>
-        <p className="text-sm text-ink-soft">{gefiltert ? `${liste.length} von ${alle.length}` : `${alle.length} Personen`} · {regionen.length} Regionen</p>
+        <h1 className="font-display text-4xl font-extrabold">{t.mitglieder}</h1>
+        <p className="text-sm text-ink-soft">{gefiltert ? t.vonAllen(liste.length, alle.length) : t.personen(alle.length)} · {t.regionen(regionen.length)}</p>
       </div>
-      {!staff && <p className="mt-1 text-sm text-ink-soft">E-Mail und Telefon erscheinen nur, wenn die Person sie in ihrem Profil freigegeben hat.</p>}
+      {!staff && <p className="mt-1 text-sm text-ink-soft">{t.kontaktNurFrei}</p>}
 
       <form className="sticky top-0 z-20 -mx-4 mt-5 grid gap-2 bg-paper/95 px-4 py-3 backdrop-blur sm:grid-cols-[1fr_12rem_auto_auto] lg:top-0" action="/mein-bereich/verzeichnis/">
-        <label className="sr-only" htmlFor="suche">Name suchen</label>
+        <label className="sr-only" htmlFor="suche">{t.nameSuchen}</label>
         <div className="relative">
           <Search aria-hidden className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-ink-soft" />
-          <input id="suche" name="suche" type="search" defaultValue={typeof suche === "string" ? suche : ""} placeholder="Name suchen" className="feld pl-10" />
+          <input id="suche" name="suche" type="search" defaultValue={typeof suche === "string" ? suche : ""} placeholder={t.nameSuchen} className="feld pl-10" />
         </div>
-        <label className="sr-only" htmlFor="region">Region</label>
-        <select id="region" name="region" defaultValue={typeof region === "string" ? region : ""} className="feld"><option value="">alle Regionen</option>{regionen.map((r) => <option key={r} value={r}>{r}</option>)}</select>
+        <label className="sr-only" htmlFor="region">{t.region}</label>
+        <select id="region" name="region" defaultValue={typeof region === "string" ? region : ""} className="feld"><option value="">{t.alleRegionen}</option>{regionen.map((r) => <option key={r} value={r}>{r}</option>)}</select>
         {abzeichenListe.length > 1 ? (
           <>
-            <label className="sr-only" htmlFor="abzeichen">Abzeichen</label>
-            <select id="abzeichen" name="abzeichen" defaultValue={typeof abzeichen === "string" ? abzeichen : ""} className="feld"><option value="">alle Abzeichen</option>{abzeichenListe.map((a) => <option key={a} value={a}>{a}</option>)}</select>
+            <label className="sr-only" htmlFor="abzeichen">{t.abzeichen}</label>
+            <select id="abzeichen" name="abzeichen" defaultValue={typeof abzeichen === "string" ? abzeichen : ""} className="feld"><option value="">{t.alleAbzeichen}</option>{abzeichenListe.map((a) => <option key={a} value={a}>{a}</option>)}</select>
           </>
         ) : <span className="hidden sm:block" />}
         <div className="flex gap-2">
-          <button type="submit" className="knopf">Suchen</button>
-          {gefiltert && <Link href="/mein-bereich/verzeichnis/" className="knopf-hell">Zurücksetzen</Link>}
+          <button type="submit" className="knopf">{t.suchen}</button>
+          {gefiltert && <Link href="/mein-bereich/verzeichnis/" className="knopf-hell">{t.zuruecksetzen}</Link>}
         </div>
       </form>
 
@@ -109,13 +115,13 @@ export default async function Verzeichnis({ searchParams }: PageProps<"/mein-ber
                     {m.has_photo
                       ? <img src={`/portal/foto/${m.participant_id}/`} alt="" loading="lazy" className="h-12 w-12 shrink-0 rounded-full object-cover ring-1 ring-line" />
                       : <span aria-hidden className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-forest/90 font-display text-base font-bold text-paper">
-                          {m.name.split(/\s+/).filter(Boolean).map((t) => t[0]).filter((_, i, a) => i === 0 || i === a.length - 1).join("").toLocaleUpperCase("de-DE")}
+                          {m.name.split(/\s+/).filter(Boolean).map((t) => t[0]).filter((_, i, a) => i === 0 || i === a.length - 1).join("").toLocaleUpperCase(locale)}
                         </span>}
                     <div className="min-w-0 flex-1">
                       {staff
                         ? <Link href={`/team/teilnehmende/${m.participant_id}/`} className="block truncate font-semibold after:absolute after:inset-0 after:rounded-3xl hover:underline">{m.name}</Link>
                         : <p className="truncate font-semibold">{m.name}</p>}
-                      <p className="truncate text-sm text-ink-soft">{[m.region, m.branch].filter(Boolean).join(" · ") || "ohne Region"}</p>
+                      <p className="truncate text-sm text-ink-soft">{[m.region, m.branch].filter(Boolean).join(" · ") || t.ohneRegion}</p>
                     </div>
                   </div>
                   {extra.length > 0 && <ul className="flex flex-wrap gap-1">{extra.map((b) => <li key={b} className="chip bg-gruen-hell">{b}</li>)}</ul>}
@@ -126,9 +132,9 @@ export default async function Verzeichnis({ searchParams }: PageProps<"/mein-ber
                         {m.phone && <a href={`tel:${nurZiffern(m.phone)}`} className="block truncate text-ink-soft tabular-nums hover:underline">{telAnzeige(m.phone)}</a>}
                       </div>
                       <div className="flex gap-1.5">
-                        {m.email && <Rund href={`mailto:${m.email}`} label={`E-Mail an ${m.name}`}><Mail className="h-4 w-4" /></Rund>}
-                        {m.phone && <Rund href={`tel:${nurZiffern(m.phone)}`} label={`${m.name} anrufen`}><Phone className="h-4 w-4" /></Rund>}
-                        {wa && <Rund href={wa} label={`WhatsApp an ${m.name}`} extern><MessageCircle className="h-4 w-4" /></Rund>}
+                        {m.email && <Rund href={`mailto:${m.email}`} label={t.emailAn(m.name)}><Mail className="h-4 w-4" /></Rund>}
+                        {m.phone && <Rund href={`tel:${nurZiffern(m.phone)}`} label={t.anrufen(m.name)}><Phone className="h-4 w-4" /></Rund>}
+                        {wa && <Rund href={wa} label={t.whatsappAn(m.name)} extern><MessageCircle className="h-4 w-4" /></Rund>}
                       </div>
                     </div>
                   )}
@@ -138,7 +144,7 @@ export default async function Verzeichnis({ searchParams }: PageProps<"/mein-ber
           </ul>
         </section>
       ))}
-      {liste.length === 0 && <p className="mt-6 rounded-3xl border-2 border-dashed border-line p-8 text-center text-ink-soft">Niemand gefunden.</p>}
+      {liste.length === 0 && <p className="mt-6 rounded-3xl border-2 border-dashed border-line p-8 text-center text-ink-soft">{t.niemand}</p>}
     </main>
     </>
   );

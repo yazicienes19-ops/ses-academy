@@ -1,15 +1,24 @@
+{{- /* Sprache aus den Kontodaten (user_metadata.sprache): „tr“ = Türkisch, sonst Deutsch. */ -}}
+{{- $tr := false -}}{{- if .Data -}}{{- if .Data.sprache -}}{{- if eq (printf "%v" .Data.sprache) "tr" -}}{{- $tr = true -}}{{- end -}}{{- end -}}{{- end -}}
 <!doctype html>
-<html lang="de">
+<html lang="{{ if $tr }}tr{{ else }}de{{ end }}">
   <body style="margin:0;background:#f3efe4;font-family:Arial,Helvetica,sans-serif;color:#13201a">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px">
       <tr><td align="center">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#fffdf8;border-radius:24px;padding:32px">
           <tr><td>
             <p style="margin:0 0 4px;font-size:13px;font-weight:bold;letter-spacing:.08em;text-transform:uppercase;color:#3f6e57">SES Academy</p>
+{{ if $tr }}
+            <h1 style="margin:0 0 16px;font-size:26px;line-height:1.2">Yeni e-posta adresini onayla</h1>
+            <p style="margin:0 0 24px;font-size:16px;line-height:1.5">„Mein Bereich“de e-posta adresin {{ .NewEmail }} olarak değiştirildi. Lütfen değişikliği onayla. Bu e-posta eski ve yeni adrese gidiyor; yeni adres, ikisi de onaylanınca geçerli olur.</p>
+            <p style="margin:0 0 28px"><a href="{{ .SiteURL }}/auth/bestaetigen/?token_hash={{ .TokenHash }}&type=email_change" style="display:inline-block;background:#13201a;color:#f3efe4;text-decoration:none;font-weight:bold;padding:14px 28px;border-radius:999px">Değişikliği onayla</a></p>
+            <p style="margin:0;font-size:13px;color:#4a564f">Bu sen değilsen hiçbir şeyi onaylama ve ses@islamrat.de adresine yaz.</p>
+            {{ else }}
             <h1 style="margin:0 0 16px;font-size:26px;line-height:1.2">Neue E-Mail-Adresse bestätigen</h1>
             <p style="margin:0 0 24px;font-size:16px;line-height:1.5">In „Mein Bereich“ wurde die E-Mail-Adresse auf {{ .NewEmail }} geändert. Bitte bestätige die Änderung. Die Mail geht an die alte und an die neue Adresse; erst wenn beide bestätigt sind, gilt die neue.</p>
             <p style="margin:0 0 28px"><a href="{{ .SiteURL }}/auth/bestaetigen/?token_hash={{ .TokenHash }}&type=email_change" style="display:inline-block;background:#13201a;color:#f3efe4;text-decoration:none;font-weight:bold;padding:14px 28px;border-radius:999px">Änderung bestätigen</a></p>
             <p style="margin:0;font-size:13px;color:#4a564f">Wenn du das nicht warst, bestätige nichts und schreib an ses@islamrat.de.</p>
+            {{ end }}
           </td></tr>
         </table>
         <p style="font-size:12px;color:#4a564f;margin-top:16px">SES Academy · Islamrat für die Bundesrepublik Deutschland · ses@islamrat.de</p>
