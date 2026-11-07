@@ -98,6 +98,7 @@ export default async function Nachrichten({ searchParams }: PageProps<"/team/nac
               <select name="group_id" className="feld" aria-label="Gruppe"><option value="">alle Gruppen</option>{(gruppen ?? []).map((g) => <option key={g.id} value={g.id}>{g.name}{g.module ? ` (${g.module.title})` : ""}</option>)}</select>
             </fieldset>
             <div className="sm:col-span-2"><button type="submit" className="knopf">Zur Freigabe vorlegen</button></div>
+            <MailHinweis knapp className="sm:col-span-2" />
           </form>
         </section>
       </main>
