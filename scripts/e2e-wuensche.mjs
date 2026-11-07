@@ -686,6 +686,7 @@ if (teil("links")) {
 if (teil("loeschen")) {
   await mailsLeeren();
   sql("delete from auth.users where email = 'selin.tw@example.test'");
+  sql("delete from approvals where action = 'person_loeschen'");
   sql("delete from deletion_requests where participant_id in (select id from participants where email = 'selin.tw@example.test' or last_name like 'Person (%')");
   sql("delete from participants where email = 'selin.tw@example.test'");
   const selinId = sql("select public.upsert_participant('Selin', 'TestWunsch', 'selin.tw@example.test', NULL, 'academy_student', 'tr', true)");
@@ -727,14 +728,32 @@ if (teil("loeschen")) {
   ok(await karte.getByText("Anrufe und Kontakt-Notizen: 1").isVisible() && await karte.getByText("Anmeldungen zu Modulen: 1").isVisible() && await karte.getByText("Login-Konto für „Mein Bereich“").isVisible(),
     "Admin sieht, was gelöscht und was anonymisiert wird");
   ok(await keinUeberlauf(admin), "Löschanträge am Handy ohne seitliches Scrollen");
-  await karte.getByRole("button", { name: "Löschen bestätigen" }).click();
-  await karte.getByRole("button", { name: "Ja, endgültig löschen" }).click();
+  // Vier-Augen-Prinzip: Admin legt vor, eine zweite Person gibt frei, erst dann wird gelöscht
+  await karte.getByRole("button", { name: "Zur Freigabe vorlegen" }).click();
+  await karte.getByRole("button", { name: "Ja, vorlegen" }).click();
+  await admin.getByText("Zur Freigabe vorgelegt.").waitFor();
+  ok(await admin.getByText(/Liegt zur Freigabe vor/).isVisible() && await admin.getByRole("button", { name: "Jetzt löschen" }).count() === 0, "Vorgelegt: Löschen erst nach Freigabe möglich");
+  ok(sql(`select first_name from participants where id = '${selinId}'`) === "Selin", "Ohne Freigabe nichts gelöscht");
+  await admin.goto(`${BASIS}/team/freigaben/`);
+  ok(!(await admin.getByRole("heading", { name: /Warten auf dich/ }).locator("xpath=..").getByText("Person löschen: Selin TestWunsch").count()), "Eigene Vorlage steht nicht zur eigenen Freigabe");
+  await vorstand.goto(`${BASIS}/team/freigaben/`);
+  const freigabe = vorstand.locator("li", { hasText: "Person löschen: Selin TestWunsch" });
+  ok(await freigabe.getByText("Anrufe und Kontakt-Notizen: 1").isVisible() && await freigabe.getByText("Anmeldungen zu Modulen: 1").isVisible() && await freigabe.getByText("Grund der Person: „TestWunsch Grund“").isVisible(),
+    "Zweite Person sieht in der Freigabe, was gelöscht und was behalten wird");
+  await freigabe.getByRole("button", { name: "Freigeben" }).click();
+  await vorstand.getByText("Freigegeben.").waitFor();
+  await admin.goto(`${BASIS}/team/loeschantraege/`);
+  const karte2 = admin.locator("li", { hasText: "Selin TestWunsch" });
+  await karte2.getByRole("button", { name: "Jetzt löschen" }).click();
+  await karte2.getByRole("button", { name: "Ja, endgültig löschen" }).click();
   await admin.getByText("Erledigt: Konto und Kontaktdaten gelöscht").waitFor();
+  ok(sql(`select status from approvals where action = 'person_loeschen' and payload ->> 'name' = 'Selin TestWunsch'`) === "ausgefuehrt", "Freigabe genau einmal ausgeführt");
   ok(sql(`select first_name || ' ' || last_name like 'Gelöschte Person (%' and email is null and phone is null and not active from participants where id = '${selinId}'`) === "t", "Person anonymisiert");
   ok(sql("select count(*) from auth.users where email = 'selin.tw@example.test'") === "0", "Login-Konto gelöscht");
   ok(sql(`select count(*) from registrations where participant_id = '${selinId}'`) === "1" && sql(`select count(*) from contact_log where participant_id = '${selinId}'`) === "0", "Anmeldung bleibt, Notiz gelöscht");
   await selin.reload();
   ok(/\/mein-bereich\/login\//.test(selin.url()), "Gelöschte Person ist abgemeldet (zurück zum Login)");
+  sql(`delete from approvals where action = 'person_loeschen' and payload ->> 'name' = 'Selin TestWunsch'`);
   sql(`delete from deletion_requests where participant_id = '${selinId}'`);
   sql(`delete from participants where id = '${selinId}'`);
 }

@@ -1286,7 +1286,7 @@ isOneToOne: false
 { Args: { "p_user_id": string }; Returns: number
                            },
 "execute_deletion":
-{ Args: { "p_note"?: string,"p_request_id": string }; Returns: Json
+{ Args: { "p_approval_id": string,"p_note"?: string }; Returns: Json
                            },
 "execute_team_approval":
 { Args: { "p_id": string,"p_new_user"?: string }; Returns: string

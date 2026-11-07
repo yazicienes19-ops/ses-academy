@@ -44,17 +44,33 @@ function zurueckTeam(hinweis: string): never {
   redirect(`/team/loeschantraege/?hinweis=${hinweis}`);
 }
 
-/** Admin bestätigt (nach Rückfrage): löschen und anonymisieren, danach das Foto aus dem Speicher entfernen. */
-export async function loeschungAusfuehren(formData: FormData) {
+/**
+ * Vier-Augen-Prinzip (Beschluss 25.10.2026, Person löschen nur mit zweiter Person): Ein Admin legt die Löschung zur
+ * Freigabe vor; die Vorschau steht im Antrag. Eine zweite Person gibt unter „Freigaben“ frei.
+ */
+export async function loeschungVorlegen(formData: FormData) {
   await requireStaff("admin");
   const id = String(formData.get("id"));
   if (!istToken(id)) zurueckTeam("eingabe");
   if (formData.get("bestaetigt") !== "ja") zurueckTeam("bestaetigen");
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("execute_deletion", { p_request_id: id, p_note: String(formData.get("notiz") ?? "").slice(0, 1000) });
+  const { error } = await supabase.rpc("create_approval", { p_action: "person_loeschen", p_payload: { antrag: id } });
+  revalidatePath("/team/freigaben/");
+  zurueckTeam(error ? (error.message.includes("already_requested") ? "schon-vorgelegt" : error.message.includes("request_not_open") ? "schon-erledigt" : "fehler") : "vorgelegt");
+}
+
+/** Nach der Freigabe (nach Rückfrage): löschen und anonymisieren, danach das Foto aus dem Speicher entfernen. */
+export async function loeschungAusfuehren(formData: FormData) {
+  await requireStaff("admin");
+  const freigabe = String(formData.get("freigabe"));
+  if (!istToken(freigabe)) zurueckTeam("eingabe");
+  if (formData.get("bestaetigt") !== "ja") zurueckTeam("bestaetigen");
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("execute_deletion", { p_approval_id: freigabe, p_note: String(formData.get("notiz") ?? "").slice(0, 1000) });
   const antwort = data as { result?: string; photo_path?: string | null } | null;
-  if (error || antwort?.result !== "ok") zurueckTeam(antwort?.result === "erledigt" ? "schon-erledigt" : "fehler");
+  if (error || antwort?.result !== "ok") zurueckTeam(antwort?.result === "ausgefuehrt" || antwort?.result === "erledigt" ? "schon-erledigt" : antwort?.result === "expired" ? "abgelaufen" : "fehler");
   if (antwort.photo_path) await createAdminClient().storage.from("fotos").remove([antwort.photo_path]);
+  revalidatePath("/team/freigaben/");
   zurueckTeam("geloescht");
 }
 

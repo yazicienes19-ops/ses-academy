@@ -3,13 +3,18 @@ import Link from "next/link";
 import { Hinweis } from "@/components/team/Hinweis";
 import { Rueckfrage } from "@/components/team/Rueckfrage";
 import { TeamKopf } from "@/components/team/TeamKopf";
-import { loeschungAblehnen, loeschungAusfuehren } from "@/lib/aktionen/datenschutz";
+import { LoeschVorschau } from "@/components/team/LoeschVorschau";
+import { loeschungAblehnen, loeschungAusfuehren, loeschungVorlegen } from "@/lib/aktionen/datenschutz";
 import { requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { jetztMs } from "@/lib/zeit";
 
 export const metadata: Metadata = { title: "Löschanträge | SES Academy" };
 
 const hinweise: Record<string, { text: string; gut: boolean }> = {
+  vorgelegt: { text: "Zur Freigabe vorgelegt. Eine zweite Person (Admin oder Vorstand) gibt unter „Freigaben“ frei, danach kannst du hier löschen.", gut: true },
+  "schon-vorgelegt": { text: "Diese Löschung liegt schon zur Freigabe vor.", gut: false },
+  abgelaufen: { text: "Die Freigabe ist älter als 24 Stunden. Bitte neu vorlegen.", gut: false },
   geloescht: { text: "Erledigt: Konto und Kontaktdaten gelöscht, Anwesenheiten und Hausaufgaben ohne Namen erhalten.", gut: true },
   abgelehnt: { text: "Abgelehnt. Die Person sieht die Notiz in „Mein Bereich“.", gut: true },
   "notiz-fehlt": { text: "Zum Ablehnen bitte eine Notiz für die Person schreiben (Grund).", gut: false },
@@ -19,16 +24,6 @@ const hinweise: Record<string, { text: string; gut: boolean }> = {
   fehler: { text: "Das hat nicht geklappt.", gut: false },
 };
 
-type Zahlen = Record<string, number | boolean>;
-const geloescht: [string, string][] = [
-  ["kontakte", "Anrufe und Kontakt-Notizen"], ["notizen", "Notizen des Teams"], ["uebernachtung", "Angaben zur Übernachtung (mit Hinweisen ans Team)"],
-  ["zimmer", "Zimmer-Zuteilungen"], ["zimmerwuensche", "Zimmerwunsch-Zuordnungen"], ["beitraege", "verknüpfte Beiträge"],
-  ["engagements", "Engagements"], ["bewerbungen", "Bewerbungen (mit Motivation)"], ["mails", "Mail-Protokoll: Adresse wird entfernt"],
-];
-const anonymisiert: [string, string][] = [
-  ["anmeldungen", "Anmeldungen zu Modulen"], ["anwesenheiten", "Anwesenheiten (Check-ins)"], ["abgaben", "Hausaufgaben-Abgaben mit Bewertungen und Dateien"],
-  ["entschuldigungen", "Entschuldigungen für Hausaufgaben"], ["feedback", "Feedback-Antworten"], ["gruppen", "Gruppen-Zuordnungen"], ["mitgliedschaften", "Mitgliedschaften (Generation)"],
-];
 const zeit = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Berlin" });
 const statusName: Record<string, string> = { offen: "offen", erledigt: "erledigt", abgelehnt: "abgelehnt", zurueckgezogen: "zurückgezogen" };
 
@@ -40,12 +35,20 @@ export default async function Loeschantraege({ searchParams }: PageProps<"/team/
   const staff = await requireStaff("admin");
   const { hinweis } = await searchParams;
   const supabase = await createClient();
-  const { data: antraege } = await supabase.from("deletion_requests").select("*").order("requested_at", { ascending: false }).limit(100);
+  const [{ data: antraege }, { data: freigaben }, { data: team }] = await Promise.all([
+    supabase.from("deletion_requests").select("*").order("requested_at", { ascending: false }).limit(100),
+    supabase.from("approvals").select("id, status, requested_by, decided_by, decided_at, decision_note, payload").eq("action", "person_loeschen").order("requested_at", { ascending: false }),
+    supabase.rpc("get_team_members"),
+  ]);
+  const name = new Map((team ?? []).map((t) => [t.user_id, t.display_name]));
+  const jetzt = jetztMs();
+  // Jüngste Vorlage je Antrag (Vier-Augen-Prinzip)
+  const vorlage = (antragId: string) => (freigaben ?? []).find((f) => (f.payload as { antrag?: string }).antrag === antragId);
   const offen = (antraege ?? []).filter((a) => a.status === "offen");
   const rest = (antraege ?? []).filter((a) => a.status !== "offen");
   const vorschau = new Map(await Promise.all(offen.map(async (a) => {
     const { data } = await supabase.rpc("deletion_preview", { p_request_id: a.id });
-    return [a.id, data as { name: string; email: string | null; zahlen: Zahlen } | null] as const;
+    return [a.id, data as { name: string; email: string | null; zahlen: Record<string, number | boolean> } | null] as const;
   })));
 
   return (
@@ -55,7 +58,8 @@ export default async function Loeschantraege({ searchParams }: PageProps<"/team/
         <h1 className="font-display text-3xl font-bold">Löschanträge</h1>
         <p className="mt-1 max-w-3xl text-ink-soft">
           Teilnehmende beantragen in „Mein Bereich“ die Löschung ihres Kontos. Gelöscht werden Login, Kontaktdaten, Foto, Notizen und
-          Übernachtungsangaben; Anwesenheiten und Hausaufgaben bleiben ohne Namen für die Auswertung.
+          Übernachtungsangaben; Anwesenheiten und Hausaufgaben bleiben ohne Namen für die Auswertung. Gelöscht wird nach dem
+          Vier-Augen-Prinzip: Ein Admin legt vor, eine zweite Person (Admin oder Vorstand) gibt unter „Freigaben“ frei, dann löscht die vorlegende Person.
         </p>
         <Hinweis code={hinweis} texte={hinweise} />
 
@@ -74,29 +78,31 @@ export default async function Loeschantraege({ searchParams }: PageProps<"/team/
                     {v?.email && <span className="ml-2 text-sm font-normal text-ink-soft">{v.email}</span>}
                   </p>
                   {a.reason && <p className="mt-2 rounded-2xl bg-paper p-3 text-sm">„{a.reason}“</p>}
-                  <div className="mt-4 grid gap-4 md:grid-cols-2">
-                    <div>
-                      <p className="font-semibold text-rot">Wird gelöscht</p>
-                      <ul className="mt-1 space-y-0.5 text-sm">
-                        <li>Name, E-Mail, Telefon, Geschlecht, Foto{z.foto ? " (vorhanden)" : ""}; Ticket und Links werden ungültig</li>
-                        <li>{z.team_konto ? "Login-Konto: bleibt, weil es zugleich ein Team-Konto ist (unter „Team“ entfernen)" : z.konto ? "Login-Konto für „Mein Bereich“" : "kein Login-Konto vorhanden"}</li>
-                        {geloescht.filter(([k]) => Number(z[k] ?? 0) > 0).map(([k, n]) => <li key={k}>{n}: {String(z[k])}</li>)}
-                      </ul>
-                    </div>
-                    <div>
-                      <p className="font-semibold">Bleibt ohne Namen („Gelöschte Person“) für die Auswertung</p>
-                      <ul className="mt-1 space-y-0.5 text-sm">
-                        {anonymisiert.filter(([k]) => Number(z[k] ?? 0) > 0).map(([k, n]) => <li key={k}>{n}: {String(z[k])}</li>)}
-                        <li className="text-ink-soft">Region, Generation, GT/KGT und Sorumlu bleiben für die Statistik.</li>
-                      </ul>
-                    </div>
-                  </div>
-                  <form action={loeschungAusfuehren} className="mt-4 flex flex-wrap items-end gap-2 border-t border-line pt-4">
-                    <input type="hidden" name="id" value={a.id} />
-                    <input name="notiz" placeholder="Notiz (optional)" aria-label="Notiz zur Löschung" className="feld !w-64" />
-                    <Rueckfrage knopf="Löschen bestätigen" knopfKlasse="rounded-full bg-red-800 px-4 py-2 text-sm font-semibold text-white" gefahr ja="Ja, endgültig löschen"
-                      frage={`${v?.name ?? "Diese Person"} jetzt endgültig löschen und anonymisieren? Das lässt sich nicht rückgängig machen.`} />
-                  </form>
+                  <LoeschVorschau zahlen={z} />
+                  {(() => {
+                    const f = vorlage(a.id);
+                    const gueltig = f?.status === "freigegeben" && f.decided_at && Date.parse(f.decided_at) > jetzt - 86_400_000;
+                    if (f?.status === "offen") return <p className="mt-4 rounded-2xl bg-gelb-hell p-3 text-sm font-semibold">Liegt zur Freigabe vor (von {name.get(f.requested_by) ?? "?"}). Eine zweite Person gibt unter „Freigaben“ frei.</p>;
+                    if (gueltig && f.requested_by === staff.userId) return (
+                      <form action={loeschungAusfuehren} className="mt-4 flex flex-wrap items-end gap-2 border-t border-line pt-4">
+                        <input type="hidden" name="freigabe" value={f.id} />
+                        <p className="basis-full text-sm font-semibold text-emerald-900">Freigegeben von {name.get(f.decided_by ?? "") ?? "?"}{f.decision_note ? `: „${f.decision_note}“` : ""}. Ausführen innerhalb von 24 Stunden.</p>
+                        <input name="notiz" placeholder="Notiz (optional)" aria-label="Notiz zur Löschung" className="feld !w-64" />
+                        <Rueckfrage knopf="Jetzt löschen" knopfKlasse="rounded-full bg-red-800 px-4 py-2 text-sm font-semibold text-white" gefahr ja="Ja, endgültig löschen"
+                          frage={`${v?.name ?? "Diese Person"} jetzt endgültig löschen und anonymisieren? Das lässt sich nicht rückgängig machen.`} />
+                      </form>
+                    );
+                    if (gueltig) return <p className="mt-4 rounded-2xl bg-paper-deep p-3 text-sm">Freigegeben. Löschen kann {name.get(f.requested_by) ?? "die vorlegende Person"}, die es vorgelegt hat.</p>;
+                    return (
+                      <form action={loeschungVorlegen} className="mt-4 flex flex-wrap items-end gap-2 border-t border-line pt-4">
+                        <input type="hidden" name="id" value={a.id} />
+                        {f?.status === "abgelehnt" && <p className="basis-full text-sm text-rot">Letzte Vorlage abgelehnt{f.decision_note ? `: „${f.decision_note}“` : ""}.</p>}
+                        {f?.status === "freigegeben" && <p className="basis-full text-sm text-ink-soft">Die letzte Freigabe ist abgelaufen.</p>}
+                        <Rueckfrage knopf="Zur Freigabe vorlegen" knopfKlasse="knopf" ja="Ja, vorlegen"
+                          frage={`Löschung von ${v?.name ?? "dieser Person"} zur Freigabe vorlegen? Eine zweite Person sieht diese Übersicht und gibt frei; danach löschst du hier.`} />
+                      </form>
+                    );
+                  })()}
                   <form action={loeschungAblehnen} className="mt-2 flex flex-wrap items-end gap-2">
                     <input type="hidden" name="id" value={a.id} />
                     <input name="notiz" placeholder="Grund für die Person" aria-label="Grund für die Ablehnung" className="feld !w-64" />

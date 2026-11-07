@@ -1,4 +1,5 @@
--- Tests für Migration 20261128090000_datenschutz.sql: Verzeichnis-Austragen, Löschantrag, Löschen/Anonymisieren.
+-- Tests für Migrationen 20261128090000_datenschutz.sql und 20261129090000_loeschung_vier_augen.sql: Verzeichnis-Austragen,
+-- Löschantrag, Löschen/Anonymisieren nur nach Vier-Augen-Freigabe.
 -- Voraussetzung: frische Datenbank mit seed.sql; alles in einer Transaktion.
 \set ON_ERROR_STOP 1
 BEGIN;
@@ -89,21 +90,42 @@ RESET ROLE;
 SELECT pg_temp.ok('authenticated hat kein EXECUTE auf deletion_counts', has_function_privilege('authenticated', 'public.deletion_counts(uuid)', 'EXECUTE')::text, 'false');
 SELECT pg_temp.ok('anon hat kein EXECUTE auf deletion_counts', has_function_privilege('anon', 'public.deletion_counts(uuid)', 'EXECUTE')::text, 'false');
 
--- 3) Nur Admin bearbeitet
+-- 3) Nur Admin legt vor; ohne Freigabe wird nicht gelöscht; die eigene Vorlage kann niemand freigeben
 SELECT pg_temp.login('vorstand@ses.test');
 SELECT pg_temp.ok('Vorstand sieht keine Löschanträge', (SELECT count(*)::text FROM public.deletion_requests), '0');
 SELECT pg_temp.fehler('Vorstand: keine Vorschau', $q$SELECT public.deletion_preview((SELECT id FROM antrag))$q$, 'admin_required');
-SELECT pg_temp.fehler('Vorstand: kein Löschen', $q$SELECT public.execute_deletion((SELECT id FROM antrag))$q$, 'admin_required');
+SELECT pg_temp.fehler('Vorstand legt keine Löschung vor', $q$SELECT public.create_approval('person_loeschen', jsonb_build_object('antrag', (SELECT id FROM antrag)))$q$, 'admin_required');
 SELECT pg_temp.login('orga@ses.test');
-SELECT pg_temp.fehler('Orga: kein Löschen', $q$SELECT public.execute_deletion((SELECT id FROM antrag))$q$, 'admin_required');
+SELECT pg_temp.fehler('Orga legt keine Löschung vor', $q$SELECT public.create_approval('person_loeschen', jsonb_build_object('antrag', (SELECT id FROM antrag)))$q$, 'full_access_required');
 SELECT pg_temp.login('admin@ses.test');
 SELECT pg_temp.ok('Admin sieht den Antrag', (SELECT count(*)::text FROM public.deletion_requests WHERE status = 'offen'), '1');
 SELECT pg_temp.ok('Vorschau nennt Konto, Notizen, Übernachtung', (SELECT (z ->> 'konto') || '/' || (z ->> 'kontakte') || '/' || (z ->> 'uebernachtung') || '/' || (z ->> 'foto')
   FROM (SELECT public.deletion_preview((SELECT id FROM antrag)) -> 'zahlen' AS z) x), 'true/1/1/true');
 SELECT pg_temp.ok('Ablehnen nur mit Notiz', public.reject_deletion((SELECT id FROM antrag), ' '), 'note_required');
+SELECT pg_temp.fehler('Unsinnige Vorlage abgelehnt', $q$SELECT public.create_approval('person_loeschen', jsonb_build_object('antrag', gen_random_uuid()))$q$, 'invalid_payload');
+CREATE TEMP TABLE frei AS SELECT public.create_approval('person_loeschen', jsonb_build_object('antrag', (SELECT id FROM antrag))) AS id;
+GRANT SELECT ON frei TO authenticated;
+SELECT pg_temp.ok('Vorlage mit Vorschau für die zweite Person', (SELECT (payload ->> 'name') || '/' || (payload -> 'zahlen' ->> 'kontakte') || '/' || (summary LIKE 'Person löschen: Amina Yilmaz (Löschantrag vom %')
+  FROM public.approvals WHERE id = (SELECT id FROM frei)), 'Amina Yilmaz/1/true');
+SELECT pg_temp.fehler('Je Antrag nur eine offene Vorlage', $q$SELECT public.create_approval('person_loeschen', jsonb_build_object('antrag', (SELECT id FROM antrag)))$q$, 'already_requested');
+SELECT pg_temp.ok('Ohne Freigabe: nicht gelöscht', public.execute_deletion((SELECT id FROM frei)) ->> 'result', 'offen');
+SELECT pg_temp.ok('… Person unverändert', (SELECT first_name FROM public.participants WHERE id = (SELECT amina FROM t)), 'Amina');
+SELECT pg_temp.ok('Eigene Vorlage freigeben schlägt fehl', public.decide_approval((SELECT id FROM frei), true), 'own_request');
+SELECT pg_temp.ok('… weiter offen', (SELECT status FROM public.approvals WHERE id = (SELECT id FROM frei)), 'offen');
+SELECT pg_temp.fehler('Freigabe am Verfahren vorbei (direkt) gesperrt', $q$UPDATE public.approvals SET status = 'freigegeben' WHERE id = (SELECT id FROM frei) RETURNING 1$q$, 'permission denied');
+SELECT pg_temp.ok('claim_approval gibt Lösch-Freigaben nicht heraus', public.claim_approval((SELECT id FROM frei), 'person_loeschen') ->> 'result', 'not_found');
+RESET ROLE;
+SELECT pg_temp.ok('Selbstfreigabe auch per CHECK ausgeschlossen', (SELECT count(*)::text FROM pg_constraint WHERE conrelid = 'public.approvals'::regclass AND pg_get_constraintdef(oid) LIKE '%decided_by <> requested_by%'), '1');
+SELECT pg_temp.login('vorstand@ses.test');
+SELECT pg_temp.ok('Vorstand sieht die Vorschau in der Freigabe', (SELECT payload -> 'zahlen' ->> 'uebernachtung' FROM public.approvals WHERE id = (SELECT id FROM frei)), '1');
+SELECT pg_temp.fehler('Vorstand kann nicht selbst löschen', $q$SELECT public.execute_deletion((SELECT id FROM frei))$q$, 'admin_required');
+SELECT pg_temp.ok('Zweite Person (Vorstand) gibt frei', public.decide_approval((SELECT id FROM frei), true), 'approved');
+SELECT pg_temp.login('orga@ses.test');
+SELECT pg_temp.fehler('Orga kann nicht löschen', $q$SELECT public.execute_deletion((SELECT id FROM frei))$q$, 'admin_required');
 
 -- 4) Löschen und anonymisieren
-CREATE TEMP TABLE erg AS SELECT public.execute_deletion((SELECT id FROM antrag), 'erledigt per Antrag') AS r;
+SELECT pg_temp.login('admin@ses.test');
+CREATE TEMP TABLE erg AS SELECT public.execute_deletion((SELECT id FROM frei), 'erledigt per Antrag') AS r;
 SELECT pg_temp.ok('Ausgeführt, Foto zum Entfernen gemeldet', (SELECT (r ->> 'result') || '/' || (r ->> 'photo_path' LIKE '%/1.jpg') || '/' || (r ->> 'konto_geloescht') FROM erg), 'ok/true/true');
 RESET ROLE;
 SELECT pg_temp.ok('Name und Kontaktdaten weg', (SELECT first_name || ' ' || last_name LIKE 'Gelöschte Person (%' AND email IS NULL AND phone IS NULL AND gender IS NULL
@@ -119,15 +141,29 @@ SELECT pg_temp.ok('Mail-Protokoll ohne Adresse', (SELECT string_agg(DISTINCT rec
 SELECT pg_temp.ok('Audit: eigene Aktionen ohne Konto, Löschung protokolliert', (SELECT (count(*) FILTER (WHERE actor_id IS NOT NULL AND action = 'submission_self'))::text || '/' ||
   (count(*) FILTER (WHERE action = 'participant_anonymized'))::text FROM public.audit_log WHERE target_participant_id = (SELECT amina FROM t)), '0/1');
 SELECT pg_temp.ok('Antrag erledigt mit Ergebnis', (SELECT status || '/' || (result ->> 'konto_geloescht') FROM public.deletion_requests WHERE id = (SELECT id FROM antrag)), 'erledigt/true');
+SELECT pg_temp.ok('Freigabe ausgeführt', (SELECT status FROM public.approvals WHERE id = (SELECT id FROM frei)), 'ausgefuehrt');
+SELECT pg_temp.ok('Genau einmal gelöscht (ein Protokolleintrag)', (SELECT count(*)::text FROM public.audit_log WHERE action = 'participant_anonymized' AND target_participant_id = (SELECT amina FROM t)), '1');
 SELECT pg_temp.login('admin@ses.test');
-SELECT pg_temp.ok('Zweimal geht nicht', public.execute_deletion((SELECT id FROM antrag)) ->> 'result', 'erledigt');
+SELECT pg_temp.ok('Zweimal geht nicht', public.execute_deletion((SELECT id FROM frei)) ->> 'result', 'ausgefuehrt');
+RESET ROLE;
+SELECT pg_temp.ok('… weiterhin genau ein Eintrag', (SELECT count(*)::text FROM public.audit_log WHERE action = 'participant_anonymized' AND target_participant_id = (SELECT amina FROM t)), '1');
 
 -- 5) Team-Konto bleibt: Antrag einer Person, deren Login zugleich ein Team-Konto ist
 RESET ROLE;
 UPDATE public.participants SET user_id = (SELECT id FROM auth.users WHERE email = 'orga@ses.test') WHERE email = 'yusuf@example.test';
 INSERT INTO public.deletion_requests (participant_id) SELECT id FROM public.participants WHERE email = 'yusuf@example.test';
+-- zweiter Admin (wie bei der Einrichtung per ./ses.sh admin) legt vor, der erste gibt frei; nur die vorlegende Person führt aus
+INSERT INTO auth.users (instance_id, id, aud, role, email, email_confirmed_at, created_at, updated_at)
+VALUES ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated', 'admin2@ses.test', now(), now(), now());
+INSERT INTO public.staff_members (user_id, role, display_name) SELECT id, 'admin', 'Admin Zwei' FROM auth.users WHERE email = 'admin2@ses.test';
+SELECT pg_temp.login('admin2@ses.test');
+CREATE TEMP TABLE frei2 AS SELECT public.create_approval('person_loeschen', jsonb_build_object('antrag', (SELECT id FROM public.deletion_requests WHERE status = 'offen'))) AS id;
+GRANT SELECT ON frei2 TO authenticated;
 SELECT pg_temp.login('admin@ses.test');
-SELECT pg_temp.ok('Team-Konto wird nicht gelöscht', (SELECT public.execute_deletion(id) ->> 'konto_geloescht' FROM public.deletion_requests WHERE status = 'offen'), 'false');
+SELECT pg_temp.ok('Zweiter Admin gibt frei', public.decide_approval((SELECT id FROM frei2), true), 'approved');
+SELECT pg_temp.ok('Nur die vorlegende Person führt aus', public.execute_deletion((SELECT id FROM frei2)) ->> 'result', 'not_requester');
+SELECT pg_temp.login('admin2@ses.test');
+SELECT pg_temp.ok('Team-Konto wird nicht gelöscht', public.execute_deletion((SELECT id FROM frei2)) ->> 'konto_geloescht', 'false');
 RESET ROLE;
 SELECT pg_temp.ok('… Team-Zugang besteht weiter', (SELECT count(*)::text FROM public.staff_members s JOIN auth.users u ON u.id = s.user_id WHERE u.email = 'orga@ses.test'), '1');
 

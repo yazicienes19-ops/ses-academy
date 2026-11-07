@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Hinweis } from "@/components/team/Hinweis";
+import { LoeschVorschau } from "@/components/team/LoeschVorschau";
 import { TeamKopf } from "@/components/team/TeamKopf";
 import { freigabeEntscheiden } from "@/lib/aktionen/freigaben";
 import { requireStaff, rollenName } from "@/lib/auth";
@@ -20,7 +21,7 @@ const hinweise: Record<string, { text: string; gut: boolean }> = {
 };
 
 const aktionName: Record<string, string> = { nachricht: "Nachricht an alle", export: "Export aller Daten", team_zugang: "Team-Zugang", person_loeschen: "Person löschen" };
-const ausfuehren: Record<string, string> = { nachricht: "/team/nachrichten/", export: "/team/auswertung/", team_zugang: "/team/team/" };
+const ausfuehren: Record<string, string> = { nachricht: "/team/nachrichten/", export: "/team/auswertung/", team_zugang: "/team/team/", person_loeschen: "/team/loeschantraege/" };
 const statusName: Record<string, string> = { offen: "wartet auf Freigabe", freigegeben: "freigegeben", abgelehnt: "abgelehnt", ausgefuehrt: "ausgeführt" };
 const zeit = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Berlin" });
 
@@ -43,7 +44,7 @@ export default async function Freigaben({ searchParams }: PageProps<"/team/freig
       <TeamKopf staff={staff} aktiv="freigaben" />
       <main className="mx-auto max-w-5xl px-4 py-8">
         <h1 className="font-display text-3xl font-bold">Freigaben</h1>
-        <p className="mt-1 text-ink-soft">Nachrichten an alle, Exporte aller Daten und neue Team-Zugänge bestätigt eine zweite Person (Entscheidung vom 25.10.2026).</p>
+        <p className="mt-1 text-ink-soft">Nachrichten an alle, Exporte aller Daten, neue Team-Zugänge und das Löschen von Personen bestätigt eine zweite Person (Entscheidung vom 25.10.2026).</p>
         <Hinweis code={hinweis} texte={hinweise} />
 
         <section className="mt-6">
@@ -58,6 +59,16 @@ export default async function Freigaben({ searchParams }: PageProps<"/team/freig
                   <p className="mt-1 font-semibold">{a.summary}</p>
                   {p.text && <pre className="mt-3 max-h-64 overflow-auto rounded-2xl bg-paper p-3 font-sans text-sm whitespace-pre-wrap">{p.text_tr ? <span className="mb-1 block text-xs font-semibold text-ink-soft">Deutsch · Betreff: {p.betreff}</span> : null}{p.text}</pre>}
                   {p.text_tr && <pre lang="tr" className="mt-3 max-h-64 overflow-auto rounded-2xl bg-paper p-3 font-sans text-sm whitespace-pre-wrap"><span className="mb-1 block text-xs font-semibold text-ink-soft">Türkisch · Betreff: {p.betreff_tr}</span>{p.text_tr}</pre>}
+                  {a.action === "person_loeschen" && (() => {
+                    const l = a.payload as { email?: string | null; grund?: string; zahlen?: Record<string, number | boolean> };
+                    return (
+                      <div className="mt-2 text-sm">
+                        {l.email && <p className="text-ink-soft">{l.email}</p>}
+                        {l.grund && <p className="mt-2 rounded-2xl bg-paper p-3">Grund der Person: „{l.grund}“</p>}
+                        {l.zahlen && <LoeschVorschau zahlen={l.zahlen} />}
+                      </div>
+                    );
+                  })()}
                   {a.action === "team_zugang" && (
                     <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 text-sm">
                       {p.email && <><dt className="text-ink-soft">E-Mail</dt><dd>{p.email}</dd></>}
