@@ -59,11 +59,16 @@ export default async function Nachrichten({ searchParams }: PageProps<"/team/nac
                 <details key={a.id} className="karte" open={!!sendbar}>
                   <summary className="flex cursor-pointer list-none flex-wrap items-center gap-2">
                     <span className="mr-auto font-semibold">{p.betreff}</span>
-                    <span className={`chip ${sendbar ? "bg-gruen-hell" : a.status === "ausgefuehrt" ? "bg-paper-deep" : "bg-gelb-hell"}`}>
-                      {a.status === "ausgefuehrt" ? `verschickt${r?.gesendet !== undefined ? ` (${r.gesendet})` : ""}` : sendbar ? "freigegeben" : a.status === "freigegeben" ? "Freigabe abgelaufen" : a.status}
+                    <span className={`chip ${sendbar ? "bg-gruen-hell" : a.status === "ausgefuehrt" ? "bg-paper-deep" : a.status === "abgelehnt" ? "bg-rot-hell text-rot" : "bg-gelb-hell"}`}>
+                      {a.status === "ausgefuehrt" ? `verschickt${r?.gesendet !== undefined ? ` (${r.gesendet})` : ""}` : sendbar ? "freigegeben" : a.status === "freigegeben" ? "Freigabe abgelaufen" : a.status === "offen" ? "wartet auf Freigabe" : a.status}
                     </span>
                   </summary>
                   <p className="mt-2 text-sm text-ink-soft">{a.summary}</p>
+                  {a.decision_note && (
+                    <p className={`mt-2 rounded-2xl p-3 text-sm ${a.status === "abgelehnt" ? "bg-rot-hell text-rot" : "bg-paper-deep"}`}>
+                      <span className="font-semibold">{a.status === "abgelehnt" ? "Abgelehnt mit Notiz:" : "Notiz zur Freigabe:"}</span> {a.decision_note}
+                    </p>
+                  )}
                   {sendbar && (
                     <form action={nachrichtSenden} className="mt-3">
                       <input type="hidden" name="id" value={a.id} />

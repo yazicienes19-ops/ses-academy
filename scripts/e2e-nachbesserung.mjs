@@ -361,6 +361,36 @@ if (teil("bewerbung")) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// 9. Freigaben: Ablehnungsnotiz sichtbar, Verlauf am Handy erreichbar
+// ---------------------------------------------------------------------------
+if (teil("freigaben")) {
+  const admin = await teamLogin(browser, "admin@ses.test");
+  await admin.goto(`${BASIS}/team/nachrichten/`);
+  await admin.fill("#betreff", "TestNach Ablehnung");
+  await admin.fill("#text", "Bitte nicht senden.");
+  await admin.getByRole("button", { name: "Zur Freigabe vorlegen" }).click();
+  await admin.waitForURL(/hinweis=/);
+  const vorstand = await teamLogin(browser, "vorstand@ses.test", 390);
+  await vorstand.goto(`${BASIS}/team/freigaben/`);
+  const karte = vorstand.locator("li", { hasText: "TestNach Ablehnung" });
+  await karte.getByLabel("Notiz").fill("Bitte erst Hotel klären");
+  await karte.getByRole("button", { name: "Ablehnen" }).click();
+  await vorstand.getByText("Abgelehnt.").waitFor();
+  ok(await keinUeberlauf(vorstand), "Freigaben am Handy: Seite ohne seitliches Scrollen");
+  const verlauf = vorstand.locator("table").locator("xpath=..");
+  ok(await verlauf.evaluate((d) => getComputedStyle(d).overflowX === "auto"), "Verlauf am Handy in eigenem Scrollbereich");
+  await verlauf.evaluate((d) => { d.scrollLeft = d.scrollWidth; });
+  const status = vorstand.locator("tr", { hasText: "TestNach Ablehnung" }).getByText("Notiz: „Bitte erst Hotel klären“");
+  ok(await status.isVisible(), "Verlauf: Ablehnungsnotiz sichtbar (Spalte Status erreichbar)");
+  await admin.goto(`${BASIS}/team/nachrichten/`);
+  await admin.locator("details", { hasText: "TestNach Ablehnung" }).locator("summary").click();
+  ok(await admin.getByText("Abgelehnt mit Notiz:").isVisible() && await admin.getByText("Bitte erst Hotel klären").first().isVisible(), "Antragsteller sieht die Notiz in Nachrichten");
+  await admin.goto(`${BASIS}/team/freigaben/`);
+  ok(await admin.locator("tr", { hasText: "TestNach Ablehnung" }).getByText("abgelehnt").isVisible(), "Status lesbar statt Datenbankwort");
+  sql("delete from approvals where summary like '%TestNach%'");
+}
+
 await browser.close();
 console.log(fehler ? `\n${fehler} Fehler` : "\nAlles in Ordnung.");
 process.exit(fehler ? 1 : 0);

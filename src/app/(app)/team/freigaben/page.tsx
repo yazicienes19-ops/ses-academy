@@ -21,6 +21,7 @@ const hinweise: Record<string, { text: string; gut: boolean }> = {
 
 const aktionName: Record<string, string> = { nachricht: "Nachricht an alle", export: "Export aller Daten", team_zugang: "Team-Zugang", person_loeschen: "Person löschen" };
 const ausfuehren: Record<string, string> = { nachricht: "/team/nachrichten/", export: "/team/auswertung/", team_zugang: "/team/team/" };
+const statusName: Record<string, string> = { offen: "wartet auf Freigabe", freigegeben: "freigegeben", abgelehnt: "abgelehnt", ausgefuehrt: "ausgeführt" };
 const zeit = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Berlin" });
 
 /** Vier-Augen-Prinzip: Anträge anderer freigeben oder ablehnen, eigene Anträge verfolgen. */
@@ -76,7 +77,9 @@ export default async function Freigaben({ searchParams }: PageProps<"/team/freig
 
         <section className="mt-10">
           <h2 className="font-display text-xl font-bold">Verlauf</h2>
-          <table className="tabelle mt-3">
+          {/* Am Handy seitlich scrollbar statt abgeschnitten */}
+          <div className="mt-3 overflow-x-auto rounded-3xl bg-weiss ring-1 ring-line">
+          <table className="tabelle min-w-[36rem]">
             <thead><tr><th>Wann</th><th>Was</th><th>Von</th><th>Status</th></tr></thead>
             <tbody>
               {rest.map((a) => {
@@ -90,14 +93,16 @@ export default async function Freigaben({ searchParams }: PageProps<"/team/freig
                     <td>
                       {a.status === "freigegeben" && !abgelaufen && a.requested_by === staff.userId && ausfuehren[a.action]
                         ? <Link href={ausfuehren[a.action]} className="link">freigegeben, jetzt ausführen</Link>
-                        : abgelaufen ? "Freigabe abgelaufen" : a.status}
+                        : abgelaufen ? "Freigabe abgelaufen" : statusName[a.status] ?? a.status}
                       {r?.gesendet !== undefined && ` (${r.gesendet} verschickt${r.fehler ? `, ${r.fehler} fehlgeschlagen` : ""})`}
+                      {a.decision_note && <span className={`mt-1 block text-sm ${a.status === "abgelehnt" ? "font-semibold text-rot" : "text-ink-soft"}`}>Notiz: „{a.decision_note}“</span>}
                     </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
+          </div>
         </section>
       </main>
     </>
