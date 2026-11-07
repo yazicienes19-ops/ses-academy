@@ -6,6 +6,7 @@ import { Hinweis as Meldung } from "@/components/team/Hinweis";
 import { KontaktFormular, KontaktKnoepfe, KontaktVerlauf, NotizFormular, ZusageKnoepfe, kontaktHinweise, type Kontakt } from "@/components/team/Kontakt";
 import { TeamKopf } from "@/components/team/TeamKopf";
 import { Rueckmeldung, laender } from "@/components/team/Ui";
+import { MailHinweis } from "@/components/team/MailHinweis";
 import { darf, requireStaff, type Staff } from "@/lib/auth";
 import { anwesenheitSetzen, beitragEntfernen, beitragHinzufuegen, personSpeichern, ticketSenden } from "@/lib/aktionen/teilnehmende";
 import { auswerten, zusammenfassen } from "@/lib/bewertung";
@@ -123,7 +124,7 @@ export default async function Person({ params, searchParams }: PageProps<"/team/
                 <input type="hidden" name="id" value={p.id} />
                 <button className="knopf w-full" disabled={!p.email || !mailAn}><Send aria-hidden className="h-4 w-4" />QR-Code per Mail</button>
               </form>
-              {!mailAn && <p className="max-w-48 text-xs text-ink-soft">Mailversand ist noch nicht eingerichtet.</p>}
+              <MailHinweis knapp className="max-w-56" />
             </div>
           </div>
 

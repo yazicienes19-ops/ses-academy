@@ -6,6 +6,7 @@ import { Hinweis } from "@/components/team/Hinweis";
 import { ModulFormular } from "@/components/team/ModulFormular";
 import { ModulReiter } from "@/components/team/ModulReiter";
 import { TeamKopf } from "@/components/team/TeamKopf";
+import { MailHinweis } from "@/components/team/MailHinweis";
 import { feedbackEinladen, frageEntfernen, frageHinzufuegen, umfrageAnlegen } from "@/lib/aktionen/feedback";
 import { absageZuruecknehmen, modulAbsagen, modulSpeichern, tagEntfernen, tagHinzufuegen } from "@/lib/aktionen/module";
 import { requireStaff } from "@/lib/auth";
@@ -143,6 +144,7 @@ export default async function ModulDetail({ params, searchParams }: PageProps<"/
             <Link href={`/team/module/${m.id}/namensschilder/`} className="rounded-full bg-white px-5 py-3 font-semibold ring-1 ring-line">Namensschilder drucken</Link>
             <Link href={`/team/module/${m.id}/hotel/`} className="rounded-full bg-white px-5 py-3 font-semibold ring-1 ring-line">Übernachtung und Hotel{m.stay_form_open ? " (Abfrage offen)" : ""}</Link>
           </div>
+          <MailHinweis knapp className="mt-3" />
           <TagesordnungKnoepfe dokumente={tagesordnungen ?? []} />
         </section>
 
@@ -172,6 +174,7 @@ export default async function ModulDetail({ params, searchParams }: PageProps<"/
                   Einladung an alle Anwesenden ohne Antwort senden
                 </button>
                 {!anwesende && <span className="ml-3 text-sm text-ink-soft">Noch niemand eingecheckt.</span>}
+                <MailHinweis knapp className="mt-3" />
               </form>
 
               {antworten > 0 && (
@@ -243,6 +246,7 @@ export default async function ModulDetail({ params, searchParams }: PageProps<"/
               <div className="min-w-60 flex-1"><label htmlFor="grund" className="mb-1 block text-sm font-semibold">Grund (intern)</label><input id="grund" name="grund" className={`${feld} w-full`} /></div>
               <div className="w-full space-y-1.5 text-sm">
                 <label className="flex gap-2"><input type="checkbox" name="benachrichtigen" value="ja" defaultChecked className="mt-0.5" /> Alle Angemeldeten und die Warteliste per Mail informieren</label>
+                <MailHinweis knapp />
                 <label className="flex gap-2 rounded-2xl bg-rot-hell p-3 text-rot"><input type="checkbox" name="bestaetigt" value="ja" required className="mt-0.5" /> Ja, das Modul wirklich absagen. Der Einlass wird gesperrt.</label>
               </div>
               <button type="submit" className="rounded-full bg-red-800 px-5 py-3 font-semibold text-white">Absagen</button>

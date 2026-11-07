@@ -47,6 +47,7 @@ async function protokolliere(eintrag: { participantId: string | null; art: strin
 }
 
 async function senden(nachricht: SendMailOptions): Promise<Ergebnis> {
+  if (!mailBereit()) return { ok: false, fehler: "Mailversand nicht eingerichtet (SMTP-Zugangsdaten fehlen)." };
   try {
     await transport().sendMail({ from: process.env.MAIL_FROM ?? "SES Academy <ses@islamrat.de>", ...nachricht });
     return { ok: true };

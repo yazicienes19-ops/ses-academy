@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, CalendarClock, CircleAlert, ClipboardList, ScanLine, ShieldCheck, Ticket, Users } from "lucide-react";
+import { MailHinweis } from "@/components/team/MailHinweis";
 import { TeamKopf } from "@/components/team/TeamKopf";
 import { aufgabeUmschalten } from "@/lib/aktionen/modulwerkzeuge";
 import { darf, requireStaff } from "@/lib/auth";
@@ -97,6 +98,7 @@ export default async function TeamStart({ searchParams }: PageProps<"/team">) {
         <p className="text-sm text-ink-soft">{datumLang.format(new Date(jetzt))}</p>
         <h1 className="font-display mt-1 text-3xl font-bold lg:text-4xl">Salam, {vorname}</h1>
         {fehler === "rechte" && <p role="alert" className="mt-4 rounded-2xl bg-amber-100 p-4 text-amber-900">Für diesen Bereich fehlt deiner Rolle die Berechtigung.</p>}
+        <MailHinweis className="mt-6" />
 
         {(offeneFreigaben ?? 0) > 0 && (
           <Link href="/team/freigaben/" className="mt-6 flex items-center gap-3 rounded-2xl bg-signal px-5 py-3.5 font-semibold text-ink transition hover:brightness-95">

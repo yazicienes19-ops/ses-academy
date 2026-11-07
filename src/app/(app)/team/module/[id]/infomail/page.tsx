@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Hinweis } from "@/components/team/Hinweis";
 import { ModulReiter } from "@/components/team/ModulReiter";
 import { TeamKopf } from "@/components/team/TeamKopf";
+import { MailHinweis } from "@/components/team/MailHinweis";
 import { infoMailAnAlle, infoMailTest } from "@/lib/aktionen/infomail";
 import { requireStaff } from "@/lib/auth";
 import { istToken } from "@/lib/codes";
@@ -78,7 +79,7 @@ export default async function InfoMail({ params, searchParams }: PageProps<"/tea
 
             <section className="karte">
               <h3 className="font-display text-xl font-bold">An alle senden</h3>
-              {!mailBereit() ? <p className="mt-2 text-sm text-ink-soft">Der Mailversand ist noch nicht eingerichtet.</p> : (
+              {!mailBereit() ? <MailHinweis knapp className="mt-3" /> : (
                 <form action={infoMailAnAlle} className="mt-3 space-y-3">
                   <input type="hidden" name="module_id" value={id} />
                   <fieldset className="space-y-1.5 text-sm">

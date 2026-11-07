@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Hinweis } from "@/components/team/Hinweis";
 import { TeamKopf } from "@/components/team/TeamKopf";
+import { MailHinweis } from "@/components/team/MailHinweis";
 import { nachrichtBeantragen, nachrichtSenden } from "@/lib/aktionen/freigaben";
 import { requireStaff } from "@/lib/auth";
 import { seitenUrl } from "@/lib/mail";
@@ -67,6 +68,7 @@ export default async function Nachrichten({ searchParams }: PageProps<"/team/nac
                     <form action={nachrichtSenden} className="mt-3">
                       <input type="hidden" name="id" value={a.id} />
                       <button type="submit" className="knopf">Jetzt an {p.anzahl} Personen senden</button>
+                      <MailHinweis knapp className="mt-3" />
                     </form>
                   )}
                   <label className="etikett mt-4" htmlFor={`wa-${a.id}`}>Text für die WhatsApp-Gruppe (markieren und kopieren)</label>

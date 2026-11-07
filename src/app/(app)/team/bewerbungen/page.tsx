@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { TeamKopf } from "@/components/team/TeamKopf";
+import { MailHinweis } from "@/components/team/MailHinweis";
 import { annehmen, statusSetzen, ticketErneutSenden } from "@/lib/aktionen/bewerbungen";
 import { requireStaff } from "@/lib/auth";
 import type { Database } from "@/lib/database.types";
@@ -54,6 +55,8 @@ export default async function BewerbungenSeite({ searchParams }: PageProps<"/tea
         <p className="mt-1 text-ink-soft">{jahrgang?.name ?? "Kein aktueller Jahrgang angelegt"}</p>
 
         {h && <p role="status" className={`mt-4 rounded-2xl p-4 ${h.gut ? "bg-emerald-100 text-emerald-950" : "bg-amber-100 text-amber-950"}`}>{h.text}</p>}
+
+        <MailHinweis className="mt-4" />
 
         <nav className="mt-6 flex flex-wrap gap-2" aria-label="Filter">
           {filterListe.map((f) => (

@@ -12,6 +12,7 @@
 #   ./ses.sh wiederherstellen-test      neueste Sicherung probeweise einspielen und Zahlen vergleichen
 #   ./ses.sh notfall [JJJJ-MM-TT]       Notfall-Listen für morgen bzw. den Tag als PDF
 #   ./ses.sh erinnerungen               Hausaufgaben-Erinnerung zwei Tage vor der Frist (läuft sonst täglich)
+#   ./ses.sh mailtest <adresse>         Testmail über die SMTP-Zugangsdaten aus der .env, mit klarer Fehlermeldung
 #   ./ses.sh autostart                  Start beim Anmelden, Sicherung 02:30, Erinnerungen 17:00, Notfall-Liste 20:00
 set -euo pipefail
 
@@ -207,6 +208,14 @@ case "$befehl" in
     (cd "$APP" && npx tsx --conditions=react-server scripts/erinnerungen.mts)
     ;;
 
+  mailtest)
+    lade_env
+    adresse="${1:?Empfängeradresse fehlt: ./ses.sh mailtest name@beispiel.de}"
+    # nodemailer liegt in der Betriebskopie (bzw. im Repo, falls noch nicht gebaut)
+    if [ -d "$APP/node_modules/nodemailer" ]; then cd "$APP"; else cd "$REPO"; fi
+    node "$HIER/mailtest.mjs" "$adresse"
+    ;;
+
   autostart)
     lade_env
     ziel="$HOME/Library/LaunchAgents"
@@ -237,6 +246,6 @@ PLIST
     ;;
 
   *)
-    sed -n '2,15p' "$0"; exit 1
+    sed -n '2,16p' "$0"; exit 1
     ;;
 esac
