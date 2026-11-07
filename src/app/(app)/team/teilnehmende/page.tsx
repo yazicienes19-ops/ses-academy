@@ -26,7 +26,7 @@ function termine(tage: { starts_at: string }[]) {
   return monate.length === 1 ? `${d.map((x) => tagZahl.format(x)).join("./")}. ${monate[0]}` : d.map((x) => `${tagZahl.format(x)}. ${monat.format(x)}`).join(" / ");
 }
 
-type ModulStand = { m: string; s: string; r: string | null; d: number };
+type ModulStand = { m: string; s: string; r: string | null; d: number; q?: string };
 type Person = {
   participant_id: string; name: string; email: string | null; phone: string | null; region: string | null; mentor_name: string | null;
   branch: string | null; active: boolean; affiliation_status: string; gender: string | null; modules: ModulStand[];
@@ -69,6 +69,12 @@ const uebernachtungen = {
   nein: { name: "übernachtet nicht", passt: (p: Person) => p.stay_answered && !p.nights?.length },
 } as const;
 const wahl = <T extends object>(liste: T, wert: string) => (wert in liste ? wert : "") as keyof T;
+
+/** Kennzeichen für alle, die nicht zum Jahrgang gehören (Gast, Walk-in, Mitglied, Alumni). */
+function herkunft(p: Person): string | null {
+  if (p.modules.some((r) => r.q === "walk_in")) return "Walk-in";
+  return p.affiliation_status === "academy_student" ? null : ({ guest: "Gast", member: "Mitglied", alumni: "Alumni" } as Record<string, string>)[p.affiliation_status] ?? "Gast";
+}
 
 /**
  * Teilnehmende und Anrufliste in einem (ab Orga-Team): alle Filter, je Person Zusage und Anwesenheit pro Modul,
@@ -120,12 +126,13 @@ export default async function Teilnehmende({ searchParams }: PageProps<"/team/te
   const zusage = wahl(zusagen, s("zusage"));
   const kontakt = wahl(kontakte, s("kontakt"));
   const ueb = wahl(uebernachtungen, s("uebernachtung"));
-  const gruppe = s("gruppe") === "alle" ? "alle" : "jahrgang";
+  const gruppe = s("gruppe") === "alle" ? "alle" : s("gruppe") === "gaeste" ? "gaeste" : "jahrgang";
   const qf = faltName(s("q"));
   const ziffern = s("q").replace(/\D/g, "");
   // Grundmenge: alles außer dem Zusage-Filter; die Zusage-Knöpfe zählen darin
   const grundmenge = alle.filter((p) => {
     if (gruppe === "jahrgang" && p.affiliation_status !== "academy_student") return false;
+    if (gruppe === "gaeste" && !herkunft(p)) return false;
     // Suche: Name/E-Mail, oder bei Ziffern die Telefonnummer (faltName behält keine Ziffern),
     // z. B. „0176 123“ findet „+49 176 123…“
     const telefonTreffer = ziffern.length >= 3 && (p.phone ?? "").replace(/\D/g, "").replace(/^(49|90|43|41)/, "0").includes(ziffern.replace(/^(00)?(49|90|43|41)/, "0"));
@@ -166,6 +173,12 @@ export default async function Teilnehmende({ searchParams }: PageProps<"/team/te
       <TeamKopf staff={staff} aktiv="teilnehmende" breit />
       <main className="mx-auto max-w-[96rem] px-4 py-10">
         <Titel kicker={`${jahrgang?.name ?? "Kein aktueller Jahrgang"} · ${liste.length} von ${alle.length}`}>Teilnehmende</Titel>
+        {gruppe === "jahrgang" && alle.some((p) => herkunft(p) && p.affiliation_status !== "academy_student") && (
+          <p className="-mt-5 mb-6 text-sm text-ink-soft">
+            {alle.filter((p) => herkunft(p) && p.affiliation_status !== "academy_student").length} Gäste und Walk-ins sind ausgeblendet.{" "}
+            <Link href={adresse({ gruppe: "gaeste" })} className="link">Anzeigen</Link>
+          </p>
+        )}
         {code && code in kontaktHinweise ? <Hinweis code={code} texte={kontaktHinweise} /> : <Rueckmeldung hinweis={sp.hinweis} fehler={sp.fehler} />}
         {alles && ohneLogin > 0 && (
           <form action={willkommenAnAlle} className="mb-6 flex flex-wrap items-center gap-3 rounded-2xl bg-white/70 p-4 ring-1 ring-line">
@@ -241,6 +254,7 @@ export default async function Teilnehmende({ searchParams }: PageProps<"/team/te
               <select name="gruppe" defaultValue={gruppe} className="feld" aria-label="Wer">
                 <option value="jahrgang">Nur Jahrgang</option>
                 <option value="alle">Mit Gästen und Walk-ins</option>
+                <option value="gaeste">Nur Gäste und Walk-ins ({alle.filter((p) => herkunft(p)).length})</option>
               </select>
               {zusage && <input type="hidden" name="zusage" value={zusage} />}
               <div className="flex gap-2 lg:col-span-2">
@@ -281,7 +295,10 @@ export default async function Teilnehmende({ searchParams }: PageProps<"/team/te
                   <tbody>
                     {liste.map((p) => (
                       <tr key={p.participant_id}>
-                        <td className="whitespace-nowrap"><Link href={personLink(p.participant_id)} className="font-semibold hover:underline">{p.name}</Link></td>
+                        <td className="whitespace-nowrap">
+                          <Link href={personLink(p.participant_id)} className="font-semibold hover:underline">{p.name}</Link>
+                          {herkunft(p) && <span className="chip ml-1.5 bg-paper-deep align-middle">{herkunft(p)}</span>}
+                        </td>
                         <td className="whitespace-nowrap">
                           {p.phone ? <a href={telLink(p.phone)} className="inline-flex items-center gap-1 text-sm hover:underline" aria-label={`${p.name} anrufen`}><Phone aria-hidden className="h-3.5 w-3.5" />{p.phone}</a> : <span className="text-sm text-ink-soft">–</span>}
                         </td>

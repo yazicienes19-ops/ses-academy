@@ -522,6 +522,30 @@ if (teil("zimmerplan")) {
   sql(`delete from hotels where module_id = '${demo}'; delete from stay_requests s using registrations r where r.id = s.registration_id and r.module_id = '${demo}'`);
 }
 
+// ---------------------------------------------------------------------------
+// 4. Teilnehmende: Gäste und Walk-ins auffindbar und gekennzeichnet
+// ---------------------------------------------------------------------------
+if (teil("teilnehmende")) {
+  sql(`delete from participants where last_name = 'TestNachWalkin'`);
+  sql(`with p as (insert into participants (first_name, last_name, affiliation_status) values ('Wanda', 'TestNachWalkin', 'guest') returning id)
+       insert into registrations (module_id, participant_id, status, source) select m.id, p.id, 'confirmed', 'walk_in' from p, modules m where m.slug = 'probe-einlass'`);
+  for (const [email, breite] of [["vorstand@ses.test", 1280], ["orga@ses.test", 390]]) {
+    const seite = await teamLogin(browser, email, breite);
+    await seite.goto(`${BASIS}/team/teilnehmende/`);
+    ok(await seite.getByText(/Gäste und Walk-ins sind ausgeblendet/).isVisible(), `(${email}) Hinweis auf ausgeblendete Gäste`);
+    await seite.getByRole("link", { name: "Anzeigen" }).click();
+    await seite.waitForURL(/gruppe=gaeste/);
+    const walkin = seite.locator("tr", { hasText: "Wanda TestNachWalkin" });
+    const gast = seite.locator("tr", { hasText: "Gast Bestätigt" });
+    ok(await walkin.getByText("Walk-in", { exact: true }).isVisible() && await gast.getByText("Gast", { exact: true }).isVisible(), `(${email}) Walk-in und Gast in der Liste, gekennzeichnet`);
+    ok(await seite.locator("tbody tr", { hasText: "Amina" }).count() === 0, `(${email}) „Nur Gäste und Walk-ins“ zeigt keine Jahrgangsleute`);
+    await seite.goto(`${BASIS}/team/teilnehmende/?gruppe=alle&q=TestNachWalkin`);
+    ok(await seite.locator("tr", { hasText: "Wanda TestNachWalkin" }).isVisible(), `(${email}) Suche findet den Walk-in`);
+    ok(await keinUeberlauf(seite), `(${email}) Liste ohne seitliches Scrollen der Seite`);
+  }
+  sql(`delete from participants where last_name = 'TestNachWalkin'`);
+}
+
 await browser.close();
 console.log(fehler ? `\n${fehler} Fehler` : "\nAlles in Ordnung.");
 process.exit(fehler ? 1 : 0);

@@ -117,5 +117,10 @@ SELECT pg_temp.ok('Orga sieht in der Liste keine E-Mail', (SELECT count(email)::
 SELECT pg_temp.ok('Liste zeigt die letzte Notiz', (SELECT last_note FROM public.get_people((SELECT demo FROM t)) WHERE participant_id = (SELECT amina FROM t)), 'Kommt mit dem Zug');
 SELECT pg_temp.login('admin@ses.test');
 SELECT pg_temp.ok('Admin sieht E-Mail', (SELECT email FROM public.get_people(NULL, (SELECT amina FROM t))), 'amina@example.test');
+-- Herkunft je Anmeldung (Migration 20261123090000_teilnehmende_herkunft): Jahrgang und Gast unterscheidbar
+SELECT pg_temp.ok('Herkunft Jahrgang', (SELECT modules -> 0 ->> 'q' FROM public.get_people(NULL, (SELECT amina FROM t))), 'cohort');
+SELECT pg_temp.ok('Herkunft Gast (öffentliche Anmeldung)',
+  (SELECT string_agg(DISTINCT x ->> 'q', ',') FROM public.get_people() g, jsonb_array_elements(g.modules) x
+    WHERE g.participant_id = (SELECT id FROM public.participants WHERE email = 'gast1@example.test')), 'public');
 
 ROLLBACK;
