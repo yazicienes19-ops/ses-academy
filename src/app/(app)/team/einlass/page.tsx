@@ -26,11 +26,12 @@ export default async function EinlassSeite({ searchParams }: PageProps<"/team/ei
 
   const { data: tageRoh } = await supabase
     .from("module_days")
-    .select("id, day, starts_at, ends_at, module:modules!inner(title, status, ticket_required, cancelled_at)")
+    .select("id, day, starts_at, ends_at, module_id, module:modules!inner(title, status, ticket_required, cancelled_at)")
     .eq("module.status", "published")
     .order("starts_at");
 
-  const alleTage = (tageRoh ?? []).filter((t) => t.module.cancelled_at === null);
+  // Auf ein Modul begrenzte Zugänge sehen nur dessen Tage (die Datenbank lässt ohnehin nur dieses Modul zu)
+  const alleTage = (tageRoh ?? []).filter((t) => t.module.cancelled_at === null && (!staff.modulId || t.module_id === staff.modulId));
   // Einlass-Helfer:innen sehen nur Tage, an denen gerade Einlass ist
   const tage = darf.orga(staff.role) ? alleTage : alleTage.filter((t) => imZeitfenster(t, jetzt));
   const vorschlag = tage.find((t) => imZeitfenster(t, jetzt)) ?? tage.find((t) => Date.parse(t.ends_at) > jetzt) ?? tage.at(-1);

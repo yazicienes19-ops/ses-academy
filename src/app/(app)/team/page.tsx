@@ -35,13 +35,21 @@ export default async function TeamStart({ searchParams }: PageProps<"/team">) {
   const supabase = await createClient();
   const vorname = staff.name.split(" ")[0];
 
-  if (!darf.orga(staff.role)) {
+  // Einlass-Helfer und auf ein Modul begrenzte Zugänge: nur die Eventtag-Werkzeuge
+  if (!darf.orga(staff.role) || staff.modulId) {
+    const { data: modul } = staff.modulId ? await supabase.from("modules").select("title").eq("id", staff.modulId).maybeSingle() : { data: null };
     return (
       <>
         <TeamKopf staff={staff} />
         <main className="mx-auto max-w-3xl px-4 py-8 lg:py-12">
           <p className="text-sm text-ink-soft">{datumLang.format(new Date(jetzt))}</p>
           <h1 className="font-display mt-1 text-3xl font-bold lg:text-4xl">Salam, {vorname}</h1>
+          {fehler === "rechte" && <p role="alert" className="mt-4 rounded-2xl bg-amber-100 p-4 text-amber-900">Für diesen Bereich fehlt deiner Rolle die Berechtigung.</p>}
+          {staff.modulId && (
+            <p className="mt-4 rounded-2xl bg-gelb-hell p-4 text-sm">
+              Dein Zugang gilt nur für <strong>{modul?.title ?? "ein Modul"}</strong>{staff.gueltigBis ? ` bis ${datumLang.format(new Date(staff.gueltigBis))}` : ""}: Einlass und Regieplan dieses Moduls.
+            </p>
+          )}
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
             <Link href="/team/einlass/" className="rounded-3xl bg-forest p-6 text-paper">
               <ScanLine aria-hidden className="h-7 w-7 text-signal" />

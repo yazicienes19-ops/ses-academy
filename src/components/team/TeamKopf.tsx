@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 import { HandyMenue } from "@/components/team/HandyMenue";
 import { abmelden } from "@/lib/aktionen/team";
-import { darf, rollenName, type Staff, type StaffRole } from "@/lib/auth";
+import { darf, modulBereiche, rollenName, type Staff, type StaffRole } from "@/lib/auth";
 
 type Bereich =
   | "start" | "einlass" | "regieplan" | "rollenplan" | "gruppen" | "module" | "bewerbungen" | "teilnehmende" | "anrufe" | "hausaufgaben"
@@ -56,7 +56,8 @@ function Navigation({ staff, aktiv }: { staff: Staff; aktiv: Bereich }) {
   return (
     <nav aria-label="Team-Bereich" className="space-y-6">
       {gruppen.map((g) => {
-        const sichtbar = g.eintraege.filter((e) => e.recht(staff.role));
+        // Auf ein Modul begrenzte Zugänge: nur Übersicht, Einlass und Regieplan
+        const sichtbar = g.eintraege.filter((e) => e.recht(staff.role) && (!staff.modulId || (modulBereiche as readonly string[]).includes(e.id)));
         if (sichtbar.length === 0) return null;
         return (
           <div key={g.titel || "start"}>

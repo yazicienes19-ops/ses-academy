@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireStaff, rollenName } from "@/lib/auth";
+import { mailBereit, sendeTeamWillkommen } from "@/lib/mail";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -24,27 +25,37 @@ async function modulZeitraum(modulId: string) {
   return { valid_from: new Date(beginn).toISOString(), valid_until: new Date(ende).toISOString(), titel: data.title };
 }
 
-/** Zugang auf ein Modul begrenzen oder wieder unbefristet machen. */
+/** Hat die Datenbank den Antrag abgelehnt, weil Vorstand/Admin nicht auf ein Modul begrenzt werden können? */
+const modulRolle = (error: { message?: string } | null) => Boolean(error?.message?.includes("module_scope_role"));
+
+/**
+ * Zugang auf ein Modul begrenzen (Einlass und Regieplan dieses Moduls, nur an den Modultagen) oder wieder unbefristet
+ * machen. Begrenzen geht sofort; aufheben, verlängern oder auf ein anderes Modul wechseln ist eine Vergabe und braucht
+ * die Freigabe eines zweiten Admins. „__bisher“ = Auswahl nicht geändert.
+ */
 export async function zugangZeitraum(formData: FormData) {
   const staff = await requireStaff("admin");
   const userId = String(formData.get("user_id"));
   const modul = String(formData.get("modul") ?? "");
   if (userId === staff.userId) zurueck("selbst");
+  if (modul === "__bisher") zurueck("unveraendert");
   const supabase = await createClient();
-  const { data: m } = await supabase.from("staff_members").select("role, valid_from, valid_until").eq("user_id", userId).maybeSingle();
+  const { data: m } = await supabase.from("staff_members").select("role, valid_from, valid_until, module_id").eq("user_id", userId).maybeSingle();
   if (!m) zurueck("fehler");
+  if (modul && m.role !== "orga_team" && m.role !== "checkin_helper") zurueck("modul-rolle");
   const z = modul ? await modulZeitraum(modul) : null;
   if (modul && !z) zurueck("modul-ohne-termin");
-  // Einschränken geht sofort; ausweiten (unbefristet, später enden, früher beginnen) ist eine Vergabe mit Freigabe
-  const weiter = (m.valid_until && (!z || Date.parse(z.valid_until) > Date.parse(m.valid_until))) || (m.valid_from && (!z || Date.parse(z.valid_from) < Date.parse(m.valid_from)));
-  if (weiter) {
+  if ((modul || null) === m.module_id && (z?.valid_from ?? null) === m.valid_from && (z?.valid_until ?? null) === m.valid_until) zurueck("unveraendert");
+  const zeitWeiter = (m.valid_until && (!z || Date.parse(z.valid_until) > Date.parse(m.valid_until))) || (m.valid_from && (!z || Date.parse(z.valid_from) < Date.parse(m.valid_from)));
+  const modulWeiter = m.module_id !== null && m.module_id !== (modul || null);
+  if (zeitWeiter || modulWeiter) {
     const { error } = await supabase.rpc("create_approval", { p_action: "team_zugang", p_payload: { art: "zeitraum", user_id: userId, modul: modul || null } });
-    zurueck(error ? "fehler" : "beantragt");
+    zurueck(modulRolle(error) ? "modul-rolle" : error ? "fehler" : "beantragt");
   }
   const { error } = await supabase.from("staff_members").update(z
-    ? { valid_from: z.valid_from, valid_until: z.valid_until, label: `${m.role === "checkin_helper" ? "Helfer" : "Team"} · ${z.titel}` }
-    : { valid_from: null, valid_until: null, label: null }).eq("user_id", userId);
-  zurueck(error ? "fehler" : "gespeichert");
+    ? { valid_from: z.valid_from, valid_until: z.valid_until, module_id: modul, label: `${m.role === "checkin_helper" ? "Helfer" : "Team"} · ${z.titel}` }
+    : { valid_from: null, valid_until: null, module_id: null, label: null }).eq("user_id", userId);
+  zurueck(error ? "fehler" : "zugang-gespeichert");
 }
 
 /**
@@ -61,10 +72,11 @@ export async function mitgliedAnlegen(formData: FormData) {
   if (!d.success) zurueck("eingabe");
   const modul = String(formData.get("modul") ?? "");
   const supabase = await createClient();
+  if (modul && d.data.rolle !== "orga_team" && d.data.rolle !== "checkin_helper") zurueck("modul-rolle");
   const { error } = await supabase.rpc("create_approval", {
     p_action: "team_zugang", p_payload: { art: "neu", email: d.data.email, name: d.data.name, rolle: d.data.rolle, modul: modul || null },
   });
-  zurueck(error ? "fehler" : "beantragt");
+  zurueck(modulRolle(error) ? "modul-rolle" : error ? "fehler" : "beantragt");
 }
 
 const rang: Record<z.infer<typeof rolle>, number> = { checkin_helper: 0, orga_team: 1, vorstand: 2, admin: 3 };
@@ -74,7 +86,7 @@ const rang: Record<z.infer<typeof rolle>, number> = { checkin_helper: 0, orga_te
  * einen anderen Admin, höchstens 24 Stunden alt) und das Eintragen der Rolle macht execute_team_approval in der Datenbank.
  */
 export async function teamZugangAusfuehren(formData: FormData) {
-  await requireStaff("admin");
+  const staff = await requireStaff("admin");
   const id = String(formData.get("id"));
   const supabase = await createClient();
   const { data: antrag } = await supabase.from("approvals").select("payload").eq("id", id).eq("action", "team_zugang").maybeSingle();
@@ -82,7 +94,8 @@ export async function teamZugangAusfuehren(formData: FormData) {
   if (!p) zurueck("fehler");
   if (p.art === "rolle" || p.art === "zeitraum") {
     const { data, error } = await supabase.rpc("execute_team_approval", { p_id: id });
-    zurueck(error ? "fehler" : data === "ok" ? "gespeichert" : data === "expired" ? "abgelaufen" : data === "module_without_days" ? "modul-ohne-termin" : "fehler");
+    zurueck(error ? "fehler" : data === "ok" ? (p.art === "rolle" ? "gespeichert" : "zugang-gespeichert") : data === "expired" ? "abgelaufen"
+      : data === "module_without_days" ? "modul-ohne-termin" : data === "module_scope_role" ? "modul-rolle" : "fehler");
   }
   const admin = createAdminClient();
   const { data: konto, error } = await admin.auth.admin.createUser({ email: p.email!, email_confirm: true });
@@ -93,7 +106,13 @@ export async function teamZugangAusfuehren(formData: FormData) {
     await admin.auth.admin.deleteUser(konto.user.id);
     zurueck(ergebnis === "expired" ? "abgelaufen" : "fehler");
   }
-  zurueck("angelegt");
+  // Willkommensmail mit Rolle, Umfang und Anleitung zur Anmeldung per Code
+  const { data: neu } = await supabase.from("staff_members").select("role, display_name, valid_until, module:modules(title)").eq("user_id", konto.user.id).maybeSingle();
+  const { data: pflicht } = await supabase.rpc("mfa_required");
+  const mail = neu ? await sendeTeamWillkommen({
+    email: p.email!, name: neu.display_name, rolle: rollenName[neu.role], modul: neu.module?.title ?? null, bis: neu.valid_until, zweiterFaktor: Boolean(pflicht),
+  }, staff.userId) : { ok: false };
+  zurueck(mail.ok ? "angelegt" : mailBereit() ? "angelegt-ohne-mail" : "angelegt-mail-aus");
 }
 
 async function anzahlAdmins() {
@@ -113,7 +132,7 @@ export async function rolleAendern(formData: FormData) {
   const { data: bisher } = await supabase.from("staff_members").select("role, display_name").eq("user_id", userId).maybeSingle();
   if (bisher && rang[neu.data] > rang[bisher.role]) {
     const { error } = await supabase.rpc("create_approval", { p_action: "team_zugang", p_payload: { art: "rolle", user_id: userId, rolle: neu.data } });
-    zurueck(error ? "fehler" : "beantragt");
+    zurueck(modulRolle(error) ? "modul-rolle" : error ? "fehler" : "beantragt");
   }
   const { error } = await supabase.from("staff_members").update({ role: neu.data }).eq("user_id", userId);
   zurueck(error ? "fehler" : "gespeichert");

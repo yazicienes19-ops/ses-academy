@@ -16,7 +16,7 @@ const standFormat = new Intl.DateTimeFormat("de-DE", { dateStyle: "short", timeS
 export default async function RegieplanDruck({ searchParams }: PageProps<"/team/regieplan/druck">) {
   const staff = await requireStaff("einlass");
   const { tag: gewaehlt } = await searchParams;
-  const { tage } = await ladeModultage();
+  const { tage } = await ladeModultage(staff.modulId);
   const tag = tage.find((t) => t.id === gewaehlt);
   if (!tag) notFound();
   const mitTeam = darf.orga(staff.role);

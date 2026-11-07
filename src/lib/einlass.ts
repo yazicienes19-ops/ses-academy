@@ -11,7 +11,7 @@ export type EinlassErgebnis = {
     // nur im Offline-Modus (Browser, siehe offline-einlass.ts)
     | "offline_vorgemerkt" | "offline_bereits" | "offline_ohne_liste" | "offline_unbekannt"
     // nur beim Walk-in (create_walk_in)
-    | "email_other_person" | "possible_duplicate";
+    | "email_other_person" | "email_in_use" | "possible_duplicate";
   participant_id?: string;
   display_name?: string;
   affiliation_status?: Enums["affiliation_status"];
@@ -81,6 +81,8 @@ export function deute(e: EinlassErgebnis): { ton: Ton; titel: string; text?: str
       return { ton: "rot", titel: "Nicht in der Offline-Liste", text: "Offline geprüft: Auf diesem Gerät stehen nur die Angemeldeten. Bitte mit dem Orga-Team klären oder später online erneut prüfen." };
     case "email_other_person":
       return { ton: "gelb", titel: "Diese E-Mail gehört schon einer anderen Person", text: "Nichts angelegt, niemand eingecheckt. Ist es dieselbe Person, bitte in der Liste abhaken; sonst die E-Mail prüfen oder leer lassen." };
+    case "email_in_use":
+      return { ton: "gelb", titel: "E-Mail schon vergeben", text: "Bitte ohne E-Mail anlegen oder das Orga-Team fragen. Es wurde nichts angelegt." };
     case "possible_duplicate":
       return { ton: "gelb", titel: "Diese Person ist schon angemeldet", text: "Nichts angelegt. Bitte in der Liste abhaken. Ist es wirklich jemand anderes mit gleichem Namen, „Trotzdem neu anlegen“ ankreuzen." };
     case "offline_ohne_liste":

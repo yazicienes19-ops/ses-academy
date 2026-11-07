@@ -56,7 +56,7 @@ const walkInSchema = z.object({
  * Gibt es den Namen im Modul schon, legt die Datenbank nur mit „trotzdem“ eine neue Person an.
  */
 export async function walkIn(tagId: string, formData: FormData, zeitfensterIgnorieren = false): Promise<EinlassAntwort> {
-  await requireStaff("orga");
+  await requireStaff("orga", { modulBezogen: true });
   const d = walkInSchema.safeParse(Object.fromEntries(formData.entries()));
   if (!d.success) {
     const ohneEinwilligung = formData.get("einwilligung") !== "ja";
@@ -81,7 +81,7 @@ export async function walkIn(tagId: string, formData: FormData, zeitfensterIgnor
 
 /** Manuell abhaken aus der Anwesenheitsliste (ab Orga-Team), auch bei Modulen ohne Ticket. */
 export async function abhaken(tagId: string, participantId: string, zeitfensterIgnorieren: boolean): Promise<EinlassAntwort> {
-  await requireStaff("orga");
+  await requireStaff("orga", { modulBezogen: true });
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("check_in_manual", {
     p_module_day_id: tagId,
@@ -94,7 +94,7 @@ export async function abhaken(tagId: string, participantId: string, zeitfensterI
 
 /** Fehlscan zurücknehmen (ab Orga-Team). */
 export async function zuruecknehmen(attendanceId: string): Promise<boolean> {
-  await requireStaff("orga");
+  await requireStaff("orga", { modulBezogen: true });
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("undo_check_in", { p_attendance_id: attendanceId });
   revalidatePath("/team/einlass/");

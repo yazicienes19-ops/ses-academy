@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Hinweis } from "@/components/team/Hinweis";
+import { MailHinweis } from "@/components/team/MailHinweis";
 import { TeamKopf } from "@/components/team/TeamKopf";
 import { zweiterFaktorPflicht } from "@/lib/aktionen/team";
 import { faktorZuruecksetzen, mitgliedAnlegen, mitgliedEntfernen, rolleAendern, teamZugangAusfuehren, zugangZeitraum } from "@/lib/aktionen/teamverwaltung";
@@ -11,7 +12,12 @@ import { jetztMs } from "@/lib/zeit";
 export const metadata: Metadata = { title: "Team | SES Academy" };
 
 const hinweise = {
-  angelegt: { text: "Konto angelegt. Die Person meldet sich unter /mein-bereich/login/ mit ihrer E-Mail-Adresse und einem Code an.", gut: true },
+  angelegt: { text: "Konto angelegt. Die Person hat eine Willkommensmail mit der Anleitung zur Anmeldung bekommen.", gut: true },
+  "angelegt-ohne-mail": { text: "Konto angelegt, aber die Willkommensmail ging nicht raus. Bitte der Person Bescheid geben: Anmeldung unter /mein-bereich/login/ mit E-Mail und Code.", gut: false },
+  "angelegt-mail-aus": { text: "Konto angelegt. Der Mailversand ist noch nicht eingerichtet, die Willkommensmail ging deshalb nicht raus. Bitte der Person Bescheid geben: Anmeldung unter /mein-bereich/login/ mit E-Mail und Code.", gut: false },
+  "zugang-gespeichert": { text: "Zugang gespeichert.", gut: true },
+  unveraendert: { text: "Nichts geändert.", gut: true },
+  "modul-rolle": { text: "Auf ein Modul begrenzen lassen sich nur Orga-Team und Einlass-Helfer. Vorstand und Admin haben immer Zugang zu allem.", gut: false },
   beantragt: { text: "Beantragt. Ein zweiter Admin gibt unter „Freigaben“ frei, danach hier ausführen.", gut: true },
   abgelaufen: { text: "Die Freigabe ist älter als 24 Stunden. Bitte neu beantragen.", gut: false },
   gespeichert: { text: "Rolle gespeichert.", gut: true },
@@ -31,10 +37,10 @@ const hinweise = {
 const bis = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Berlin" });
 
 const rechte: Record<keyof typeof rollenName, string> = {
-  admin: "Alles, auch Team verwalten",
-  vorstand: "Bewerbungen, Module, Einlass mit Liste",
-  orga_team: "Einlass mit Anwesenheitsliste, abhaken",
-  checkin_helper: "Nur Scanner und Kurzcode, keine Kontaktdaten. Am besten „nur <Modul>“ wählen: dann gilt der Zugang nur an den Modultagen.",
+  admin: "Alles, auch Team-Zugänge verwalten und freigeben",
+  vorstand: "Alles außer Team-Zugängen: Module, Bewerbungen, Teilnehmende, Import, Auswertung, Nachrichten, Freigaben",
+  orga_team: "Einlass mit Liste und Walk-in, Regieplan, Teilnehmende und Anrufe, Logistik und Zimmer, Hausaufgaben, Dokumente, Sitzungen",
+  checkin_helper: "Nur Scanner und Kurzcode, Regieplan lesen, keine Kontaktdaten",
 };
 
 export default async function TeamVerwaltung({ searchParams }: PageProps<"/team/team">) {
@@ -42,16 +48,23 @@ export default async function TeamVerwaltung({ searchParams }: PageProps<"/team/
   const { hinweis } = await searchParams;
   const supabase = await createClient();
   const [{ data: mitglieder }, { data: module }] = await Promise.all([
-    supabase.from("staff_members").select("user_id, role, display_name, created_at, valid_from, valid_until, label").order("display_name"),
+    supabase.from("staff_members").select("user_id, role, display_name, created_at, valid_from, valid_until, label, module_id, modul:modules(title)").order("display_name"),
     supabase.from("modules").select("id, title, module_days!inner(ends_at)").eq("status", "published").is("cancelled_at", null).gt("module_days.ends_at", new Date(jetztMs()).toISOString()),
   ]);
   const kommendeModule = [...new Map((module ?? []).map((m) => [m.id, m])).values()];
-  const modulAuswahl = (name: string) => (
-    <select name={name} defaultValue="" className={feld} aria-label="Zeitraum">
-      <option value="">unbefristet</option>
-      {kommendeModule.map((m) => <option key={m.id} value={m.id}>nur {m.title}</option>)}
-    </select>
-  );
+  // Auswahl zeigt den aktuellen Stand: das Modul, „unbefristet“ oder (ältere Zugänge) den bisherigen Zeitraum
+  const modulAuswahl = (name: string, aktuell?: { module_id: string | null; valid_until: string | null; label: string | null; modulTitel?: string | null }) => {
+    const bisher = aktuell && !aktuell.module_id && aktuell.valid_until;
+    const fremd = aktuell?.module_id && !kommendeModule.some((m) => m.id === aktuell.module_id);
+    return (
+      <select name={name} defaultValue={aktuell?.module_id ?? (bisher ? "__bisher" : "")} className={feld} aria-label="Zugang">
+        <option value="">alle Module, unbefristet</option>
+        {bisher && <option value="__bisher">wie bisher: nur Zeitraum{aktuell.label ? ` (${aktuell.label})` : ""}</option>}
+        {fremd && <option value={aktuell.module_id!}>nur {aktuell.modulTitel ?? "früheres Modul"}</option>}
+        {kommendeModule.map((m) => <option key={m.id} value={m.id}>nur {m.title}</option>)}
+      </select>
+    );
+  };
   const jetzt = jetztMs();
   const [{ data: pflicht }, { data: aal }, { data: freigegeben }] = await Promise.all([
     supabase.rpc("mfa_required"), supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
@@ -88,17 +101,19 @@ export default async function TeamVerwaltung({ searchParams }: PageProps<"/team/
             <li key={m.user_id} className="flex flex-wrap items-center gap-3 py-4">
               <p className="mr-auto font-semibold">
                 {m.display_name}{m.user_id === staff.userId ? " (du)" : ""}
+                <span className="block text-sm font-normal text-ink-soft">{rollenName[m.role]}{m.module_id ? ` · nur ${m.modul?.title ?? "ein Modul"} (Einlass und Regieplan)` : ""}</span>
                 {m.valid_until && (
                   <span className={`block text-sm font-normal ${Date.parse(m.valid_until) <= jetzt ? "text-red-900" : "text-ink-soft"}`}>
-                    {m.label ? `${m.label} · ` : ""}{Date.parse(m.valid_until) <= jetzt ? "abgelaufen" : `gültig bis ${bis.format(new Date(m.valid_until))} Uhr`}
+                    {m.valid_from && Date.parse(m.valid_from) > jetzt ? `gültig ab ${bis.format(new Date(m.valid_from))} Uhr · ` : ""}
+                    {Date.parse(m.valid_until) <= jetzt ? "abgelaufen" : `gültig bis ${bis.format(new Date(m.valid_until))} Uhr`}
                   </span>
                 )}
               </p>
-              {m.user_id !== staff.userId && (
+              {m.user_id !== staff.userId && (m.role === "orga_team" || m.role === "checkin_helper" || m.valid_until) && (
                 <form action={zugangZeitraum} className="flex flex-wrap gap-2">
                   <input type="hidden" name="user_id" value={m.user_id} />
-                  {modulAuswahl("modul")}
-                  <button type="submit" className="rounded-full bg-white px-4 py-2 text-sm font-semibold ring-1 ring-line">Zeitraum</button>
+                  {modulAuswahl("modul", { module_id: m.module_id, valid_until: m.valid_until, label: m.label, modulTitel: m.modul?.title })}
+                  <button type="submit" className="rounded-full bg-white px-4 py-2 text-sm font-semibold ring-1 ring-line">Zugang speichern</button>
                 </form>
               )}
               <form action={rolleAendern} className="flex flex-wrap gap-2">
@@ -143,7 +158,11 @@ export default async function TeamVerwaltung({ searchParams }: PageProps<"/team/
             {rollenAuswahl("rolle")}
             {modulAuswahl("modul")}
             <button type="submit" className="justify-self-start rounded-full bg-ink px-6 py-3 font-semibold text-paper">Zur Freigabe vorlegen</button>
-            <p className="text-sm text-ink-soft sm:col-span-2">Ein zweiter Admin gibt den Zugang frei. Ein Passwort ist nicht nötig: Anmeldung mit E-Mail und Code.</p>
+            <p className="text-sm text-ink-soft sm:col-span-2">
+              Ein zweiter Admin gibt den Zugang frei; danach bekommt die Person eine Willkommensmail. Ein Passwort ist nicht nötig: Anmeldung mit E-Mail und Code.
+              „Nur &lt;Modul&gt;“ (für Orga-Team und Einlass-Helfer): Zugang nur zu Einlass und Regieplan dieses Moduls und nur vom Einlassbeginn am ersten bis 6 Stunden nach dem letzten Modultag.
+            </p>
+            <MailHinweis knapp className="sm:col-span-2" />
           </form>
         </section>
       </main>

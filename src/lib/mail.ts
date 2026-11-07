@@ -140,6 +140,38 @@ export async function sendeAbmeldeBestaetigung(participantId: string, modulTitel
   return ergebnis;
 }
 
+/**
+ * Willkommensmail für ein neues Teamkonto (nach der Vier-Augen-Freigabe): Rolle, ggf. Modul und Zeitraum, wie die
+ * Anmeldung per E-Mail-Code funktioniert. Bisher bekam die Person gar nichts und musste vom Admin informiert werden.
+ */
+export async function sendeTeamWillkommen(an: { email: string; name: string; rolle: string; modul?: string | null; bis?: string | null; zweiterFaktor: boolean }, von?: string): Promise<Ergebnis> {
+  const login = seitenUrl("/mein-bereich/login/");
+  const vorname = an.name.split(" ")[0];
+  const bis = an.bis ? new Intl.DateTimeFormat("de-DE", { dateStyle: "long", timeStyle: "short", timeZone: "Europe/Berlin" }).format(new Date(an.bis)) : null;
+  const umfang = an.modul
+    ? `nur für das Modul „${an.modul}“ (Einlass und Regieplan)${bis ? `, gültig bis ${bis} Uhr` : ""}`
+    : bis ? `gültig bis ${bis} Uhr` : "ohne zeitliche Begrenzung";
+  const text = [
+    `Hallo ${vorname},`, "",
+    `du hast jetzt einen Zugang zum Team-Bereich der SES Academy als ${an.rolle}, ${umfang}.`, "",
+    "So meldest du dich an:",
+    `1. ${login} öffnen`,
+    `2. deine E-Mail-Adresse ${an.email} eingeben`,
+    "3. den 6-stelligen Code aus der Mail eintippen, die dann kommt (ein Passwort brauchst du nicht)",
+    ...(an.zweiterFaktor ? ["4. einmalig einen zweiten Faktor mit einer Authenticator-App auf dem Handy einrichten"] : []), "",
+    "Kommt keine Mail an, schau bitte auch im Spam-Ordner nach oder schreib an ses@islamrat.de.", "",
+    "Viele Grüße", "Dein Team der SES Academy",
+  ].join("\n");
+  const ergebnis = await senden({
+    to: an.email,
+    subject: "Dein Zugang zum Team-Bereich der SES Academy",
+    text,
+    html: `<div style="font-family:Arial,Helvetica,sans-serif;color:#13201a;max-width:560px;line-height:1.6;white-space:pre-line">${html(text)}</div>`,
+  });
+  await protokolliere({ participantId: null, art: "team_willkommen", an: an.email, ergebnis, von });
+  return ergebnis;
+}
+
 /** Eingangsbestätigung nach dem Absenden der Bewerbung. */
 export async function sendeBewerbungEingang(an: { email: string; vorname: string; sprache: string }): Promise<Ergebnis> {
   const t = portalTexte[sprachOder(an.sprache)];

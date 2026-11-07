@@ -546,6 +546,93 @@ if (teil("teilnehmende")) {
   sql(`delete from participants where last_name = 'TestNachWalkin'`);
 }
 
+// ---------------------------------------------------------------------------
+// 8. Team-Zugang auf ein Modul begrenzt: Freigabe, Willkommensmail, Rechte wirklich nur fürs Modul
+// ---------------------------------------------------------------------------
+if (teil("teamzugang")) {
+  await mailsLeeren();
+  const demo = sql("select id from modules where slug = 'demokratie'");
+  sql("delete from approvals where payload ->> 'email' = 'testnach.modul@example.test' or summary like 'TestNach%'");
+  sql("delete from auth.users where email = 'testnach.modul@example.test'");
+  // zweiter Admin für das Vier-Augen-Prinzip (wie bei der Einrichtung per ./ses.sh admin)
+  sql("update staff_members set role = 'admin' where user_id = (select id from auth.users where email = 'vorstand@ses.test')");
+  const admin = await teamLogin(browser, "admin@ses.test");
+  await admin.goto(`${BASIS}/team/team/`);
+  const antrag = admin.locator("form", { hasText: "Zur Freigabe vorlegen" });
+  // Vorstand nur für ein Modul geht nicht
+  await antrag.locator("input[name=name]").fill("TestNach Vorstand");
+  await antrag.locator("input[name=email]").fill("testnach.vorstand@example.test");
+  await antrag.locator("select[name=rolle]").selectOption("vorstand");
+  await antrag.locator("select[name=modul]").selectOption({ label: "nur Demokratie" });
+  await antrag.getByRole("button", { name: "Zur Freigabe vorlegen" }).click();
+  await admin.getByText("Auf ein Modul begrenzen lassen sich nur Orga-Team und Einlass-Helfer").waitFor();
+  ok(true, "Vorstand lässt sich nicht auf ein Modul begrenzen");
+  await antrag.locator("input[name=name]").fill("TestNach Modulorga");
+  await antrag.locator("input[name=email]").fill("testnach.modul@example.test");
+  await antrag.locator("select[name=rolle]").selectOption("orga_team");
+  await antrag.locator("select[name=modul]").selectOption({ label: "nur Demokratie" });
+  await antrag.getByRole("button", { name: "Zur Freigabe vorlegen" }).click();
+  await admin.getByText("Beantragt.").waitFor();
+  const zweiter = await teamLogin(browser, "vorstand@ses.test");
+  await zweiter.goto(`${BASIS}/team/freigaben/`);
+  await zweiter.locator("li", { hasText: "testnach.modul@example.test" }).getByRole("button", { name: "Freigeben" }).click();
+  await zweiter.getByText("Freigegeben.").waitFor();
+  await admin.goto(`${BASIS}/team/team/`);
+  await admin.locator("form", { hasText: "TestNach Modulorga" }).getByRole("button", { name: "Jetzt ausführen" }).click();
+  await admin.getByText(/Konto angelegt/).waitFor();
+  ok(await admin.getByText("Die Person hat eine Willkommensmail").isVisible(), "Konto angelegt, Willkommensmail verschickt");
+  const willkommen = (await mailsAn("testnach.modul@example.test"))[0];
+  ok(willkommen?.Subject === "Dein Zugang zum Team-Bereich der SES Academy" && willkommen.Text.includes("nur für das Modul „Demokratie“") && willkommen.Text.includes("/mein-bereich/login/"),
+    "Willkommensmail mit Modul und Anleitung");
+  const zeile = admin.locator("li", { hasText: "TestNach Modulorga" });
+  ok(await zeile.locator("select[name=modul]").evaluate((s) => s.selectedOptions[0].textContent) === "nur Demokratie", "Auswahl zeigt „nur Demokratie“ statt „unbefristet“");
+  ok(await zeile.getByText("nur Demokratie (Einlass und Regieplan)").isVisible(), "Zeile nennt die Begrenzung");
+  // Aufheben braucht eine Freigabe
+  await zeile.locator("select[name=modul]").selectOption("");
+  await zeile.getByRole("button", { name: "Zugang speichern" }).click();
+  await admin.getByText("Beantragt.").waitFor();
+  ok(sql("select module_id from staff_members s join auth.users u on u.id = s.user_id where u.email = 'testnach.modul@example.test'") === demo, "Aufheben wirkt erst nach Freigabe");
+
+  // Anmelden im Zeitfenster (zum Test vorgezogen) und Rechte prüfen
+  sql("update staff_members s set valid_from = now() - interval '1 hour' from auth.users u where u.id = s.user_id and u.email = 'testnach.modul@example.test'");
+  const modul = await (await browser.newContext({ viewport: { width: 390, height: 844 } })).newPage();
+  await modul.goto(`${BASIS}/mein-bereich/login/`);
+  await modul.fill("#email", "testnach.modul@example.test");
+  await modul.getByRole("button", { name: "Anmeldelink schicken" }).click();
+  await modul.locator("#code").waitFor();
+  let code = null;
+  for (let i = 0; i < 20 && !code; i++) { code = (await mailsAn("testnach.modul@example.test")).find((m) => m.Subject.includes("Mein Bereich"))?.Text.match(/\b(\d{6})\b/)?.[1]; if (!code) await modul.waitForTimeout(500); }
+  await modul.fill("#code", code);
+  await modul.getByRole("button", { name: "Anmelden", exact: true }).click();
+  await modul.waitForURL(`${BASIS}/team/`);
+  ok(await modul.getByText("Dein Zugang gilt nur für").isVisible(), "Startseite nennt die Begrenzung");
+  await modul.getByRole("button", { name: "Menü" }).click();
+  const menue = (await modul.locator("#handy-menue nav").innerText()).replace(/\s+/g, " ");
+  ok(menue.includes("Einlass") && menue.includes("Regieplan") && !/Teilnehmende|Dokumente|Sitzungen|Hausaufgaben|Mitglieder/.test(menue), `Menü nur Eventtag (${menue.trim()})`);
+  for (const pfad of [`/team/module/${demo}/hotel/`, "/team/teilnehmende/", "/team/dokumente/", "/team/sitzungen/", "/team/hausaufgaben/", "/team/anrufe/", `/team/module/${demo}/namensschilder/`]) {
+    await modul.goto(`${BASIS}${pfad}`);
+    ok(modul.url().includes("fehler=rechte"), `Gesperrt: ${pfad}`);
+  }
+  await modul.goto(`${BASIS}/team/einlass/`);
+  const tage = await modul.locator("a[href*='/team/einlass/?tag=']").allInnerTexts();
+  ok(tage.length > 0 && tage.every((t) => t.includes("Demokratie")), `Einlass zeigt nur Demokratie (${tage.length} Tage)`);
+  await modul.goto(`${BASIS}/team/regieplan/`);
+  ok(!(await modul.content()).includes("Probe-Einlass"), "Regieplan ohne andere Module");
+  await modul.locator("summary", { hasText: "Programmpunkt eintragen" }).click();
+  await modul.fill("#von", "09:00");
+  await modul.fill("#title", "TestNach Modulpunkt");
+  await modul.getByRole("button", { name: "Eintragen" }).first().click();
+  await modul.getByText("Programmpunkt eingetragen.").waitFor();
+  ok(sql("select count(*) from program_items where title = 'TestNach Modulpunkt'") === "1", "Programm im eigenen Modul pflegbar");
+  ok(await keinUeberlauf(modul), "Regieplan am Handy ohne seitliches Scrollen");
+
+  sql("delete from program_items where title = 'TestNach Modulpunkt'");
+  sql("delete from approvals where payload ->> 'email' = 'testnach.modul@example.test' or summary like '%TestNach%'");
+  sql("delete from staff_members s using auth.users u where u.id = s.user_id and u.email = 'testnach.modul@example.test'");
+  sql("delete from auth.users where email = 'testnach.modul@example.test'");
+  sql("update staff_members set role = 'vorstand' where user_id = (select id from auth.users where email = 'vorstand@ses.test')");
+}
+
 await browser.close();
 console.log(fehler ? `\n${fehler} Fehler` : "\nAlles in Ordnung.");
 process.exit(fehler ? 1 : 0);

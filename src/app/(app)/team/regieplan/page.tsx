@@ -44,9 +44,11 @@ const zeitspanne = (von: string | null, bis: string | null) => (von ? `${uhrzeit
 export default async function Regieplan({ searchParams }: PageProps<"/team/regieplan">) {
   const staff = await requireStaff("einlass");
   const { tag: gewaehlt, hinweis, bearbeiten, einsatz: einsatzBearbeitet } = await searchParams;
-  const { tage, vorschlag } = await ladeModultage();
+  const { tage, vorschlag } = await ladeModultage(staff.modulId);
   const tag = tage.find((t) => t.id === gewaehlt) ?? vorschlag;
   const darfPflegen = darf.orga(staff.role);
+  // Auf ein Modul begrenzte Zugänge: Programm und Team pflegen ja, Dokumentenablage, Druck-Listen und PDF nein
+  const unbegrenzt = !staff.modulId;
 
   const supabase = await createClient();
   const [{ data: punkte }, { data: einsaetzeRoh }, { data: dokumente }] = tag
@@ -56,7 +58,7 @@ export default async function Regieplan({ searchParams }: PageProps<"/team/regie
           ? supabase.from("duty_assignments").select("*").eq("module_day_id", tag.id).order("is_lead", { ascending: false }).order("starts_at", { nullsFirst: true }).order("person_name")
           : Promise.resolve({ data: [] }),
         // PDFs aus der Ablage zur Auswahl (nur Orga-Team sieht die Ablage); das Modul des Tages zuerst
-        darfPflegen
+        darfPflegen && unbegrenzt
           ? supabase.from("documents").select("id, title, status, module_id, document_versions(version, mime_type, uploaded_at)").order("updated_at", { ascending: false })
           : Promise.resolve({ data: [] }),
       ])
@@ -91,9 +93,9 @@ export default async function Regieplan({ searchParams }: PageProps<"/team/regie
           {tag && (
             <div className="flex flex-wrap gap-2">
               <Link href={`/team/regieplan/druck/?tag=${tag.id}`} target="_blank" className="knopf-hell"><Printer aria-hidden className="h-4 w-4" />Regieplan fürs Team drucken</Link>
-              {darfPflegen && <Link href={`/team/module/${tag.module_id}/tagesordnung/`} target="_blank" className="knopf"><Printer aria-hidden className="h-4 w-4" />Tagesordnung für Teilnehmende</Link>}
-              {darfPflegen && <Link href={`/team/module/${tag.module_id}/namensschilder/`} target="_blank" className="knopf-hell">Namensschilder</Link>}
-              {darfPflegen && <Link href={`/team/module/${tag.module_id}/notfall/`} target="_blank" className="knopf-hell">Notfall-Liste</Link>}
+              {darfPflegen && unbegrenzt && <Link href={`/team/module/${tag.module_id}/tagesordnung/`} target="_blank" className="knopf"><Printer aria-hidden className="h-4 w-4" />Tagesordnung für Teilnehmende</Link>}
+              {darfPflegen && unbegrenzt && <Link href={`/team/module/${tag.module_id}/namensschilder/`} target="_blank" className="knopf-hell">Namensschilder</Link>}
+              {darfPflegen && unbegrenzt && <Link href={`/team/module/${tag.module_id}/notfall/`} target="_blank" className="knopf-hell">Notfall-Liste</Link>}
             </div>
           )}
         </div>
@@ -121,7 +123,7 @@ export default async function Regieplan({ searchParams }: PageProps<"/team/regie
                     <iframe src={`/team/regieplan/pdf/${tag.id}/`} title={pdf.title} className="block h-[80vh] w-full border-t border-line bg-paper-deep" />
                   </section>
                 )}
-                {darfPflegen && (
+                {darfPflegen && unbegrenzt && (
                   <details className={`rounded-3xl bg-paper-deep/60 px-4 py-3 text-sm ${pdf ? "mt-3" : "mb-4"}`}>
                     <summary className="cursor-pointer font-semibold">{pdf ? "Andere PDF wählen oder entfernen" : "PDF als Regieplan für diesen Tag festlegen"}</summary>
                     {pdfs.length === 0 ? (

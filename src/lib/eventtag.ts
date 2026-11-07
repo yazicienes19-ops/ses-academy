@@ -16,15 +16,18 @@ export function tagBezeichnung(tag: { starts_at: string; label?: string | null }
   return `${modul} · ${tagFormat.format(new Date(tag.starts_at))}${tag.label ? ` · ${tag.label}` : ""}`;
 }
 
-/** Modultage zur Auswahl: veröffentlichte, nicht abgesagte Module; Vorschlag = heute bzw. der nächste Tag. */
-export async function ladeModultage() {
+/**
+ * Modultage zur Auswahl: veröffentlichte, nicht abgesagte Module; Vorschlag = heute bzw. der nächste Tag.
+ * modulId: Zugang auf ein Modul begrenzt, dann nur dessen Tage.
+ */
+export async function ladeModultage(modulId: string | null = null) {
   const supabase = await createClient();
   const { data } = await supabase
     .from("module_days")
     .select("id, day, starts_at, ends_at, label, module_id, regieplan_document_id, module:modules!inner(title, status, cancelled_at)")
     .eq("module.status", "published")
     .order("starts_at");
-  const tage = (data ?? []).filter((t) => t.module.cancelled_at === null);
+  const tage = (data ?? []).filter((t) => t.module.cancelled_at === null && (!modulId || t.module_id === modulId));
   const jetzt = Date.now();
   const vorschlag = tage.find((t) => Date.parse(t.ends_at) + 6 * 3600_000 > jetzt) ?? tage.at(-1);
   return { tage, vorschlag };

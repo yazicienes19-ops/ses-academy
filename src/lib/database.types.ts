@@ -1015,17 +1015,23 @@ isOneToOne: false
                   ]
                 },"staff_members": {
                   Row: {
-                    "created_at": string,"display_name": string,"label": string | null,"role": Database["public"]['Enums']["staff_role"],"user_id": string,"valid_from": string | null,"valid_until": string | null
+                    "created_at": string,"display_name": string,"label": string | null,"module_id": string | null,"role": Database["public"]['Enums']["staff_role"],"user_id": string,"valid_from": string | null,"valid_until": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"display_name": string,"label"?: string | null,"role": Database["public"]['Enums']["staff_role"],"user_id": string,"valid_from"?: string | null,"valid_until"?: string | null
+                    "created_at"?: string,"display_name": string,"label"?: string | null,"module_id"?: string | null,"role": Database["public"]['Enums']["staff_role"],"user_id": string,"valid_from"?: string | null,"valid_until"?: string | null
                   }
                   Update: {
-                    "created_at"?: string,"display_name"?: string,"label"?: string | null,"role"?: Database["public"]['Enums']["staff_role"],"user_id"?: string,"valid_from"?: string | null,"valid_until"?: string | null
+                    "created_at"?: string,"display_name"?: string,"label"?: string | null,"module_id"?: string | null,"role"?: Database["public"]['Enums']["staff_role"],"user_id"?: string,"valid_from"?: string | null,"valid_until"?: string | null
                   }
                   Relationships: [
-                    
+                    {
+      foreignKeyName: "staff_members_module_id_fkey"
+      columns: ["module_id"]
+isOneToOne: false
+      referencedRelation: "modules"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"stay_requests": {
                   Row: {
@@ -1178,6 +1184,9 @@ isOneToOne: false
 "create_walk_in":
 { Args: { "p_affiliation"?: Database["public"]['Enums']["affiliation_status"],"p_allow_off_window"?: boolean,"p_email"?: string,"p_first_name": string,"p_force_new"?: boolean,"p_last_name": string,"p_module_day_id": string,"p_privacy_consent"?: boolean }; Returns: Json
                            },
+"current_staff_module":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
 "current_staff_role":
 { Args: Record<PropertyKey, never>; Returns: Database["public"]['Enums']["staff_role"]
                            },
@@ -1324,12 +1333,16 @@ isOneToOne: false
                            },
 "has_checkin_access":
 { Args: Record<PropertyKey, never>; Returns: boolean
+                           } |
+{ Args: { "p_module_id": string }; Returns: boolean
                            },
 "has_full_access":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
 "has_orga_access":
 { Args: Record<PropertyKey, never>; Returns: boolean
+                           } |
+{ Args: { "p_module_id": string }; Returns: boolean
                            },
 "link_my_account":
 { Args: Record<PropertyKey, never>; Returns: string

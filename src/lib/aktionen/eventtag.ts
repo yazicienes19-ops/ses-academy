@@ -48,7 +48,7 @@ const punktSchema = z.object({
 });
 
 export async function programmpunktAnlegen(formData: FormData) {
-  const staff = await requireStaff("orga");
+  const staff = await requireStaff("orga", { modulBezogen: true });
   const tagId = String(formData.get("tag"));
   const pfad = `/team/regieplan/?tag=${tagId}`;
   const tag = await ladeTag(tagId);
@@ -75,7 +75,7 @@ const statusSchema = z.enum(["geplant", "laeuft", "erledigt", "verschoben", "ent
 
 /** Status setzen. „läuft“ beendet dabei automatisch den Punkt, der vorher lief. */
 export async function programmpunktStatus(formData: FormData) {
-  const staff = await requireStaff("orga");
+  const staff = await requireStaff("orga", { modulBezogen: true });
   const tagId = String(formData.get("tag"));
   const id = String(formData.get("id"));
   const pfad = `/team/regieplan/?tag=${tagId}`;
@@ -92,7 +92,7 @@ export async function programmpunktStatus(formData: FormData) {
 
 /** Verzögerung: diesen und alle späteren, noch nicht erledigten Punkte des Tages um n Minuten verschieben. */
 export async function programmVerschieben(formData: FormData) {
-  const staff = await requireStaff("orga");
+  const staff = await requireStaff("orga", { modulBezogen: true });
   const tagId = String(formData.get("tag"));
   const id = String(formData.get("id"));
   const pfad = `/team/regieplan/?tag=${tagId}`;
@@ -122,7 +122,7 @@ export async function programmVerschieben(formData: FormData) {
 
 /** Programmpunkt nachträglich ändern (Zeit, Titel, Raum, Verantwortlich, Untertitel); der Status bleibt. */
 export async function programmpunktBearbeiten(formData: FormData) {
-  const staff = await requireStaff("orga");
+  const staff = await requireStaff("orga", { modulBezogen: true });
   const tagId = String(formData.get("tag"));
   const id = String(formData.get("id"));
   const pfad = `/team/regieplan/?tag=${tagId}`;
@@ -146,7 +146,7 @@ export async function programmpunktBearbeiten(formData: FormData) {
 }
 
 export async function programmpunktEntfernen(formData: FormData) {
-  await requireStaff("orga");
+  await requireStaff("orga", { modulBezogen: true });
   const tagId = String(formData.get("tag"));
   const id = String(formData.get("id"));
   const pfad = `/team/regieplan/?tag=${tagId}`;
@@ -169,7 +169,7 @@ const einsatzSchema = z.object({
 });
 
 export async function einsatzAnlegen(formData: FormData) {
-  await requireStaff("orga");
+  await requireStaff("orga", { modulBezogen: true });
   const tagId = String(formData.get("tag"));
   const pfad = `/team/regieplan/?tag=${tagId}`;
   const tag = await ladeTag(tagId);
@@ -193,7 +193,7 @@ export async function einsatzAnlegen(formData: FormData) {
 
 /** Einsatz nachträglich ändern (Name, Aufgabe, Telefon, Zeit, Leitung). */
 export async function einsatzBearbeiten(formData: FormData) {
-  await requireStaff("orga");
+  await requireStaff("orga", { modulBezogen: true });
   const tagId = String(formData.get("tag"));
   const id = String(formData.get("id"));
   const pfad = `/team/regieplan/?tag=${tagId}`;
@@ -216,7 +216,7 @@ export async function einsatzBearbeiten(formData: FormData) {
 }
 
 export async function einsatzEntfernen(formData: FormData) {
-  await requireStaff("orga");
+  await requireStaff("orga", { modulBezogen: true });
   const tagId = String(formData.get("tag"));
   const id = String(formData.get("id"));
   const pfad = `/team/regieplan/?tag=${tagId}`;
@@ -228,7 +228,7 @@ export async function einsatzEntfernen(formData: FormData) {
 
 /** Einsätze eines Tages auf einen anderen Tag desselben Moduls übernehmen (Uhrzeiten bleiben gleich). */
 export async function einsaetzeUebernehmen(formData: FormData) {
-  await requireStaff("orga");
+  await requireStaff("orga", { modulBezogen: true });
   const vonTag = String(formData.get("von_tag"));
   const tagId = String(formData.get("tag"));
   const pfad = `/team/regieplan/?tag=${tagId}`;

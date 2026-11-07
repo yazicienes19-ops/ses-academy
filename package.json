@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "onepager": "node scripts/onepager.mjs",
-    "test:db": "supabase db reset && for t in checkin_test portal_test kennzahlen_test step2_test eventtag_test feedback_test abgabe_test uebernachtung_test community_test zweiter_faktor_test modulwerkzeuge_test vier_augen_test dokumente_test saalfragen_test kontakte_test zimmerplan_test ticket_link_test; do docker exec -i supabase_db_ses-academy psql -U postgres -d postgres -q -t < supabase/tests/$t.sql || exit 1; done",
+    "test:db": "supabase db reset && for t in checkin_test portal_test kennzahlen_test step2_test eventtag_test feedback_test abgabe_test uebernachtung_test community_test zweiter_faktor_test modulwerkzeuge_test vier_augen_test dokumente_test saalfragen_test kontakte_test zimmerplan_test ticket_link_test team_modul_test; do docker exec -i supabase_db_ses-academy psql -U postgres -d postgres -q -t < supabase/tests/$t.sql || exit 1; done",
     "test:zimmerplan": "tsx scripts/zimmerplan-test.mts"
   },
   "dependencies": {
