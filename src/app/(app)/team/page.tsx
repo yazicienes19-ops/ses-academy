@@ -68,13 +68,14 @@ export default async function TeamStart({ searchParams }: PageProps<"/team">) {
   }
 
   const alles = darf.alles(staff.role);
-  const [{ data: naechste }, { data: meine }, { data: fristen }, { data: hotels }, { data: hausaufgaben }, { count: offeneFreigaben }] = await Promise.all([
+  const [{ data: naechste }, { data: meine }, { data: fristen }, { data: hotels }, { data: hausaufgaben }, { count: offeneFreigaben }, { count: offeneLoeschungen }] = await Promise.all([
     supabase.from("module_days").select("id, day, module:modules!inner(id, title, location, status, cancelled_at, slug)").gte("day", heute).eq("module.status", "published").is("module.cancelled_at", null).not("module.slug", "like", "probe-%").order("day").limit(1),
     supabase.from("tasks").select("id, title, due_date, module:modules(id, title)").eq("assignee_user", staff.userId).is("done_at", null).order("due_date", { nullsFirst: false }).limit(8),
     supabase.from("tasks").select("id, title, due_date, module:modules(id, title)").is("done_at", null).lte("due_date", inZweiWochen).order("due_date").limit(8),
     supabase.from("hotels").select("name, cancellation_deadline, module:modules(id, title)").gte("cancellation_deadline", heute).lte("cancellation_deadline", inZweiWochen),
     supabase.from("assignments").select("number, title, due_date").gte("due_date", heute).lte("due_date", inZweiWochen),
     alles ? supabase.from("approvals").select("id", { count: "exact", head: true }).eq("status", "offen").neq("requested_by", staff.userId) : Promise.resolve({ count: 0 }),
+    darf.admin(staff.role) ? supabase.from("deletion_requests").select("id", { count: "exact", head: true }).eq("status", "offen") : Promise.resolve({ count: 0 }),
   ]);
   const naechstes = naechste?.[0];
 
@@ -112,6 +113,14 @@ export default async function TeamStart({ searchParams }: PageProps<"/team">) {
           <Link href="/team/freigaben/" className="mt-6 flex items-center gap-3 rounded-2xl bg-signal px-5 py-3.5 font-semibold text-ink transition hover:brightness-95">
             <ShieldCheck aria-hidden className="h-5 w-5" />
             <span className="mr-auto">{offeneFreigaben} {offeneFreigaben === 1 ? "Antrag wartet" : "Anträge warten"} auf deine Freigabe</span>
+            <ArrowRight aria-hidden className="h-5 w-5" />
+          </Link>
+        )}
+
+        {(offeneLoeschungen ?? 0) > 0 && (
+          <Link href="/team/loeschantraege/" className="mt-3 flex items-center gap-3 rounded-2xl bg-gelb-hell px-5 py-3.5 font-semibold text-ink ring-1 ring-line transition hover:brightness-95">
+            <ShieldCheck aria-hidden className="h-5 w-5" />
+            <span className="mr-auto">{offeneLoeschungen} {offeneLoeschungen === 1 ? "Löschantrag wartet" : "Löschanträge warten"} auf Bearbeitung</span>
             <ArrowRight aria-hidden className="h-5 w-5" />
           </Link>
         )}

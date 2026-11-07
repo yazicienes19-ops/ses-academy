@@ -1,3 +1,5 @@
+import { Rueckfrage } from "@/components/team/Rueckfrage";
+import { loeschungBeantragen, loeschungZurueckziehen, verzeichnisUmschalten } from "@/lib/aktionen/datenschutz";
 import { RechtlicheLinks } from "@/components/RechtlicheLinks";
 import { rechtlicheTexte } from "@/lib/rechtliches";
 import type { Metadata } from "next";
@@ -29,12 +31,12 @@ function formate(l: BereichSprache, terminFolgt: string) {
 const sprachen: Record<string, string> = { de: "Deutsch", tr: "Türkçe", en: "English", fr: "Français", nl: "Nederlands" };
 
 export default async function MeinBereich({ searchParams }: PageProps<"/mein-bereich">) {
-  const { abgabe, uebernachtung, profil, modul } = await searchParams;
+  const { abgabe, uebernachtung, profil, modul, datenschutz } = await searchParams;
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) redirect("/mein-bereich/login/");
   // Zugriffsregeln: jede Abfrage liefert nur die eigenen Daten
-  const { data: ich } = await supabase.from("participants").select("id,first_name,last_name,email,phone,preferred_language,share_contact,photo_consent_at,photo_path,checkin_token,link_token,short_code,cohort_id").eq("user_id", auth.user.id).maybeSingle();
+  const { data: ich } = await supabase.from("participants").select("id,first_name,last_name,email,phone,preferred_language,share_contact,photo_consent_at,photo_path,checkin_token,link_token,short_code,cohort_id,directory_opt_out").eq("user_id", auth.user.id).maybeSingle();
   // Sprache: Profil der Person (Türkisch oder Deutsch), vor dem Laden des Profils die des Kontos
   const l = bereichSprache(ich?.preferred_language ?? (auth.user.user_metadata?.sprache as string | undefined));
   const t = bereichTexte[l];
@@ -44,6 +46,7 @@ export default async function MeinBereich({ searchParams }: PageProps<"/mein-ber
   const profilHinweis = hinweis(t.profilHinweise, profil);
   const uebernachtungHinweis = hinweis(t.uebernachtungHinweise, uebernachtung);
   const abgabeHinweis = hinweis(t.abgabeHinweise, abgabe);
+  const datenschutzHinweis = hinweis(t.datenschutzHinweise, datenschutz);
   if (!ich)
     return (
       <main lang={l} className="mx-auto max-w-xl px-4 py-16">
@@ -74,11 +77,13 @@ export default async function MeinBereich({ searchParams }: PageProps<"/mein-ber
   const vorbei = meineModule.filter((m) => m.tage.length && m.tage.every((t) => t.ends_at < jetzt)).reverse();
   const abgaben = (subs ?? []) as unknown as Sub[];
   const mitAbfrage = meineModule.filter((m) => m.modules.stay_form_open && !m.modules.cancelled_at && (m.status === "confirmed" || m.status === "waitlist") && m.tage.some((t) => t.ends_at >= jetzt));
-  const [{ data: angaben }, { data: zimmer }, { data: mitgliedschaften }] = await Promise.all([
+  const [{ data: angaben }, { data: zimmer }, { data: mitgliedschaften }, { data: loeschantraege }] = await Promise.all([
     mitAbfrage.length ? supabase.from("stay_requests").select("*") : Promise.resolve({ data: [] }),
     supabase.rpc("get_my_rooms"),
     supabase.from("memberships").select("id, membership_badge").order("valid_from", { ascending: false }),
+    supabase.from("deletion_requests").select("status, requested_at, decision_note").order("requested_at", { ascending: false }).limit(1),
   ]);
+  const loeschantrag = loeschantraege?.[0];
   const svg = await qrSvg(ich.checkin_token);
 
   return (
@@ -291,6 +296,38 @@ export default async function MeinBereich({ searchParams }: PageProps<"/mein-ber
                 <div className="min-w-60 flex-1"><label className="etikett" htmlFor="email">{t.emailAdresse}</label><input id="email" name="email" type="email" required defaultValue={ich.email ?? ""} className="feld" /></div>
                 <button type="submit" className="knopf-hell">{t.adresseAendern}</button>
               </form>
+            </div>
+          </div>
+        </section>
+
+        <section id="datenschutz" className="mt-12 scroll-mt-4">
+          <h2 className="font-display mb-4 text-2xl font-bold">{t.datenschutzTitel}</h2>
+          {datenschutzHinweis && <p role="status" className={`mb-4 rounded-2xl p-4 font-semibold ${datenschutzHinweis.gut ? "bg-gruen-hell" : "bg-gelb-hell"}`}>{datenschutzHinweis.text}</p>}
+          <div className="grid gap-4 md:grid-cols-2">
+            <form action={verzeichnisUmschalten} className="karte flex flex-col items-start gap-3">
+              <input type="hidden" name="raus" value={ich.directory_opt_out ? "0" : "1"} />
+              <p className="font-semibold">{t.verzeichnis}</p>
+              <p className="text-sm text-ink-soft">{ich.directory_opt_out ? t.verzeichnisDraussen : t.verzeichnisDrin}</p>
+              <button type="submit" className="knopf-hell mt-auto">{ich.directory_opt_out ? t.verzeichnisEintragen : t.verzeichnisAustragen}</button>
+            </form>
+            <div className="karte">
+              <p className="font-semibold">{t.loeschenTitel}</p>
+              {loeschantrag?.status === "offen" ? (
+                <form action={loeschungZurueckziehen} className="mt-2 flex flex-col items-start gap-3">
+                  <p className="rounded-2xl bg-gelb-hell p-3 text-sm font-semibold">{t.loeschenOffen(datum(loeschantrag.requested_at))}</p>
+                  <button type="submit" className="knopf-hell">{t.loeschenZurueckziehen}</button>
+                </form>
+              ) : (
+                <form action={loeschungBeantragen} className="mt-2 flex flex-wrap items-start gap-3">
+                  {loeschantrag?.status === "abgelehnt" && loeschantrag.decision_note && <p className="basis-full rounded-2xl bg-paper-deep p-3 text-sm">{t.loeschenAbgelehnt(loeschantrag.decision_note)}</p>}
+                  <p className="basis-full text-sm text-ink-soft">{t.loeschenText}</p>
+                  <div className="basis-full">
+                    <label className="etikett" htmlFor="grund-loeschen">{t.loeschenGrund}</label>
+                    <textarea id="grund-loeschen" name="grund" rows={2} maxLength={1000} className="feld" />
+                  </div>
+                  <Rueckfrage knopf={t.loeschenKnopf} knopfKlasse="knopf-hell" gefahr frage={t.loeschenFrage} ja={t.loeschenJa} abbrechen={t.abbrechen} laeuft="…" />
+                </form>
+              )}
             </div>
           </div>
         </section>

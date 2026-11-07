@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
 
-function JaKnopf({ children, className }: { children: React.ReactNode; className: string }) {
+function JaKnopf({ children, className, laeuft }: { children: React.ReactNode; className: string; laeuft: string }) {
   const { pending } = useFormStatus();
-  return <button type="submit" name="bestaetigt" value="ja" disabled={pending} aria-busy={pending} className={className}>{pending ? "Einen Moment …" : children}</button>;
+  return <button type="submit" name="bestaetigt" value="ja" disabled={pending} aria-busy={pending} className={className}>{pending ? laeuft : children}</button>;
 }
 
 /**
@@ -13,8 +13,10 @@ function JaKnopf({ children, className }: { children: React.ReactNode; className
  * (mit Erklärung und ggf. weiteren Feldern als children), erst „Ja“ sendet ab, mit bestaetigt=ja. Die Server Action
  * prüft dieses Feld; ohne JavaScript geht also nichts aus Versehen durch.
  */
-export function Rueckfrage({ knopf, knopfKlasse = "knopf-hell", frage, ja, gefahr = false, children }: {
+export function Rueckfrage({ knopf, knopfKlasse = "knopf-hell", frage, ja, gefahr = false, children, abbrechen = "Abbrechen", laeuft = "Einen Moment …" }: {
   knopf: React.ReactNode; knopfKlasse?: string; frage: React.ReactNode; ja: React.ReactNode; gefahr?: boolean; children?: React.ReactNode;
+  /** Beschriftungen für andere Sprachen (z. B. „Mein Bereich“ auf Türkisch) */
+  abbrechen?: string; laeuft?: string;
 }) {
   const [offen, setOffen] = useState(false);
   if (!offen) return <button type="button" onClick={() => setOffen(true)} className={knopfKlasse}>{knopf}</button>;
@@ -23,8 +25,8 @@ export function Rueckfrage({ knopf, knopfKlasse = "knopf-hell", frage, ja, gefah
       <div className="font-semibold">{frage}</div>
       {children && <div className="mt-2 space-y-1.5">{children}</div>}
       <div className="mt-3 flex flex-wrap gap-2">
-        <JaKnopf className={gefahr ? "rounded-full bg-red-800 px-4 py-2 font-semibold text-white" : "knopf"}>{ja}</JaKnopf>
-        <button type="button" onClick={() => setOffen(false)} className="knopf-hell">Abbrechen</button>
+        <JaKnopf laeuft={laeuft} className={gefahr ? "rounded-full bg-red-800 px-4 py-2 font-semibold text-white" : "knopf"}>{ja}</JaKnopf>
+        <button type="button" onClick={() => setOffen(false)} className="knopf-hell">{abbrechen}</button>
       </div>
     </div>
   );

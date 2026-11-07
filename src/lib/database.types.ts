@@ -255,6 +255,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"deletion_requests": {
+                  Row: {
+                    "decided_at": string | null,"decided_by": string | null,"decision_note": string | null,"id": string,"participant_id": string | null,"reason": string,"requested_at": string,"result": Json | null,"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "decided_at"?: string | null,"decided_by"?: string | null,"decision_note"?: string | null,"id"?: string,"participant_id"?: string | null,"reason"?: string,"requested_at"?: string,"result"?: Json | null,"status"?: string
+                  }
+                  Update: {
+                    "decided_at"?: string | null,"decided_by"?: string | null,"decision_note"?: string | null,"id"?: string,"participant_id"?: string | null,"reason"?: string,"requested_at"?: string,"result"?: Json | null,"status"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "deletion_requests_participant_id_fkey"
+      columns: ["participant_id"]
+isOneToOne: false
+      referencedRelation: "participants"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"document_versions": {
                   Row: {
                     "document_id": string,"file_name": string,"id": string,"mime_type": string | null,"note": string,"size_bytes": number | null,"storage_path": string,"uploaded_at": string,"uploaded_by": string | null,"version": number
@@ -785,14 +805,14 @@ isOneToOne: true
                   ]
                 },"participants": {
                   Row: {
-                    "active": boolean,"affiliation_status": Database["public"]['Enums']["affiliation_status"],"branch": string | null,"checkin_token": string,"cohort_id": string | null,"country": string | null,"created_at": string,"email": string | null,"first_name": string,"gender": string | null,"id": string,"last_name": string,"link_token": string,"mentor_id": string | null,"phone": string | null,"photo_consent_at": string | null,"photo_path": string | null,"preferred_language": string,"privacy_consent_at": string | null,"region_id": number | null,"share_contact": boolean,"short_code": string | null,"updated_at": string,"user_id": string | null,"display_name": string | null
+                    "active": boolean,"affiliation_status": Database["public"]['Enums']["affiliation_status"],"branch": string | null,"checkin_token": string,"cohort_id": string | null,"country": string | null,"created_at": string,"directory_opt_out": boolean,"email": string | null,"first_name": string,"gender": string | null,"id": string,"last_name": string,"link_token": string,"mentor_id": string | null,"phone": string | null,"photo_consent_at": string | null,"photo_path": string | null,"preferred_language": string,"privacy_consent_at": string | null,"region_id": number | null,"share_contact": boolean,"short_code": string | null,"updated_at": string,"user_id": string | null,"display_name": string | null
                   }
                   ComputedFields: "display_name"
                   Insert: {
-                    "active"?: boolean,"affiliation_status"?: Database["public"]['Enums']["affiliation_status"],"branch"?: string | null,"checkin_token"?: string,"cohort_id"?: string | null,"country"?: string | null,"created_at"?: string,"email"?: string | null,"first_name": string,"gender"?: string | null,"id"?: string,"last_name"?: string,"link_token"?: string,"mentor_id"?: string | null,"phone"?: string | null,"photo_consent_at"?: string | null,"photo_path"?: string | null,"preferred_language"?: string,"privacy_consent_at"?: string | null,"region_id"?: number | null,"share_contact"?: boolean,"short_code"?: never,"updated_at"?: string,"user_id"?: string | null
+                    "active"?: boolean,"affiliation_status"?: Database["public"]['Enums']["affiliation_status"],"branch"?: string | null,"checkin_token"?: string,"cohort_id"?: string | null,"country"?: string | null,"created_at"?: string,"directory_opt_out"?: boolean,"email"?: string | null,"first_name": string,"gender"?: string | null,"id"?: string,"last_name"?: string,"link_token"?: string,"mentor_id"?: string | null,"phone"?: string | null,"photo_consent_at"?: string | null,"photo_path"?: string | null,"preferred_language"?: string,"privacy_consent_at"?: string | null,"region_id"?: number | null,"share_contact"?: boolean,"short_code"?: never,"updated_at"?: string,"user_id"?: string | null
                   }
                   Update: {
-                    "active"?: boolean,"affiliation_status"?: Database["public"]['Enums']["affiliation_status"],"branch"?: string | null,"checkin_token"?: string,"cohort_id"?: string | null,"country"?: string | null,"created_at"?: string,"email"?: string | null,"first_name"?: string,"gender"?: string | null,"id"?: string,"last_name"?: string,"link_token"?: string,"mentor_id"?: string | null,"phone"?: string | null,"photo_consent_at"?: string | null,"photo_path"?: string | null,"preferred_language"?: string,"privacy_consent_at"?: string | null,"region_id"?: number | null,"share_contact"?: boolean,"short_code"?: never,"updated_at"?: string,"user_id"?: string | null
+                    "active"?: boolean,"affiliation_status"?: Database["public"]['Enums']["affiliation_status"],"branch"?: string | null,"checkin_token"?: string,"cohort_id"?: string | null,"country"?: string | null,"created_at"?: string,"directory_opt_out"?: boolean,"email"?: string | null,"first_name"?: string,"gender"?: string | null,"id"?: string,"last_name"?: string,"link_token"?: string,"mentor_id"?: string | null,"phone"?: string | null,"photo_consent_at"?: string | null,"photo_path"?: string | null,"preferred_language"?: string,"privacy_consent_at"?: string | null,"region_id"?: number | null,"share_contact"?: boolean,"short_code"?: never,"updated_at"?: string,"user_id"?: string | null
                   }
                   Relationships: [
                     {
@@ -1253,11 +1273,20 @@ isOneToOne: false
 "decide_approval":
 { Args: { "p_approve": boolean,"p_id": string,"p_note"?: string }; Returns: string
                            },
+"deletion_counts":
+{ Args: { "pid": string }; Returns: Json
+                           },
+"deletion_preview":
+{ Args: { "p_request_id": string }; Returns: Json
+                           },
 "display_name":
 { Args: { "p": Omit<Database["public"]['Tables']["participants"]['Row'], Database["public"]['Tables']["participants"]['ComputedFields']> }; Returns: string
                            },
 "end_user_sessions":
 { Args: { "p_user_id": string }; Returns: number
+                           },
+"execute_deletion":
+{ Args: { "p_note"?: string,"p_request_id": string }; Returns: Json
                            },
 "execute_team_approval":
 { Args: { "p_id": string,"p_new_user"?: string }; Returns: string
@@ -1404,6 +1433,9 @@ isOneToOne: false
                            } |
 { Args: { "p_module_id": string }; Returns: boolean
                            },
+"is_admin":
+{ Args: Record<PropertyKey, never>; Returns: boolean
+                           },
 "link_my_account":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
@@ -1449,6 +1481,9 @@ isOneToOne: false
 "register_public":
 { Args: { "p_email": string,"p_first_name": string,"p_language"?: string,"p_last_name": string,"p_module_slug": string,"p_phone"?: string }; Returns: Json
                            },
+"reject_deletion":
+{ Args: { "p_note": string,"p_request_id": string }; Returns: string
+                           },
 "rejoin_by_token":
 { Args: { "p_module_id": string,"p_token": string }; Returns: Json
                            },
@@ -1461,11 +1496,17 @@ isOneToOne: false
 "release_info_mail":
 { Args: { "p_module_id": string,"p_participant_id": string }; Returns: undefined
                            },
+"request_my_deletion":
+{ Args: { "p_reason"?: string }; Returns: string
+                           },
 "save_my_stay":
 { Args: { "p_arrival_at": string,"p_arrival_by": string,"p_departure_at": string,"p_module_id": string,"p_nights": (string)[],"p_notes": string,"p_room_wish": string }; Returns: string
                            },
 "set_day_document":
 { Args: { "p_day_id": string,"p_document_id": string }; Returns: undefined
+                           },
+"set_my_directory_opt_out":
+{ Args: { "p_opt_out": boolean }; Returns: string
                            },
 "set_rsvp":
 { Args: { "p_module_id": string,"p_participant_id": string,"p_rsvp": string }; Returns: undefined
@@ -1499,6 +1540,9 @@ isOneToOne: false
                            },
 "withdraw_mine":
 { Args: { "p_excuse_note"?: string,"p_module_id": string }; Returns: Json
+                           },
+"withdraw_my_deletion":
+{ Args: Record<PropertyKey, never>; Returns: string
                            },
 "withdraw_registration":
 { Args: { "p_excuse_note": string,"p_module_id": string,"p_participant_id": string,"p_via": string }; Returns: Json

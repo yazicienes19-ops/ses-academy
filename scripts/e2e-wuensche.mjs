@@ -648,6 +648,65 @@ if (teil("links")) {
   sql("update participants set preferred_language = 'de' where email = 'leila@example.test'");
 }
 
+// ---------------------------------------------------------------------------
+// 9b. Mein Bereich: aus dem Verzeichnis austragen, Löschung beantragen; Admin sieht, was passiert, und bestätigt
+// ---------------------------------------------------------------------------
+if (teil("loeschen")) {
+  await mailsLeeren();
+  sql("delete from auth.users where email = 'selin.tw@example.test'");
+  sql("delete from deletion_requests where participant_id in (select id from participants where email = 'selin.tw@example.test' or last_name like 'Person (%')");
+  sql("delete from participants where email = 'selin.tw@example.test'");
+  const selinId = sql("select public.upsert_participant('Selin', 'TestWunsch', 'selin.tw@example.test', NULL, 'academy_student', 'tr', true)");
+  sql(`update participants set cohort_id = '00000000-0000-4000-8000-000000002026', phone = '+49 170 555' where id = '${selinId}'`);
+  sql(`insert into registrations (module_id, participant_id, status, source) select id, '${selinId}', 'confirmed', 'staff' from modules where slug = 'demokratie'`);
+  sql(`insert into contact_log (participant_id, channel, note) values ('${selinId}', 'notiz', 'TestWunsch Notiz')`);
+
+  const selin = await portalLogin(browser, "selin.tw@example.test");
+  ok(await selin.getByRole("heading", { name: "Verilerin" }).isVisible(), "Mein Bereich (Türkisch): Abschnitt „Verilerin“");
+  await selin.getByRole("button", { name: "Rehberden çık" }).click();
+  await selin.getByText("Üye rehberinden çıktın.").first().waitFor();
+  ok(sql(`select directory_opt_out from participants where id = '${selinId}'`) === "t", "Aus dem Verzeichnis ausgetragen");
+  const amina = await portalLogin(browser, "amina@example.test", 1280);
+  await amina.goto(`${BASIS}/mein-bereich/verzeichnis/`);
+  ok(!(await amina.getByText("Selin TestWunsch").count()), "Andere Mitglieder sehen sie im Verzeichnis nicht mehr");
+  await selin.getByRole("button", { name: "Rehbere tekrar katıl" }).click();
+  await selin.getByText("Tekrar üye rehberindesin.").first().waitFor();
+  await amina.reload();
+  ok(await amina.getByText("Selin TestWunsch").count() > 0, "Wieder eingetragen: wieder sichtbar");
+
+  await selin.locator("#grund-loeschen").fill("TestWunsch Grund");
+  await selin.getByRole("button", { name: "Silinmesini talep et" }).click();
+  ok(await selin.getByText("gerçekten talep etmek istiyor musun").isVisible(), "Rückfrage vor dem Löschantrag (Türkisch)");
+  await selin.getByRole("button", { name: "Evet, silinmesini talep et" }).click();
+  await selin.getByText("Silme talebin bize ulaştı").waitFor();
+  ok(await selin.getByText("tarihli silme talebin inceleniyor").isVisible(), "Antrag gestellt, Stand sichtbar");
+  ok(sql(`select first_name from participants where id = '${selinId}'`) === "Selin", "Noch nichts gelöscht (keine Selbstlöschung)");
+  ok(await keinUeberlauf(selin), "Mein Bereich am Handy ohne seitliches Scrollen");
+
+  const vorstand = await teamLogin(browser, "vorstand@ses.test");
+  await vorstand.goto(`${BASIS}/team/loeschantraege/`);
+  ok(vorstand.url().includes("fehler=rechte"), "Vorstand: Löschanträge nur für Admins");
+  const admin = await teamLogin(browser, "admin@ses.test", 390);
+  ok(await admin.getByText("1 Löschantrag wartet auf Bearbeitung").isVisible(), "Admin-Startseite: Hinweis auf den Antrag");
+  await admin.getByText("1 Löschantrag wartet auf Bearbeitung").click();
+  await admin.waitForURL(/\/team\/loeschantraege\/$/);
+  const karte = admin.locator("li", { hasText: "Selin TestWunsch" });
+  ok(await karte.getByText("„TestWunsch Grund“").isVisible(), "Admin sieht den Grund");
+  ok(await karte.getByText("Anrufe und Kontakt-Notizen: 1").isVisible() && await karte.getByText("Anmeldungen zu Modulen: 1").isVisible() && await karte.getByText("Login-Konto für „Mein Bereich“").isVisible(),
+    "Admin sieht, was gelöscht und was anonymisiert wird");
+  ok(await keinUeberlauf(admin), "Löschanträge am Handy ohne seitliches Scrollen");
+  await karte.getByRole("button", { name: "Löschen bestätigen" }).click();
+  await karte.getByRole("button", { name: "Ja, endgültig löschen" }).click();
+  await admin.getByText("Erledigt: Konto und Kontaktdaten gelöscht").waitFor();
+  ok(sql(`select first_name || ' ' || last_name like 'Gelöschte Person (%' and email is null and phone is null and not active from participants where id = '${selinId}'`) === "t", "Person anonymisiert");
+  ok(sql("select count(*) from auth.users where email = 'selin.tw@example.test'") === "0", "Login-Konto gelöscht");
+  ok(sql(`select count(*) from registrations where participant_id = '${selinId}'`) === "1" && sql(`select count(*) from contact_log where participant_id = '${selinId}'`) === "0", "Anmeldung bleibt, Notiz gelöscht");
+  await selin.reload();
+  ok(/\/mein-bereich\/login\//.test(selin.url()), "Gelöschte Person ist abgemeldet (zurück zum Login)");
+  sql(`delete from deletion_requests where participant_id = '${selinId}'`);
+  sql(`delete from participants where id = '${selinId}'`);
+}
+
 await browser.close();
 console.log(fehler ? `\n${fehler} Fehler` : "\nAlles in Ordnung.");
 process.exit(fehler ? 1 : 0);
