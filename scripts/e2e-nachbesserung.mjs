@@ -231,6 +231,42 @@ if (teil("feedback")) {
   sql(`delete from feedback_surveys where id = '${umfrage}'`);
 }
 
+// ---------------------------------------------------------------------------
+// 6. Login: Code erneut senden (mit Wartezeit), Spam-Hinweis
+// ---------------------------------------------------------------------------
+if (teil("login")) {
+  await mailsLeeren();
+  const codeAus = async (anzahl) => {
+    for (let i = 0; i < 30; i++) {
+      const m = await mailsAn("leila@example.test");
+      if (m.length >= anzahl) return m.sort((a, b) => Date.parse(b.Date) - Date.parse(a.Date))[0].Text.match(/\b(\d{6})\b/)[1];
+      await new Promise((r) => setTimeout(r, 500));
+    }
+    return null;
+  };
+  const seite = await (await browser.newContext({ viewport: { width: 390, height: 844 } })).newPage();
+  await seite.goto(`${BASIS}/mein-bereich/login/`);
+  await seite.fill("#email", "leila@example.test");
+  await seite.getByRole("button", { name: "Anmeldelink schicken" }).click();
+  await seite.locator("#code").waitFor();
+  const erster = await codeAus(1);
+  ok(await seite.getByText("Schau bitte auch im Spam- oder Werbung-Ordner nach").isVisible(), "Spam-Hinweis sichtbar");
+  const knopf = seite.getByRole("button", { name: /Code erneut senden/ });
+  ok(await knopf.isDisabled() && /in \d+ s/.test(await knopf.innerText()), `Erneut senden erst nach Wartezeit: „${await knopf.innerText()}“`);
+  await seite.waitForTimeout(61_000);
+  ok(await knopf.isEnabled(), "Nach 60 Sekunden freigegeben");
+  await knopf.click();
+  await seite.getByText("Ein neuer Code ist unterwegs").waitFor();
+  const zweiter = await codeAus(2);
+  ok(zweiter && zweiter !== erster, "Zweite Mail mit neuem Code");
+  ok(await seite.getByRole("button", { name: /Code erneut senden \(in/ }).isDisabled(), "Wartezeit beginnt erneut");
+  await seite.fill("#code", ` ${zweiter.slice(0, 3)} ${zweiter.slice(3)}`);
+  await seite.getByRole("button", { name: "Anmelden", exact: true }).click();
+  await seite.waitForURL(/\/mein-bereich\/$/);
+  ok(true, "Anmeldung mit dem neuen Code (auch mit Leerzeichen eingefügt)");
+  ok(await keinUeberlauf(seite), "Mein Bereich am Handy ohne seitliches Scrollen");
+}
+
 await browser.close();
 console.log(fehler ? `\n${fehler} Fehler` : "\nAlles in Ordnung.");
 process.exit(fehler ? 1 : 0);

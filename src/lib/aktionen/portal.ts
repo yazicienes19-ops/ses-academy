@@ -8,10 +8,12 @@ import { createClient } from "@/lib/supabase/server";
 // Ein Login für alle (Entscheidung 25.10.2026): ohne Passwort, per Link oder 6-stelligem Code aus der E-Mail.
 // Teilnehmende landen in „Mein Bereich“, Teamkonten im Team-Bereich (dort ggf. zusätzlich der zweite Faktor).
 
-export type PortalLogin = { schritt: "mail" | "code"; email?: string; fehler?: string };
+/** gesendetUm: Zeitpunkt der letzten Anforderung (für die Wartezeit bis „Code erneut senden“); erneut: zweiter Versand. */
+export type PortalLogin = { schritt: "mail" | "code"; email?: string; fehler?: string; gesendetUm?: number; erneut?: boolean };
 
 export async function codeAnfordern(_: PortalLogin, formData: FormData): Promise<PortalLogin> {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const erneut = formData.get("erneut") === "ja";
   if (!z.email().safeParse(email).success) return { schritt: "mail", fehler: "Bitte gib eine gültige E-Mail-Adresse ein." };
   // Nur hinterlegte Adressen bekommen eine Mail. Die Antwort ist immer gleich, damit niemand
   // herausfinden kann, welche Adressen im System stehen.
@@ -23,10 +25,10 @@ export async function codeAnfordern(_: PortalLogin, formData: FormData): Promise
       // Teilnehmende bekommen beim ersten Login ein Konto; Teamkonten gibt es schon
       options: { shouldCreateUser: art === "participant", emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/bestaetigen/` },
     });
-    if (error?.status === 429) return { schritt: "mail", email, fehler: "Zu viele Versuche. Bitte warte eine Minute." };
+    if (error?.status === 429) return { schritt: erneut ? "code" : "mail", email, fehler: "Zu viele Versuche. Bitte warte eine Minute.", gesendetUm: Date.now(), erneut };
     if (error) console.error("Portal-Login:", error.message);
   }
-  return { schritt: "code", email };
+  return { schritt: "code", email, gesendetUm: Date.now(), erneut };
 }
 
 export async function codePruefen(_: PortalLogin, formData: FormData): Promise<PortalLogin> {
