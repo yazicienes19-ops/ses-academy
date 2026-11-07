@@ -8,7 +8,7 @@ Fünfsprachige Website der SES Academy, dazu Bewerbung, Teilnahme und Einlass (C
 | --- | --- | --- |
 | `/`, `/bewerbung/`, `/seminar/…`, `/en/…` | Öffentlich | Website. Das Bewerbungsformular speichert in Supabase und schickt eine Eingangsbestätigung. Ist ein Modul im Team-Bereich „offen für Gäste“, erscheint auf seiner Seminarseite ein Anmeldeformular (gleicher Kurzname wie in der Adresse). |
 | `/ticket/` | Öffentlich | „Ticket verloren?“: schickt das Ticket erneut an die angegebene Adresse. |
-| `/ticket/<token>/` | Teilnehmende | Persönliches Ticket: QR-Code, Kurzcode, Module, selbst abmelden oder entschuldigen. Der Link kommt per Mail. |
+| `/ticket/<token>/` | Teilnehmende | Persönliches Ticket: QR-Code, Kurzcode, Module. Über den Link aus der Mail (`link_token`) auch selbst abmelden bzw. entschuldigen und das bis zum Modulbeginn wieder zurücknehmen; nach dem Abmelden kommt eine Bestätigung per Mail. Der QR-Code enthält einen anderen Token (`checkin_token`): Wer nur den QR kennt (Foto, ältere Links), sieht das Ticket, kann aber nicht abmelden. |
 | `/team/` | Team (Login) | Übersicht je nach Rolle. |
 | `/team/einlass/` | alle Team-Rollen | Scanner und Kurzcode. Ab Orga-Team auch die Anwesenheitsliste (abhaken, zurücknehmen). |
 | `/team/regieplan/` | alle Team-Rollen (pflegen ab Orga-Team) | Regie- und Rollenplan eines Modultags auf einer Seite: Programm mit Stand nach der Uhr (läuft/vorbei automatisch, von Hand nur „entfällt“), Zeitplan verschieben, je Punkt die Eingeteilten; rechts das Team des Tages (ab Orga-Team) mit Leitung und Telefon; Druckansicht A4 quer unter `/team/regieplan/druck/`. Aktualisiert sich alle 30 Sekunden. |
@@ -22,7 +22,7 @@ Fünfsprachige Website der SES Academy, dazu Bewerbung, Teilnahme und Einlass (C
 | `/team/gruppen/` | ab Orga-Team | „Fehlt noch“ je Sorumlu am Eventtag: wer noch nicht eingecheckt ist, mit Anruf-Knopf; Admin/Vorstand pflegen dort Telefon und persönlichen Link der Sorumlu. |
 | `/sorumlu/<link>/` | Sorumlu (geheimer Link, ohne Konto) | Die eigene Gruppe am aktuellen Modultag, wer fehlt, mit Anruf-Knopf. |
 | `/team/module/<id>/namensschilder/` | ab Orga-Team | Namensschilder zum Drucken: acht je A4-Seite mit Name, Region, Generation und QR-Code für den Einlass, vier leere für Walk-ins. |
-| `/feedback/<ticket-token>/<umfrage>/` | Teilnehmende (Link aus der Mail) | Feedback-Umfrage zum Modul; antworten kann nur, wer eingecheckt war. Das Team sieht auf der Modulseite nur zusammengefasste Ergebnisse. |
+| `/feedback/<link-token>/<umfrage>/` | Teilnehmende (Link aus der Mail) | Feedback-Umfrage zum Modul; antworten kann nur, wer eingecheckt war. Das Team sieht auf der Modulseite nur zusammengefasste Ergebnisse. |
 | `/team/module/<id>/programm/` · `referenten/` · `checkliste/` · `gruppen/` | ab Orga-Team | Reiter des Moduls: Programm aller Tage; Referentenpool mit Status je Modul und Gästeblatt (Anreise, Abholung, Betreuung, Technik, Folien, Honorar); Checkliste aus der Vorlage mit Fristen und Zuständigen; Gruppen und Räume mit Vorschlag nach Land oder GT/KGT und Anwesenheit je Gruppe. |
 | `/team/` | Team | Startseite: nächstes Modul, meine Aufgaben (abhaken), Fristen der nächsten zwei Wochen (Checkliste, Stornofrist Hotel, Hausaufgaben). |
 | `/team/module/<id>/hotel/` | ab Orga-Team (Abfrage öffnen: Admin/Vorstand) | Übernachtung: Abfrage in „Mein Bereich“ (Nächte, Anreise, Zimmerwunsch, Hinweise), Hotel mit Kontingent, Preis und Stornofrist, Zimmer anlegen („101-110“), Zimmer zuteilen, Zimmerliste fürs Hotel zum Drucken. |

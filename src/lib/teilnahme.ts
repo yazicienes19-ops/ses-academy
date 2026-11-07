@@ -18,18 +18,34 @@ export type TicketModul = {
 };
 
 export type TicketDaten = {
-  participant: Pick<Row<"participants">, "id" | "first_name" | "last_name" | "email" | "preferred_language" | "checkin_token" | "short_code">;
+  participant: Pick<Row<"participants">, "id" | "first_name" | "last_name" | "email" | "preferred_language" | "checkin_token" | "link_token" | "short_code">;
   module: TicketModul[];
+  /** Über den Mail-Link (link_token) geöffnet. Nur dann darf die Seite abmelden; der QR-Inhalt (checkin_token) zeigt nur das Ticket. */
+  perLink: boolean;
 };
 
-/** Alles, was Ticket-Seite und Ticket-Mail brauchen. Läuft mit Dienstschlüssel, daher nur serverseitig. */
+/**
+ * Alles, was Ticket-Seite und Ticket-Mail brauchen. Läuft mit Dienstschlüssel, daher nur serverseitig.
+ * token: zuerst der Link aus der Mail (link_token), sonst der QR-Inhalt bzw. ältere Links (checkin_token).
+ */
 export async function ladeTicket(filter: { token: string } | { participantId: string }): Promise<TicketDaten | null> {
   const admin = createAdminClient();
-  const query = admin.from("participants").select("id, first_name, last_name, email, preferred_language, checkin_token, short_code");
-  const { data: participant } = await ("token" in filter
-    ? query.eq("checkin_token", filter.token)
-    : query.eq("id", filter.participantId)
-  ).maybeSingle();
+  const spalten = "id, first_name, last_name, email, preferred_language, checkin_token, link_token, short_code";
+  let perLink = false;
+  let participant: TicketDaten["participant"] | null = null;
+  if ("token" in filter) {
+    const { data: perMail } = await admin.from("participants").select(spalten).eq("link_token", filter.token).maybeSingle();
+    if (perMail) {
+      participant = perMail;
+      perLink = true;
+    } else {
+      const { data: perQr } = await admin.from("participants").select(spalten).eq("checkin_token", filter.token).maybeSingle();
+      participant = perQr;
+    }
+  } else {
+    const { data } = await admin.from("participants").select(spalten).eq("id", filter.participantId).maybeSingle();
+    participant = data;
+  }
   if (!participant) return null;
 
   const { data: regs } = await admin
@@ -56,7 +72,7 @@ export async function ladeTicket(filter: { token: string } | { participantId: st
     };
   });
   liste.sort((a, b) => (a.beginn ?? "").localeCompare(b.beginn ?? ""));
-  return { participant, module: liste };
+  return { participant, module: liste, perLink };
 }
 
 /** Datum eines Moduls lesbar, z. B. „14.–15. November 2026“. */

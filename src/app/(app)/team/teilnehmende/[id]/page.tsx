@@ -119,7 +119,7 @@ export default async function Person({ params, searchParams }: PageProps<"/team/
               </div>
             </div>
             <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:flex-col">
-              <a href={`/ticket/${p.checkin_token}/`} target="_blank" rel="noopener noreferrer" className="knopf-hell"><QrCode aria-hidden className="h-4 w-4" />QR-Code ansehen</a>
+              <a href={`/ticket/${p.link_token}/`} target="_blank" rel="noopener noreferrer" className="knopf-hell"><QrCode aria-hidden className="h-4 w-4" />QR-Code ansehen</a>
               <form action={ticketSenden}>
                 <input type="hidden" name="id" value={p.id} />
                 <button className="knopf w-full" disabled={!p.email || !mailAn}><Send aria-hidden className="h-4 w-4" />QR-Code per Mail</button>

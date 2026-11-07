@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { uebernachtungSpeichern } from "@/lib/aktionen/hotel";
 import { emailAendern, portalAbmelden } from "@/lib/aktionen/portal";
+import { meinAbmelden, meinZuruecknehmen } from "@/lib/aktionen/ticket";
 import { naechte, nachtName } from "@/lib/uebernachtung";
 import { kurzcodeAnzeige, qrSvg } from "@/lib/tickets";
 import { createClient } from "@/lib/supabase/server";
@@ -33,6 +34,15 @@ const uebernachtungHinweise: Record<string, { text: string; gut: boolean }> = {
   fehler: { text: "Das hat nicht geklappt. Bitte die Angaben prüfen.", gut: false },
 };
 
+const modulHinweise: Record<string, { text: string; gut: boolean }> = {
+  abgemeldet: { text: "Danke für Bescheid. Deine Abmeldung ist gespeichert, eine Bestätigung kommt per Mail.", gut: true },
+  "zu-spaet": { text: "Das Modul hat schon begonnen. Bitte melde dich direkt beim Team.", gut: false },
+  "wieder-dabei": { text: "Schön, dass du doch dabei bist. Deine Anmeldung gilt wieder.", gut: true },
+  "wieder-warteliste": { text: "Du stehst wieder auf der Warteliste. Wir melden uns, sobald ein Platz frei ist.", gut: true },
+  "nicht-moeglich": { text: "Das geht hier leider nicht mehr. Bitte schreib uns an ses@islamrat.de.", gut: false },
+  fehler: { text: "Das hat leider nicht geklappt. Bitte versuch es noch einmal.", gut: false },
+};
+
 const profilHinweise: Record<string, { text: string; gut: boolean }> = {
   gespeichert: { text: "Profil gespeichert.", gut: true },
   "foto-art": { text: "Bitte ein Foto als JPG, PNG oder WebP hochladen.", gut: false },
@@ -47,7 +57,8 @@ const profilHinweise: Record<string, { text: string; gut: boolean }> = {
 const sprachen: Record<string, string> = { de: "Deutsch", tr: "Türkçe", en: "English", fr: "Français", nl: "Nederlands" };
 
 export default async function MeinBereich({ searchParams }: PageProps<"/mein-bereich">) {
-  const { abgabe, uebernachtung, profil } = await searchParams;
+  const { abgabe, uebernachtung, profil, modul } = await searchParams;
+  const modulHinweis = typeof modul === "string" ? modulHinweise[modul] : undefined;
   const profilHinweis = typeof profil === "string" ? profilHinweise[profil] : undefined;
   const uebernachtungHinweis = typeof uebernachtung === "string" ? uebernachtungHinweise[uebernachtung] : undefined;
   const abgabeHinweis = typeof abgabe === "string" ? abgabeHinweise[abgabe] : undefined;
@@ -55,7 +66,7 @@ export default async function MeinBereich({ searchParams }: PageProps<"/mein-ber
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) redirect("/mein-bereich/login/");
   // Zugriffsregeln: jede Abfrage liefert nur die eigenen Daten
-  const { data: ich } = await supabase.from("participants").select("id,first_name,last_name,email,phone,preferred_language,share_contact,photo_consent_at,photo_path,checkin_token,short_code,cohort_id").eq("user_id", auth.user.id).maybeSingle();
+  const { data: ich } = await supabase.from("participants").select("id,first_name,last_name,email,phone,preferred_language,share_contact,photo_consent_at,photo_path,checkin_token,link_token,short_code,cohort_id").eq("user_id", auth.user.id).maybeSingle();
   if (!ich)
     return (
       <main className="mx-auto max-w-xl px-4 py-16">
@@ -78,6 +89,8 @@ export default async function MeinBereich({ searchParams }: PageProps<"/mein-ber
     .sort((a, b) => (a.tage[0]?.starts_at ?? "").localeCompare(b.tage[0]?.starts_at ?? ""));
   // Auch Warteliste zeigen (mit Vermerk), sonst heißt es fälschlich „für kein Modul angemeldet“
   const kommend = meineModule.filter((m) => m.tage.some((t) => t.ends_at >= jetzt) && (m.status === "confirmed" || m.status === "waitlist"));
+  // Selbst abgesagt, Modul noch nicht begonnen: mit „Doch teilnehmen“
+  const abgesagtKommend = meineModule.filter((m) => !m.modules.cancelled_at && m.tage.length > 0 && m.tage[0].starts_at > jetzt && (m.status === "excused" || m.status === "cancelled"));
   const vorbei = meineModule.filter((m) => m.tage.length && m.tage.every((t) => t.ends_at < jetzt)).reverse();
   const abgaben = (subs ?? []) as unknown as Sub[];
   const mitAbfrage = meineModule.filter((m) => m.modules.stay_form_open && (m.status === "confirmed" || m.status === "waitlist") && m.tage.some((t) => t.ends_at >= jetzt));
@@ -106,11 +119,12 @@ export default async function MeinBereich({ searchParams }: PageProps<"/mein-ber
             <div className="p-6">
               <div className="mx-auto w-full max-w-[240px] [&>svg]:h-auto [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: svg }} role="img" aria-label="Persönlicher QR-Code" />
               <p className="mt-3 font-mono text-2xl font-bold tracking-[0.15em]">{kurzcodeAnzeige(ich.short_code ?? "")}</p>
-              <Link href={`/ticket/${ich.checkin_token}/`} className="link mt-3 inline-block text-sm">Ticket-Seite öffnen (auch zum Abmelden)</Link>
+              <Link href={`/ticket/${ich.link_token}/`} className="link mt-3 inline-block text-sm">Ticket-Seite öffnen</Link>
             </div>
           </div>
-          <div>
+          <div id="module">
             <h2 className="font-display mb-4 text-2xl font-bold">Kommende Module</h2>
+            {modulHinweis && <p role="status" className={`mb-4 rounded-2xl p-4 font-semibold ${modulHinweis.gut ? "bg-gruen-hell" : "bg-gelb-hell"}`}>{modulHinweis.text}</p>}
             {kommend.length ? (
               <ul className="space-y-3">
                 {kommend.map((m) => (
@@ -120,10 +134,36 @@ export default async function MeinBereich({ searchParams }: PageProps<"/mein-ber
                     {m.modules.cancelled_at && <p className="mt-2 chip bg-rot-hell text-rot">Dieses Modul wurde abgesagt.</p>}
                     {!m.modules.cancelled_at && m.status === "waitlist" && <p className="mt-2 chip bg-gelb-hell">Warteliste: Wir melden uns, sobald ein Platz frei ist.</p>}
                     {m.attendances.length > 0 && <p className="mt-2 chip bg-gruen-hell">✓ eingecheckt</p>}
+                    {!m.modules.cancelled_at && m.tage[0].starts_at > jetzt && (
+                      <details className="mt-3">
+                        <summary className="cursor-pointer text-sm font-semibold">Ich kann nicht teilnehmen</summary>
+                        <form action={meinAbmelden} className="mt-3 grid gap-2">
+                          <input type="hidden" name="module_id" value={m.modules.id} />
+                          <label htmlFor={`grund-${m.modules.id}`} className="text-sm">Grund (optional)</label>
+                          <textarea id={`grund-${m.modules.id}`} name="grund" rows={2} maxLength={500} className="feld" />
+                          <button type="submit" className="knopf justify-self-start">Abmeldung bestätigen</button>
+                        </form>
+                      </details>
+                    )}
                   </li>
                 ))}
               </ul>
             ) : <p className="karte text-ink-soft">Gerade bist du für kein kommendes Modul angemeldet.</p>}
+            {abgesagtKommend.length > 0 && (
+              <ul className="mt-3 space-y-3">
+                {abgesagtKommend.map((m) => (
+                  <li key={m.modules.id} className="karte">
+                    <p className="font-display text-xl font-bold">{m.modules.title}</p>
+                    <p className="text-sm text-ink-soft">{zeitraum(m.tage)}{m.modules.location ? ` · ${m.modules.location}` : ""}</p>
+                    <form action={meinZuruecknehmen} className="mt-3 flex flex-wrap items-center gap-3">
+                      <input type="hidden" name="module_id" value={m.modules.id} />
+                      <span className="text-sm text-ink-soft">Du hast für dieses Modul abgesagt.</span>
+                      <button type="submit" className="knopf-hell">Doch teilnehmen</button>
+                    </form>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </section>
 

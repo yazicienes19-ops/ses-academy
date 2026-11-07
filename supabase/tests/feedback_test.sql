@@ -45,9 +45,9 @@ CREATE TEMP TABLE t AS SELECT
   (SELECT id FROM public.modules WHERE slug = 'demokratie') AS demokratie,
   (SELECT d.id FROM public.module_days d JOIN public.modules m ON m.id = d.module_id WHERE m.slug = 'skills-workshop' ORDER BY d.starts_at LIMIT 1) AS skills_tag1,
   (SELECT access_token FROM public.mentors WHERE name = 'Sorumlu A') AS token_a,
-  (SELECT checkin_token FROM public.participants WHERE email = 'amina@example.test') AS amina,
-  (SELECT checkin_token FROM public.participants WHERE email = 'leila@example.test') AS leila,
-  (SELECT checkin_token FROM public.participants WHERE email = 'yusuf@example.test') AS yusuf;
+  (SELECT link_token FROM public.participants WHERE email = 'amina@example.test') AS amina,
+  (SELECT link_token FROM public.participants WHERE email = 'leila@example.test') AS leila,
+  (SELECT link_token FROM public.participants WHERE email = 'yusuf@example.test') AS yusuf;
 GRANT SELECT ON t TO authenticated, service_role;
 
 -- 1) Umfrage anlegen: nur Admin/Vorstand, mit 7 Standardfragen

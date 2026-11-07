@@ -67,7 +67,7 @@ export async function sendeTicketMail(participantId: string, ausgeloestVon?: str
   const p = daten.participant;
   const l = sprachOder(p.preferred_language);
   const t = portalTexte[l];
-  const link = seitenUrl(`/ticket/${p.checkin_token}/`);
+  const link = seitenUrl(`/ticket/${p.link_token}/`);
   const code = kurzcodeAnzeige(p.short_code ?? "");
   const aktiv = daten.module.filter((m) => !m.abgesagt && (m.status === "confirmed" || m.status === "waitlist" || m.status === "pending"));
 
@@ -115,6 +115,30 @@ export async function sendeTicketMail(participantId: string, ausgeloestVon?: str
   return ergebnis;
 }
 
+/**
+ * Bestätigung nach dem Abmelden von einem Modul (Ticket-Link oder „Mein Bereich“), mit dem Weg zurück. So merkt die
+ * Person auch, wenn jemand anderes sie abgemeldet hat.
+ */
+export async function sendeAbmeldeBestaetigung(participantId: string, modulTitel: string, moduleId?: string): Promise<Ergebnis> {
+  const { data: p } = await createAdminClient().from("participants").select("id, first_name, email, preferred_language, link_token").eq("id", participantId).maybeSingle();
+  if (!p?.email) return { ok: false, fehler: "Keine E-Mail-Adresse hinterlegt." };
+  const l = sprachOder(p.preferred_language);
+  const t = portalTexte[l];
+  const link = seitenUrl(`/ticket/${p.link_token}/`);
+  const text = [t.mailAnrede(p.first_name), "", t.mailAbmeldungText(modulTitel), "", t.mailAbmeldungZurueck, `${t.mailTicketLink}: ${link}`, "", t.mailGruss].join("\n");
+  const inhalt = `<!doctype html><html lang="${l}"><body style="margin:0;background:#f3efe4;font-family:Arial,Helvetica,sans-serif;color:#13201a">
+<div style="max-width:560px;margin:0 auto;padding:32px 20px;font-size:16px;line-height:1.6">
+  <p style="font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#3c4a42;margin:0 0 16px">SES Academy</p>
+  <p>${html(t.mailAnrede(p.first_name))}<br>${html(t.mailAbmeldungText(modulTitel))}</p>
+  <p>${html(t.mailAbmeldungZurueck)}</p>
+  <p style="margin:24px 0"><a href="${html(link)}" style="display:inline-block;background:#13201a;color:#f3efe4;text-decoration:none;padding:14px 28px;border-radius:999px;font-weight:bold">${html(t.mailTicketLink)}</a></p>
+  <p style="font-size:14px;white-space:pre-line">${html(t.mailGruss)}</p>
+</div></body></html>`;
+  const ergebnis = await senden({ to: p.email, subject: t.mailAbmeldungBetreff(modulTitel), text, html: inhalt });
+  await protokolliere({ participantId: p.id, art: "abmeldung", an: p.email, ergebnis, moduleId });
+  return ergebnis;
+}
+
 /** Eingangsbestätigung nach dem Absenden der Bewerbung. */
 export async function sendeBewerbungEingang(an: { email: string; vorname: string; sprache: string }): Promise<Ergebnis> {
   const t = portalTexte[sprachOder(an.sprache)];
@@ -146,11 +170,11 @@ export async function ticketKuerzlichGesendet(participantId: string, minuten = 1
 export async function sendeFeedbackMail(participantId: string, surveyId: string, ausgeloestVon?: string): Promise<Ergebnis> {
   const db = createAdminClient();
   const [{ data: p }, { data: umfrage }] = await Promise.all([
-    db.from("participants").select("id, first_name, email, checkin_token").eq("id", participantId).maybeSingle(),
+    db.from("participants").select("id, first_name, email, link_token").eq("id", participantId).maybeSingle(),
     db.from("feedback_surveys").select("closes_at, module:modules(title)").eq("id", surveyId).maybeSingle(),
   ]);
   if (!p?.email || !umfrage) return { ok: false, fehler: "Keine E-Mail-Adresse hinterlegt." };
-  const link = seitenUrl(`/feedback/${p.checkin_token}/${surveyId}/`);
+  const link = seitenUrl(`/feedback/${p.link_token}/${surveyId}/`);
   const bis = new Intl.DateTimeFormat("de-DE", { day: "numeric", month: "long", timeZone: "Europe/Berlin" }).format(new Date(umfrage.closes_at));
   const titel = umfrage.module?.title ?? "Modul";
   const text = [
@@ -249,7 +273,7 @@ export async function sendeInfoMail(participantId: string, moduleId: string, aus
   if (!d) return { ok: false, fehler: "Nicht für dieses Modul angemeldet." };
   const an = test ?? d.p.email;
   if (!an) return { ok: false, fehler: "Keine E-Mail-Adresse hinterlegt." };
-  const { betreff, text, html } = infoMailInhalt(d, seitenUrl(`/ticket/${d.p.checkin_token}/`));
+  const { betreff, text, html } = infoMailInhalt(d, seitenUrl(`/ticket/${d.p.link_token}/`));
   const ergebnis = await senden({
     to: an,
     subject: test ? `[Test] ${betreff}` : betreff,

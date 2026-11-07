@@ -150,6 +150,6 @@ SELECT pg_temp.ok('Leila Entschuldigungen', total_cancelled_or_excused::text, '1
 -- 13. Selbst entschuldigen über den Ticket-Link (Server mit service_role)
 RESET ROLE;
 SET LOCAL ROLE service_role;
-SELECT pg_temp.ok('Jahrgang entschuldigt sich', (public.withdraw_by_token(amina_token, demo_module, 'Krank'))->>'status', 'excused') FROM t;
+SELECT pg_temp.ok('Jahrgang entschuldigt sich', (public.withdraw_by_token((SELECT link_token FROM public.participants WHERE checkin_token = amina_token), demo_module, 'Krank'))->>'status', 'excused') FROM t;
 
 ROLLBACK;

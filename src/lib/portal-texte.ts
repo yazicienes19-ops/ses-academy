@@ -47,6 +47,17 @@ export type PortalTexte = {
   verlorenSenden: string;
   verlorenOk: string;
   verlorenLink: string;
+  abmeldenPerMail: string;
+  abmeldeLinkSenden: string;
+  abmeldeLinkGesendet: string;
+  abgesagtSelbst: string;
+  dochTeilnehmen: string;
+  wiederAngemeldet: string;
+  wiederWarteliste: string;
+  nichtMehrMoeglich: string;
+  mailAbmeldungBetreff: (titel: string) => string;
+  mailAbmeldungText: (titel: string) => string;
+  mailAbmeldungZurueck: string;
 };
 
 export const portalTexte: Record<Sprache, PortalTexte> = {
@@ -93,6 +104,17 @@ export const portalTexte: Record<Sprache, PortalTexte> = {
     verlorenSenden: "Ticket senden",
     verlorenOk: "Wenn es zu dieser Adresse eine Anmeldung gibt, ist dein Ticket jetzt unterwegs.",
     verlorenLink: "Ticket verloren? Hier erneut anfordern",
+    abmeldenPerMail: "Abmelden kannst du über den Link aus deiner Ticket-Mail oder angemeldet in „Mein Bereich“. Wir schicken dir den Link gern noch einmal an deine E-Mail-Adresse.",
+    abmeldeLinkSenden: "Link per Mail schicken",
+    abmeldeLinkGesendet: "Wir haben dir den Link an deine E-Mail-Adresse geschickt. Darüber kannst du dich auch abmelden.",
+    abgesagtSelbst: "Du hast für dieses Modul abgesagt.",
+    dochTeilnehmen: "Doch teilnehmen",
+    wiederAngemeldet: "Schön, dass du doch dabei bist. Deine Anmeldung gilt wieder.",
+    wiederWarteliste: "Du stehst wieder auf der Warteliste. Wir melden uns, sobald ein Platz frei ist.",
+    nichtMehrMoeglich: "Das geht hier leider nicht mehr. Bitte schreib uns an ses@islamrat.de.",
+    mailAbmeldungBetreff: (t) => `Abmeldung gespeichert: ${t}`,
+    mailAbmeldungText: (t) => `du hast dich von „${t}“ abgemeldet. Danke, dass du Bescheid gesagt hast.`,
+    mailAbmeldungZurueck: "Falls das ein Versehen war oder du doch kommen kannst: Auf deiner Ticket-Seite kannst du die Abmeldung bis zum Beginn des Moduls zurücknehmen. Wenn du dich nicht selbst abgemeldet hast, antworte bitte auf diese Mail.",
   },
   tr: {
     ticketTitel: "Biletin",
@@ -137,6 +159,17 @@ export const portalTexte: Record<Sprache, PortalTexte> = {
     verlorenSenden: "Bileti gönder",
     verlorenOk: "Bu adrese ait bir kayıt varsa biletin şimdi yolda.",
     verlorenLink: "Biletini mi kaybettin? Buradan tekrar iste",
+    abmeldenPerMail: "Kaydını, bilet e-postandaki bağlantıdan veya „Mein Bereich“e giriş yaparak iptal edebilirsin. Bağlantıyı e-posta adresine tekrar gönderebiliriz.",
+    abmeldeLinkSenden: "Bağlantıyı e-postayla gönder",
+    abmeldeLinkGesendet: "Bağlantıyı e-posta adresine gönderdik. Kaydını oradan da iptal edebilirsin.",
+    abgesagtSelbst: "Bu modüle katılamayacağını bildirdin.",
+    dochTeilnehmen: "Yine de katılıyorum",
+    wiederAngemeldet: "Aramızda olacağına sevindik. Kaydın tekrar geçerli.",
+    wiederWarteliste: "Tekrar bekleme listesindesin. Yer açılınca sana haber vereceğiz.",
+    nichtMehrMoeglich: "Maalesef bu artık buradan mümkün değil. Lütfen ses@islamrat.de adresine yaz.",
+    mailAbmeldungBetreff: (t) => `Kaydın iptal edildi: ${t}`,
+    mailAbmeldungText: (t) => `„${t}“ programına katılamayacağını bildirdin. Haber verdiğin için teşekkürler.`,
+    mailAbmeldungZurueck: "Yanlışlıkla olduysa ya da yine de gelebileceksen: Bilet sayfanda modül başlayana kadar iptali geri alabilirsin. Kaydını sen iptal etmediysen lütfen bu e-postayı yanıtla.",
   },
   en: {
     ticketTitel: "Your ticket",
@@ -181,6 +214,17 @@ export const portalTexte: Record<Sprache, PortalTexte> = {
     verlorenSenden: "Send ticket",
     verlorenOk: "If there is a registration for this address, your ticket is on its way.",
     verlorenLink: "Lost your ticket? Request it again here",
+    abmeldenPerMail: "You can cancel via the link in your ticket email or when signed in to “Mein Bereich”. We can send the link to your email address again.",
+    abmeldeLinkSenden: "Email me the link",
+    abmeldeLinkGesendet: "We have sent the link to your email address. You can also cancel there.",
+    abgesagtSelbst: "You cancelled for this module.",
+    dochTeilnehmen: "I can attend after all",
+    wiederAngemeldet: "Great that you can make it after all. Your registration is valid again.",
+    wiederWarteliste: "You are back on the waiting list. We will let you know as soon as a place is free.",
+    nichtMehrMoeglich: "This is no longer possible here. Please write to ses@islamrat.de.",
+    mailAbmeldungBetreff: (t) => `Cancellation saved: ${t}`,
+    mailAbmeldungText: (t) => `you cancelled your place for “${t}”. Thanks for letting us know.`,
+    mailAbmeldungZurueck: "If this was a mistake or you can come after all, you can undo the cancellation on your ticket page until the module begins. If you did not cancel yourself, please reply to this email.",
   },
   fr: {
     ticketTitel: "Ton billet",
@@ -225,6 +269,17 @@ export const portalTexte: Record<Sprache, PortalTexte> = {
     verlorenSenden: "Envoyer le billet",
     verlorenOk: "S’il existe une inscription pour cette adresse, ton billet est en route.",
     verlorenLink: "Billet perdu ? Le redemander ici",
+    abmeldenPerMail: "Tu peux te désinscrire via le lien de ton e-mail de billet ou en te connectant à « Mein Bereich ». Nous pouvons t’envoyer le lien à nouveau.",
+    abmeldeLinkSenden: "M’envoyer le lien",
+    abmeldeLinkGesendet: "Nous t’avons envoyé le lien par e-mail. Tu peux aussi te désinscrire par ce lien.",
+    abgesagtSelbst: "Tu t’es désinscrit·e de ce module.",
+    dochTeilnehmen: "Finalement, je participe",
+    wiederAngemeldet: "Super que tu puisses venir. Ton inscription est de nouveau valable.",
+    wiederWarteliste: "Tu es de nouveau sur la liste d’attente. Nous te prévenons dès qu’une place se libère.",
+    nichtMehrMoeglich: "Ce n’est plus possible ici. Écris-nous à ses@islamrat.de.",
+    mailAbmeldungBetreff: (t) => `Désinscription enregistrée : ${t}`,
+    mailAbmeldungText: (t) => `tu t’es désinscrit·e de « ${t} ». Merci de nous avoir prévenus.`,
+    mailAbmeldungZurueck: "Si c’était une erreur ou si tu peux finalement venir, tu peux annuler la désinscription sur ta page de billet jusqu’au début du module. Si tu ne t’es pas désinscrit·e toi-même, réponds à cet e-mail.",
   },
   nl: {
     ticketTitel: "Je ticket",
@@ -269,6 +324,17 @@ export const portalTexte: Record<Sprache, PortalTexte> = {
     verlorenSenden: "Ticket sturen",
     verlorenOk: "Als er een aanmelding voor dit adres is, is je ticket nu onderweg.",
     verlorenLink: "Ticket kwijt? Vraag het hier opnieuw aan",
+    abmeldenPerMail: "Afmelden kan via de link in je ticketmail of als je bent ingelogd in „Mein Bereich”. We kunnen je de link opnieuw mailen.",
+    abmeldeLinkSenden: "Link mailen",
+    abmeldeLinkGesendet: "We hebben je de link gemaild. Daarmee kun je je ook afmelden.",
+    abgesagtSelbst: "Je hebt je voor deze module afgemeld.",
+    dochTeilnehmen: "Ik kom toch",
+    wiederAngemeldet: "Fijn dat je toch komt. Je aanmelding geldt weer.",
+    wiederWarteliste: "Je staat weer op de wachtlijst. We laten het weten zodra er een plek vrij is.",
+    nichtMehrMoeglich: "Dat kan hier helaas niet meer. Schrijf ons op ses@islamrat.de.",
+    mailAbmeldungBetreff: (t) => `Afmelding opgeslagen: ${t}`,
+    mailAbmeldungText: (t) => `je hebt je afgemeld voor „${t}”. Bedankt voor het laten weten.`,
+    mailAbmeldungZurueck: "Was dit een vergissing of kun je toch komen? Op je ticketpagina kun je de afmelding tot het begin van de module terugdraaien. Heb je je niet zelf afgemeld, beantwoord dan deze mail.",
   },
 };
 

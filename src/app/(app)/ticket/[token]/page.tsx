@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import { jetztMs } from "@/lib/zeit";
 import { notFound } from "next/navigation";
 import { locale } from "@/i18n/typ";
-import { perTicketAbmelden } from "@/lib/aktionen/ticket";
+import { abmeldeLinkSenden, perTicketAbmelden, perTicketZuruecknehmen } from "@/lib/aktionen/ticket";
 import { portalTexte, sprachOder } from "@/lib/portal-texte";
 import { ladeTicket, modulZeitraum } from "@/lib/teilnahme";
 import { istToken, kurzcodeAnzeige, qrSvg } from "@/lib/tickets";
 
-export const metadata: Metadata = { title: "Ticket | SES Academy", robots: { index: false, follow: false }, referrer: "no-referrer" };
+export const metadata: Metadata = { title: "Ticket | SES Academy", robots: { index: false, follow: false }, referrer: "same-origin" };
 
 export default async function TicketSeite({ params, searchParams }: PageProps<"/ticket/[token]">) {
   const { token } = await params;
@@ -21,7 +21,13 @@ export default async function TicketSeite({ params, searchParams }: PageProps<"/
   const t = portalTexte[l];
   const svg = await qrSvg(p.checkin_token);
   const jetzt = jetztMs();
-  const meldung = hinweis === "abgemeldet" ? t.abgemeldet : hinweis === "zu-spaet" ? t.zuSpaet : hinweis === "fehler" ? t.unbekannt : null;
+  const meldungen: Record<string, string> = {
+    abgemeldet: t.abgemeldet, "zu-spaet": t.zuSpaet, fehler: t.unbekannt, "link-gesendet": t.abmeldeLinkGesendet,
+    "wieder-dabei": t.wiederAngemeldet, "wieder-warteliste": t.wiederWarteliste, "nicht-moeglich": t.nichtMehrMoeglich,
+  };
+  const meldung = typeof hinweis === "string" ? meldungen[hinweis] ?? null : null;
+  // Abmelden und „Doch teilnehmen“ nur über den Link aus der Mail, nicht mit dem Inhalt des QR-Codes
+  const perLink = daten.perLink;
 
   return (
     <main lang={l} className="mx-auto max-w-lg px-4 py-10">
@@ -60,11 +66,11 @@ export default async function TicketSeite({ params, searchParams }: PageProps<"/
                 </span>
               </div>
               {!m.ticketNoetig && <p className="mt-2 text-sm text-ink-soft">{t.ohneTicket}</p>}
-              {kannAbmelden && (
+              {kannAbmelden && perLink && (
                 <details className="mt-3">
                   <summary className="cursor-pointer text-sm font-semibold">{t.abmelden}</summary>
                   <form action={perTicketAbmelden} className="mt-3 grid gap-2">
-                    <input type="hidden" name="token" value={p.checkin_token} />
+                    <input type="hidden" name="token" value={p.link_token} />
                     <input type="hidden" name="module_id" value={m.moduleId} />
                     <label htmlFor={`grund-${m.moduleId}`} className="text-sm">{t.grund}</label>
                     <textarea id={`grund-${m.moduleId}`} name="grund" rows={2} maxLength={500} className="rounded-2xl bg-white px-4 py-3 ring-1 ring-line" />
@@ -72,10 +78,27 @@ export default async function TicketSeite({ params, searchParams }: PageProps<"/
                   </form>
                 </details>
               )}
+              {kommt && perLink && (m.status === "excused" || m.status === "cancelled") && (
+                <form action={perTicketZuruecknehmen} className="mt-3 flex flex-wrap items-center gap-3">
+                  <input type="hidden" name="token" value={p.link_token} />
+                  <input type="hidden" name="module_id" value={m.moduleId} />
+                  <span className="text-sm text-ink-soft">{t.abgesagtSelbst}</span>
+                  <button type="submit" className="rounded-full bg-white px-5 py-2.5 text-sm font-semibold ring-1 ring-line">{t.dochTeilnehmen}</button>
+                </form>
+              )}
             </li>
           );
         })}
       </ul>
+
+      {!perLink && daten.module.some((m) => !m.abgesagt && m.beginn !== null && Date.parse(m.beginn) > jetzt) && (
+        <form action={abmeldeLinkSenden} className="mt-6 rounded-3xl bg-white/80 p-5 text-sm ring-1 ring-line">
+          <input type="hidden" name="token" value={p.checkin_token} />
+          <p className="font-semibold">{t.abmelden}</p>
+          <p className="mt-1 text-ink-soft">{t.abmeldenPerMail}</p>
+          <button type="submit" className="mt-3 rounded-full bg-white px-5 py-2.5 font-semibold ring-1 ring-line">{t.abmeldeLinkSenden}</button>
+        </form>
+      )}
     </main>
   );
 }

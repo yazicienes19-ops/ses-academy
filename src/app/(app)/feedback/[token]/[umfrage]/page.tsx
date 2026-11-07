@@ -5,15 +5,15 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { jetztMs } from "@/lib/zeit";
 import { FeedbackFormular } from "./FeedbackFormular";
 
-export const metadata: Metadata = { title: "Feedback | SES Academy", robots: { index: false, follow: false }, referrer: "no-referrer" };
+export const metadata: Metadata = { title: "Feedback | SES Academy", robots: { index: false, follow: false }, referrer: "same-origin" };
 
-/** Feedback-Umfrage über den persönlichen Link aus der Mail. Der Ticket-Token ist der Nachweis, ein Konto ist nicht nötig. */
+/** Feedback-Umfrage über den persönlichen Link aus der Mail. Der Link-Token (nicht der QR-Inhalt) ist der Nachweis, ein Konto ist nicht nötig. */
 export default async function FeedbackSeite({ params }: PageProps<"/feedback/[token]/[umfrage]">) {
   const { token, umfrage } = await params;
   if (!istToken(token) || !istToken(umfrage)) notFound();
   const db = createAdminClient();
   const [{ data: person }, { data: u }] = await Promise.all([
-    db.from("participants").select("id, first_name").eq("checkin_token", token.toLowerCase()).maybeSingle(),
+    db.from("participants").select("id, first_name").eq("link_token", token.toLowerCase()).maybeSingle(),
     db.from("feedback_surveys").select("id, opens_at, closes_at, module:modules(title), feedback_questions(id, position, kind, prompt)").eq("id", umfrage).maybeSingle(),
   ]);
   if (!person || !u) notFound();

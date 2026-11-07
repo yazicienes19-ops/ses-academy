@@ -69,7 +69,7 @@ export type InfoDaten = NonNullable<Awaited<ReturnType<typeof ladeInfoMail>>>;
 export async function ladeInfoMail(participantId: string, modulId: string) {
   const admin = createAdminClient();
   const [{ data: p }, { data: modul }, { data: reg }, { data: hotels }, { data: zuteilung }] = await Promise.all([
-    admin.from("participants").select("id, first_name, last_name, email, preferred_language, checkin_token, short_code").eq("id", participantId).maybeSingle(),
+    admin.from("participants").select("id, first_name, last_name, email, preferred_language, checkin_token, link_token, short_code").eq("id", participantId).maybeSingle(),
     admin.from("modules").select("id, title, subtitle, location, ticket_required, stay_form_open, module_days(id, starts_at, ends_at, program_items(starts_at, ends_at, title, status))").eq("id", modulId).maybeSingle(),
     admin.from("registrations").select("id, status, rsvp, stay_requests(nights)").eq("module_id", modulId).eq("participant_id", participantId).maybeSingle(),
     admin.from("hotels").select("id, name, address, rooms_visible").eq("module_id", modulId).order("created_at").limit(1),

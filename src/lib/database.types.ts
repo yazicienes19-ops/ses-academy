@@ -731,14 +731,14 @@ isOneToOne: true
                   ]
                 },"participants": {
                   Row: {
-                    "active": boolean,"affiliation_status": Database["public"]['Enums']["affiliation_status"],"branch": string | null,"checkin_token": string,"cohort_id": string | null,"country": string | null,"created_at": string,"email": string | null,"first_name": string,"gender": string | null,"id": string,"last_name": string,"mentor_id": string | null,"phone": string | null,"photo_consent_at": string | null,"photo_path": string | null,"preferred_language": string,"privacy_consent_at": string | null,"region_id": number | null,"share_contact": boolean,"short_code": string | null,"updated_at": string,"user_id": string | null,"display_name": string | null
+                    "active": boolean,"affiliation_status": Database["public"]['Enums']["affiliation_status"],"branch": string | null,"checkin_token": string,"cohort_id": string | null,"country": string | null,"created_at": string,"email": string | null,"first_name": string,"gender": string | null,"id": string,"last_name": string,"link_token": string,"mentor_id": string | null,"phone": string | null,"photo_consent_at": string | null,"photo_path": string | null,"preferred_language": string,"privacy_consent_at": string | null,"region_id": number | null,"share_contact": boolean,"short_code": string | null,"updated_at": string,"user_id": string | null,"display_name": string | null
                   }
                   ComputedFields: "display_name"
                   Insert: {
-                    "active"?: boolean,"affiliation_status"?: Database["public"]['Enums']["affiliation_status"],"branch"?: string | null,"checkin_token"?: string,"cohort_id"?: string | null,"country"?: string | null,"created_at"?: string,"email"?: string | null,"first_name": string,"gender"?: string | null,"id"?: string,"last_name"?: string,"mentor_id"?: string | null,"phone"?: string | null,"photo_consent_at"?: string | null,"photo_path"?: string | null,"preferred_language"?: string,"privacy_consent_at"?: string | null,"region_id"?: number | null,"share_contact"?: boolean,"short_code"?: never,"updated_at"?: string,"user_id"?: string | null
+                    "active"?: boolean,"affiliation_status"?: Database["public"]['Enums']["affiliation_status"],"branch"?: string | null,"checkin_token"?: string,"cohort_id"?: string | null,"country"?: string | null,"created_at"?: string,"email"?: string | null,"first_name": string,"gender"?: string | null,"id"?: string,"last_name"?: string,"link_token"?: string,"mentor_id"?: string | null,"phone"?: string | null,"photo_consent_at"?: string | null,"photo_path"?: string | null,"preferred_language"?: string,"privacy_consent_at"?: string | null,"region_id"?: number | null,"share_contact"?: boolean,"short_code"?: never,"updated_at"?: string,"user_id"?: string | null
                   }
                   Update: {
-                    "active"?: boolean,"affiliation_status"?: Database["public"]['Enums']["affiliation_status"],"branch"?: string | null,"checkin_token"?: string,"cohort_id"?: string | null,"country"?: string | null,"created_at"?: string,"email"?: string | null,"first_name"?: string,"gender"?: string | null,"id"?: string,"last_name"?: string,"mentor_id"?: string | null,"phone"?: string | null,"photo_consent_at"?: string | null,"photo_path"?: string | null,"preferred_language"?: string,"privacy_consent_at"?: string | null,"region_id"?: number | null,"share_contact"?: boolean,"short_code"?: never,"updated_at"?: string,"user_id"?: string | null
+                    "active"?: boolean,"affiliation_status"?: Database["public"]['Enums']["affiliation_status"],"branch"?: string | null,"checkin_token"?: string,"cohort_id"?: string | null,"country"?: string | null,"created_at"?: string,"email"?: string | null,"first_name"?: string,"gender"?: string | null,"id"?: string,"last_name"?: string,"link_token"?: string,"mentor_id"?: string | null,"phone"?: string | null,"photo_consent_at"?: string | null,"photo_path"?: string | null,"preferred_language"?: string,"privacy_consent_at"?: string | null,"region_id"?: number | null,"share_contact"?: boolean,"short_code"?: never,"updated_at"?: string,"user_id"?: string | null
                   }
                   Relationships: [
                     {
@@ -1343,6 +1343,9 @@ isOneToOne: false
 "module_access_window":
 { Args: { "p_module_id": string }; Returns: Json
                            },
+"module_has_free_seat":
+{ Args: { "p_module_id": string }; Returns: boolean
+                           },
 "my_participant_id":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
@@ -1369,6 +1372,15 @@ isOneToOne: false
                            },
 "register_public":
 { Args: { "p_email": string,"p_first_name": string,"p_language"?: string,"p_last_name": string,"p_module_slug": string,"p_phone"?: string }; Returns: Json
+                           },
+"rejoin_by_token":
+{ Args: { "p_module_id": string,"p_token": string }; Returns: Json
+                           },
+"rejoin_mine":
+{ Args: { "p_module_id": string }; Returns: Json
+                           },
+"rejoin_registration":
+{ Args: { "p_module_id": string,"p_participant_id": string,"p_via": string }; Returns: Json
                            },
 "release_info_mail":
 { Args: { "p_module_id": string,"p_participant_id": string }; Returns: undefined
@@ -1408,6 +1420,12 @@ isOneToOne: false
                            },
 "withdraw_by_token":
 { Args: { "p_excuse_note"?: string,"p_module_id": string,"p_token": string }; Returns: Json
+                           },
+"withdraw_mine":
+{ Args: { "p_excuse_note"?: string,"p_module_id": string }; Returns: Json
+                           },
+"withdraw_registration":
+{ Args: { "p_excuse_note": string,"p_module_id": string,"p_participant_id": string,"p_via": string }; Returns: Json
                            }
           }
           Enums: {
