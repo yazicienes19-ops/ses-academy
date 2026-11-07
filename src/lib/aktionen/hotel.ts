@@ -144,6 +144,9 @@ export async function uebernachtungSpeichern(formData: FormData) {
   });
   if (!istToken(modulId) || !d.success) redirect("/mein-bereich/?uebernachtung=fehler#uebernachtung");
   const zeit = (tag: string, uhr: string) => (tag ? berlinerZeit(tag, uhr || "12:00") : null);
+  const an = zeit(d.data.ankunft_tag, d.data.ankunft_zeit);
+  const ab = zeit(d.data.abreise_tag, d.data.abreise_zeit);
+  if (an && ab && ab < an) redirect("/mein-bereich/?uebernachtung=abreise#uebernachtung");
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("save_my_stay", {
     p_module_id: modulId, p_nights: d.data.nights,
@@ -151,5 +154,5 @@ export async function uebernachtungSpeichern(formData: FormData) {
     p_departure_at: zeit(d.data.abreise_tag, d.data.abreise_zeit)!, p_room_wish: d.data.room_wish, p_notes: d.data.notes,
   });
   revalidatePath("/mein-bereich/");
-  redirect(`/mein-bereich/?uebernachtung=${error ? "fehler" : data}#uebernachtung`);
+  redirect(`/mein-bereich/?uebernachtung=${error ? "fehler" : data === "departure_before_arrival" ? "abreise" : data}#uebernachtung`);
 }

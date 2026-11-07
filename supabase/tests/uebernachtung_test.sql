@@ -46,6 +46,20 @@ SELECT pg_temp.ok('Nur Nächte rund um das Modul, ohne Doppelte', (SELECT nights
 SELECT pg_temp.ok('Erneutes Speichern ändert die Angaben', public.save_my_stay((SELECT ws FROM t), '{2026-12-18}', NULL, 'auto', NULL, '', ''), 'saved');
 SELECT pg_temp.ok('Amina sieht nur ihre eigenen Angaben', (SELECT count(*)::text || ' ' || max(arrival_by) FROM public.stay_requests), '1 auto');
 SELECT pg_temp.ok('Nicht angemeldetes Modul', public.save_my_stay(gen_random_uuid(), '{}', NULL, NULL, NULL, '', ''), 'not_registered');
+-- Abreise vor Ankunft (Migration 20261121090000_uebernachtung_abreise): abgelehnt, alte Angaben bleiben
+SELECT pg_temp.ok('Abreise vor Ankunft abgelehnt',
+  public.save_my_stay((SELECT ws FROM t), '{2026-12-18}', '2026-12-18 18:00+01', 'bahn', '2026-12-17 10:00+01', '', ''), 'departure_before_arrival');
+SELECT pg_temp.ok('Angaben unverändert', (SELECT arrival_by FROM public.stay_requests), 'auto');
+SELECT pg_temp.ok('Gleicher Tag, Abreise nach Ankunft geht',
+  public.save_my_stay((SELECT ws FROM t), '{2026-12-18}', '2026-12-18 09:00+01', 'auto', '2026-12-18 17:00+01', '', ''), 'saved');
+RESET ROLE;
+DO $$ BEGIN
+  UPDATE public.stay_requests SET departure_at = arrival_at - interval '1 day';
+  RAISE EXCEPTION 'FEHLER Tabelle nimmt Abreise vor Ankunft an';
+EXCEPTION WHEN check_violation THEN RAISE NOTICE 'ok  Tabelle prüft Abreise nach Ankunft';
+END $$;
+SELECT pg_temp.login('amina@example.test');
+SELECT pg_temp.ok('Wieder wie vorher', public.save_my_stay((SELECT ws FROM t), '{2026-12-18}', NULL, 'auto', NULL, '', ''), 'saved');
 SELECT pg_temp.ok('Amina sieht keine Hotels', (SELECT count(*)::text FROM public.hotels), '0');
 
 SELECT pg_temp.login('orga@ses.test');

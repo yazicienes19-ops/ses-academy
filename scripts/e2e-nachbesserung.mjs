@@ -434,6 +434,32 @@ if (teil("regieplan")) {
   sql(`delete from program_items where module_day_id = '${tag}' and title like 'TestNach%'; delete from duty_assignments where module_day_id = '${tag}' and person_name like 'TestNach%'`);
 }
 
+// ---------------------------------------------------------------------------
+// 11. Übernachtung: Abreise vor Ankunft wird abgelehnt
+// ---------------------------------------------------------------------------
+if (teil("uebernachtung")) {
+  sql("update modules set stay_form_open = true where slug = 'demokratie'");
+  const mb = await portalLogin(browser, "amina@example.test");
+  const form = mb.locator("#uebernachtung form", { hasText: "Demokratie" });
+  await form.locator("input[name=ankunft_tag]").fill("2026-11-14");
+  await form.locator("input[name=ankunft_zeit]").fill("18:00");
+  await form.locator("input[name=abreise_tag]").fill("2026-11-13");
+  await form.locator("input[name=abreise_zeit]").fill("10:00");
+  await form.getByRole("button", { name: "Speichern" }).click();
+  await mb.getByText("Die Abreise liegt vor der Ankunft").waitFor();
+  ok(sql("select count(*) from stay_requests s join registrations r on r.id = s.registration_id join participants p on p.id = r.participant_id where p.email = 'amina@example.test'") === "0", "Abreise vor Ankunft: nichts gespeichert");
+  const form2 = mb.locator("#uebernachtung form", { hasText: "Demokratie" });
+  await form2.locator("input[name=ankunft_tag]").fill("2026-11-13");
+  await form2.locator("input[name=ankunft_zeit]").fill("18:00");
+  await form2.locator("input[name=abreise_tag]").fill("2026-11-15");
+  await form2.locator("input[name=abreise_zeit]").fill("17:00");
+  await form2.getByRole("button", { name: "Speichern" }).click();
+  await mb.getByText("Deine Angaben zur Übernachtung sind gespeichert").waitFor();
+  ok(true, "Richtige Reihenfolge wird gespeichert");
+  sql("delete from stay_requests s using registrations r, participants p where r.id = s.registration_id and p.id = r.participant_id and p.email = 'amina@example.test'");
+  sql("update modules set stay_form_open = false where slug = 'demokratie'");
+}
+
 await browser.close();
 console.log(fehler ? `\n${fehler} Fehler` : "\nAlles in Ordnung.");
 process.exit(fehler ? 1 : 0);
