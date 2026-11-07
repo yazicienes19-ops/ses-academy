@@ -4,9 +4,10 @@ import { useState, useTransition } from "react";
 import type { Sprache, Texte } from "@/i18n/typ";
 import { bewerbungAbsenden, type BewerbungZustand } from "@/lib/aktionen/bewerbung";
 import { Pfeil } from "./Pfeil";
+import { RechtlicheLinks } from "./RechtlicheLinks";
 
 // Die Bewerbung wird serverseitig gespeichert (Supabase) und per E-Mail bestätigt.
-export function BewerbungsFormular({ t, l }: { t: Texte["bewerbungSeite"]; l: Sprache }) {
+export function BewerbungsFormular({ t, l, rechtlich }: { t: Texte["bewerbungSeite"]; l: Sprache; rechtlich: { impressum: string; datenschutz: string } }) {
   const f = t.felder;
   const [zustand, setZustand] = useState<BewerbungZustand>({ status: "leer" });
   const [sendet, starte] = useTransition();
@@ -104,6 +105,7 @@ export function BewerbungsFormular({ t, l }: { t: Texte["bewerbungSeite"]; l: Sp
         <input type="checkbox" name="einwilligung" value="ja" required className="mt-1 h-5 w-5 shrink-0 accent-[var(--ink)]" />
         <span className="text-ink-soft">{t.einwilligung}</span>
       </label>
+      <RechtlicheLinks {...rechtlich} className="-mt-3 pl-8 text-ink-soft sm:col-span-2" />
 
       <div className="sm:col-span-2">
         <button type="submit" disabled={sendet} className="w-full rounded-full bg-ink px-8 py-4 text-lg font-semibold text-paper transition hover:bg-forest disabled:opacity-60 sm:w-auto">

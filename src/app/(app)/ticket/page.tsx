@@ -1,3 +1,5 @@
+import { RechtlicheLinks } from "@/components/RechtlicheLinks";
+import { rechtlicheTexte } from "@/lib/rechtliches";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { portalTexte, sprachOder } from "@/lib/portal-texte";
@@ -15,6 +17,7 @@ export default async function TicketVerloren({ searchParams }: PageProps<"/ticke
       <h1 className="mt-8 font-display text-4xl font-bold">{t.verlorenTitel}</h1>
       <p className="mt-3 text-ink-soft">{t.verlorenText}</p>
       <TicketAnfordern l={l} />
+      <RechtlicheLinks {...rechtlicheTexte(l)} className="mt-10 justify-center text-ink-soft" />
     </main>
   );
 }

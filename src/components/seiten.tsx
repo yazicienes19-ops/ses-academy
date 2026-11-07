@@ -360,7 +360,7 @@ export function Seminarseite({ l, slug }: { l: Sprache; slug: ModulSlug }) {
           </div>
         </div>
 
-        <ModulAnmeldung l={l} slug={slug} felder={t.bewerbungSeite.felder} />
+        <ModulAnmeldung l={l} slug={slug} felder={t.bewerbungSeite.felder} rechtlich={{ impressum: t.footer.impressum, datenschutz: t.footer.datenschutz }} />
 
         {(t.berichte.module[slug] || m.bis < heute()) && (
           <section className="bg-paper-deep/50">
@@ -491,7 +491,7 @@ export function Bewerbungsseite({ l }: { l: Sprache }) {
         <h2 className="font-display text-[clamp(2.2rem,5vw,3.8rem)] leading-none font-extrabold">{b.formTitel}</h2>
         <div className="mt-10">
           {bewerbungOffen
-            ? <BewerbungsFormular t={b} l={l} />
+            ? <BewerbungsFormular t={b} l={l} rechtlich={{ impressum: t.footer.impressum, datenschutz: t.footer.datenschutz }} />
             : <p className="rounded-3xl bg-white/80 p-8 text-lg ring-1 ring-line">{b.geschlossen}</p>}
         </div>
       </section>

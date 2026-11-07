@@ -1,3 +1,5 @@
+import { RechtlicheLinks } from "@/components/RechtlicheLinks";
+import { rechtlicheTexte } from "@/lib/rechtliches";
 import type { Metadata } from "next";
 import { jetztMs } from "@/lib/zeit";
 import { notFound } from "next/navigation";
@@ -99,6 +101,7 @@ export default async function TicketSeite({ params, searchParams }: PageProps<"/
           <button type="submit" className="mt-3 rounded-full bg-white px-5 py-2.5 font-semibold ring-1 ring-line">{t.abmeldeLinkSenden}</button>
         </form>
       )}
+      <RechtlicheLinks {...rechtlicheTexte(l)} className="mt-10 justify-center text-ink-soft" />
     </main>
   );
 }

@@ -598,6 +598,56 @@ if (teil("logistik")) {
   sql("delete from module_materials where label like 'TestWunsch%'");
 }
 
+// ---------------------------------------------------------------------------
+// 9a. Datenschutz und Impressum: Bewerbung, Login, Mein Bereich, Ticket, Mails
+// ---------------------------------------------------------------------------
+if (teil("links")) {
+  await mailsLeeren();
+  const DS = "https://www.islamrat.de/disclaimer/";
+  const IM = "https://www.islamrat.de/impressum/";
+  const hatLinks = async (page, ds = "Datenschutz", im = "Impressum") =>
+    (await page.getByRole("link", { name: ds, exact: true }).last().getAttribute("href")) === DS &&
+    (await page.getByRole("link", { name: im, exact: true }).last().getAttribute("href")) === IM;
+  const besucher = await (await browser.newContext({ viewport: { width: 390, height: 844 } })).newPage();
+  await besucher.goto(`${BASIS}/bewerbung/`);
+  if (await besucher.locator("#vorname").count()) {
+    const form = besucher.locator("form");
+    ok((await form.getByRole("link", { name: "Datenschutz" }).getAttribute("href")) === DS && (await form.getByRole("link", { name: "Impressum" }).getAttribute("href")) === IM, "Bewerbungsformular: Datenschutz und Impressum am Einverständnis");
+    await besucher.goto(`${BASIS}/tr/bewerbung/`);
+    ok((await besucher.locator("form").getByRole("link", { name: "Gizlilik" }).count()) === 1, "Bewerbungsformular auf Türkisch: „Gizlilik“, „Künye“");
+  } else console.log("–    Bewerbungsformular übersprungen (Server ohne BEWERBUNG_OFFEN=ja)");
+  await besucher.goto(`${BASIS}/mein-bereich/login/`);
+  ok(await hatLinks(besucher), "Login: Datenschutz und Impressum");
+  await besucher.goto(`${BASIS}/ticket/?sprache=de`);
+  ok(await hatLinks(besucher), "Ticket verloren: Datenschutz und Impressum");
+  const link = sql("select link_token from participants where email = 'leila@example.test'");
+  sql("update participants set preferred_language = 'tr' where email = 'leila@example.test'");
+  await besucher.goto(`${BASIS}/ticket/${link}/`);
+  ok(await hatLinks(besucher, "Gizlilik", "Künye"), "Ticket (Türkisch): Gizlilik und Künye");
+  ok(await keinUeberlauf(besucher), "Ticket am Handy ohne seitliches Scrollen");
+
+  const amina = await portalLogin(browser, "amina@example.test");
+  ok(await hatLinks(amina), "Mein Bereich: Datenschutz und Impressum");
+  // Login-Mail (Supabase-Vorlage): wirkt erst nach Neustart von Supabase, deshalb nur prüfen, wenn sie schon geladen ist
+  const login = (await mailsAn("amina@example.test"))[0];
+  if (login?.HTML.includes(DS)) ok(true, "Login-Mail: Datenschutz und Impressum");
+  else console.log("–    Login-Mail ohne Links: Supabase läuft noch mit der alten Vorlage (supabase stop/start)");
+
+  // Mails aus der App: Fuß mit Links, in der Sprache der Mail
+  sql("delete from email_log where recipient in ('amina@example.test', 'leila@example.test') and kind = 'ticket'");
+  for (const adresse of ["amina@example.test", "leila@example.test"]) {
+    await besucher.goto(`${BASIS}/ticket/?sprache=de`);
+    await besucher.fill("#email", adresse);
+    await besucher.click("button[type=submit]");
+    await besucher.getByText("Wenn es zu dieser Adresse eine Anmeldung gibt").waitFor();
+  }
+  const de = (await mailsWarten("amina@example.test", "Ticket"))[0];
+  const tr = (await mailsWarten("leila@example.test", "bilet"))[0];
+  ok(de?.Text.includes(`Datenschutz: ${DS}`) && de.Text.includes(`Impressum: ${IM}`) && de.HTML.includes(DS), "Ticket-Mail (Deutsch): Datenschutz und Impressum im Fuß");
+  ok(tr?.Text.includes(`Gizlilik: ${DS}`) && tr.Text.includes(`Künye: ${IM}`), "Ticket-Mail (Türkisch): Gizlilik und Künye im Fuß");
+  sql("update participants set preferred_language = 'de' where email = 'leila@example.test'");
+}
+
 await browser.close();
 console.log(fehler ? `\n${fehler} Fehler` : "\nAlles in Ordnung.");
 process.exit(fehler ? 1 : 0);

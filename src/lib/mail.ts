@@ -1,7 +1,8 @@
 import "server-only";
 
 import nodemailer, { type SendMailOptions } from "nodemailer";
-import { locale } from "@/i18n/typ";
+import { locale, type Sprache } from "@/i18n/typ";
+import { DATENSCHUTZ_URL, IMPRESSUM_URL, rechtlicheTexte } from "@/lib/rechtliches";
 import { bereichSprache, bereichTexte, datumsSprache } from "@/lib/bereich-texte";
 import { portalTexte, sprachOder } from "@/lib/portal-texte";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -47,10 +48,22 @@ async function protokolliere(eintrag: { participantId: string | null; art: strin
   });
 }
 
-async function senden(nachricht: SendMailOptions): Promise<Ergebnis> {
+/** Fuß jeder Mail: Datenschutz und Impressum (Seiten des Islamrats), in der Sprache der Mail. */
+function mitFuss(nachricht: SendMailOptions, l: Sprache): SendMailOptions {
+  const r = rechtlicheTexte(l);
+  const text = typeof nachricht.text === "string" ? `${nachricht.text}\n\n--\n${r.datenschutz}: ${DATENSCHUTZ_URL}\n${r.impressum}: ${IMPRESSUM_URL}` : nachricht.text;
+  const fuss = `<p style="margin:24px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;color:#5d6b63;text-align:center;white-space:normal">`
+    + `<a href="${DATENSCHUTZ_URL}" style="color:#5d6b63">${html(r.datenschutz)}</a> &middot; <a href="${IMPRESSUM_URL}" style="color:#5d6b63">${html(r.impressum)}</a></p>`;
+  const inhalt = typeof nachricht.html === "string"
+    ? (nachricht.html.includes("</body>") ? nachricht.html.replace("</body>", `${fuss}</body>`) : `${nachricht.html}${fuss}`)
+    : nachricht.html;
+  return { ...nachricht, text, html: inhalt };
+}
+
+async function senden(nachricht: SendMailOptions, l: Sprache = "de"): Promise<Ergebnis> {
   if (!mailBereit()) return { ok: false, fehler: "Mailversand nicht eingerichtet (SMTP-Zugangsdaten fehlen)." };
   try {
-    await transport().sendMail({ from: process.env.MAIL_FROM ?? "SES Academy <ses@islamrat.de>", ...nachricht });
+    await transport().sendMail({ from: process.env.MAIL_FROM ?? "SES Academy <ses@islamrat.de>", ...mitFuss(nachricht, l) });
     return { ok: true };
   } catch (e) {
     return { ok: false, fehler: e instanceof Error ? e.message : String(e) };
@@ -109,7 +122,7 @@ export async function sendeTicketMail(participantId: string, ausgeloestVon?: str
     text,
     html: inhalt,
     attachments: [{ filename: "ticket-qr.png", content: await qrPng(p.checkin_token), cid: "ticket-qr" }],
-  });
+  }, l);
   // Auch die Willkommensmail enthält das Ticket; sie zählt deshalb zusätzlich als Ticket-Versand
   await protokolliere({ participantId: p.id, art: willkommen ? "willkommen" : "ticket", an: email, ergebnis, von: ausgeloestVon });
   if (willkommen) await protokolliere({ participantId: p.id, art: "ticket", an: email, ergebnis, von: ausgeloestVon });
@@ -135,7 +148,7 @@ export async function sendeAbmeldeBestaetigung(participantId: string, modulTitel
   <p style="margin:24px 0"><a href="${html(link)}" style="display:inline-block;background:#13201a;color:#f3efe4;text-decoration:none;padding:14px 28px;border-radius:999px;font-weight:bold">${html(t.mailTicketLink)}</a></p>
   <p style="font-size:14px;white-space:pre-line">${html(t.mailGruss)}</p>
 </div></body></html>`;
-  const ergebnis = await senden({ to: p.email, subject: t.mailAbmeldungBetreff(modulTitel), text, html: inhalt });
+  const ergebnis = await senden({ to: p.email, subject: t.mailAbmeldungBetreff(modulTitel), text, html: inhalt }, l);
   await protokolliere({ participantId: p.id, art: "abmeldung", an: p.email, ergebnis, moduleId });
   return ergebnis;
 }
@@ -181,7 +194,7 @@ export async function sendeBewerbungEingang(an: { email: string; vorname: string
     subject: t.mailBewerbungBetreff,
     text,
     html: `<div style="font-family:Arial,Helvetica,sans-serif;color:#13201a;max-width:560px;line-height:1.6;white-space:pre-line">${html(text)}</div>`,
-  });
+  }, sprachOder(an.sprache));
   await protokolliere({ participantId: null, art: "application_received", an: an.email, ergebnis });
   return ergebnis;
 }
@@ -227,7 +240,7 @@ export async function sendeBewerbungStatus(an: { email: string; vorname: string;
     subject: t[an.status].betreff,
     text,
     html: `<div lang="${l}" style="font-family:Arial,Helvetica,sans-serif;color:#13201a;max-width:560px;line-height:1.6;white-space:pre-line">${html(text)}</div>`,
-  });
+  }, l);
   await protokolliere({ participantId: null, art: `bewerbung_${an.status}`, an: an.email, ergebnis, von });
   return ergebnis;
 }
@@ -291,7 +304,7 @@ export async function sendeFeedbackMail(participantId: string, surveyId: string,
 <p style="margin:28px 0"><a href="${html(link)}" style="display:inline-block;background:#13201a;color:#f3efe4;text-decoration:none;padding:14px 28px;border-radius:999px;font-weight:bold">${html(t.feedbackMailLink)}</a></p>
 <p style="color:#3c4a42;font-size:14px">${html(t.feedbackMailBis(bis))}</p>
 <p style="white-space:pre-line">${html(pt.mailGruss)}</p></div>`,
-  });
+  }, l);
   await protokolliere({ participantId: p.id, art: "feedback", an: p.email, ergebnis, von: ausgeloestVon });
   return ergebnis;
 }
@@ -370,7 +383,7 @@ export async function sendeNachricht(an: { participant_id: string | null; email:
     subject: test ? `[Test] ${inhalt.betreff}` : inhalt.betreff,
     text: voll,
     html: `<div lang="${inhalt.sprache}" style="font-family:Arial,Helvetica,sans-serif;color:#13201a;max-width:560px;line-height:1.6;white-space:pre-line">${html(voll)}</div>`,
-  });
+  }, inhalt.sprache);
   if (!test) await protokolliere({ participantId: an.participant_id, art: `nachricht:${antragId}`, an: an.email, ergebnis, von });
   return ergebnis;
 }
@@ -391,7 +404,7 @@ export async function sendeInfoMail(participantId: string, moduleId: string, aus
     text,
     html,
     attachments: [{ filename: "ticket-qr.png", content: await qrPng(d.p.checkin_token), cid: "ticket-qr" }],
-  });
+  }, d.p.preferred_language === "tr" ? "tr" : "de");
   if (!test) {
     // Enthält das Ticket: zählt auch als Ticket-Versand
     await protokolliere({ participantId: d.p.id, art: "info", an, ergebnis, von: ausgeloestVon, moduleId });
@@ -409,7 +422,7 @@ export async function sendeAbsageMail(participantId: string, modulTitel: string,
   const text = tr
     ? `Merhaba ${p.first_name},\n\nmaalesef „${modulTitel}“ programı iptal edildi. Biletin bu program için geçerli değil. Yeni bir tarih belli olunca sana haber vereceğiz.\n\nSorun olursa bu e-postayı yanıtlaman yeterli.\n\nSelamlarımızla\nSES Academy ekibi`
     : `Hallo ${p.first_name},\n\nleider müssen wir „${modulTitel}“ absagen. Dein Ticket gilt für dieses Modul nicht mehr. Sobald es einen neuen Termin gibt, melden wir uns.\n\nBei Fragen antworte einfach auf diese Mail.\n\nViele Grüße\nDein Team der SES Academy`;
-  const ergebnis = await senden({ to: p.email, subject: betreff, text, html: `<!doctype html><html><body style="font-family:Arial,Helvetica,sans-serif;color:#13201a;background:#f3efe4;margin:0"><div style="max-width:560px;margin:0 auto;padding:28px 20px;font-size:16px;line-height:1.6;white-space:pre-line">${html(text)}</div></body></html>` });
+  const ergebnis = await senden({ to: p.email, subject: betreff, text, html: `<!doctype html><html><body style="font-family:Arial,Helvetica,sans-serif;color:#13201a;background:#f3efe4;margin:0"><div style="max-width:560px;margin:0 auto;padding:28px 20px;font-size:16px;line-height:1.6;white-space:pre-line">${html(text)}</div></body></html>` }, tr ? "tr" : "de");
   await protokolliere({ participantId: p.id, art: "absage", an: p.email, ergebnis, von: ausgeloestVon, moduleId });
   return ergebnis;
 }

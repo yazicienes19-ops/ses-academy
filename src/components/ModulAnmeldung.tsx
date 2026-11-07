@@ -5,12 +5,13 @@ import type { Sprache, Texte } from "@/i18n/typ";
 import { gastAnmelden, modulOffen, type AnmeldungZustand, type ModulOffen } from "@/lib/aktionen/anmeldung";
 import { portalTexte } from "@/lib/portal-texte";
 import { Pfeil } from "./Pfeil";
+import { RechtlicheLinks } from "./RechtlicheLinks";
 
 /**
  * Anmeldeformular für Gäste auf der Seminarseite. Die Seite selbst ist statisch,
  * deshalb fragt das Formular beim Laden nach, ob das Modul gerade offen ist.
  */
-export function ModulAnmeldung({ l, slug, felder: f }: { l: Sprache; slug: string; felder: Texte["bewerbungSeite"]["felder"] }) {
+export function ModulAnmeldung({ l, slug, felder: f, rechtlich }: { l: Sprache; slug: string; felder: Texte["bewerbungSeite"]["felder"]; rechtlich: { impressum: string; datenschutz: string } }) {
   const t = portalTexte[l];
   const [lage, setLage] = useState<ModulOffen | null>(null);
   const [zustand, setZustand] = useState<AnmeldungZustand>({ status: "leer" });
@@ -68,6 +69,7 @@ export function ModulAnmeldung({ l, slug, felder: f }: { l: Sprache; slug: strin
               <input type="checkbox" name="einwilligung" value="ja" required className="mt-1 h-5 w-5 shrink-0 accent-[var(--signal)]" />
               <span className="text-paper/80">{t.anmeldungEinwilligung}</span>
             </label>
+            <RechtlicheLinks {...rechtlich} className="-mt-3 pl-8 text-paper/80 sm:col-span-2" />
             <div className="sm:col-span-2">
               <button type="submit" disabled={sendet} className="w-full rounded-full bg-signal px-8 py-4 text-lg font-semibold text-ink transition hover:bg-paper disabled:opacity-60 sm:w-auto">
                 {t.anmeldungSenden} <Pfeil className="ml-2" />

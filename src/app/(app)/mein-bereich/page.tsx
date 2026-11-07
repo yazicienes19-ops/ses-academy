@@ -1,3 +1,5 @@
+import { RechtlicheLinks } from "@/components/RechtlicheLinks";
+import { rechtlicheTexte } from "@/lib/rechtliches";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -48,6 +50,7 @@ export default async function MeinBereich({ searchParams }: PageProps<"/mein-ber
         <h1 className="font-display text-4xl font-extrabold">{t.keinProfilTitel}</h1>
         <p className="mt-4 text-ink-soft">{t.keinProfilText}</p>
         <form action={portalAbmelden} className="mt-6"><button className="knopf-hell">{t.abmelden}</button></form>
+        <RechtlicheLinks {...rechtlicheTexte(l)} className="mt-10 text-ink-soft" />
       </main>
     );
 
@@ -322,6 +325,7 @@ export default async function MeinBereich({ searchParams }: PageProps<"/mein-ber
             </ul>
           </div>
         </section>
+        <RechtlicheLinks {...rechtlicheTexte(l)} className="mt-16 border-t border-line pt-6 text-ink-soft" />
       </main>
     </div>
   );

@@ -1,3 +1,5 @@
+import { RechtlicheLinks } from "@/components/RechtlicheLinks";
+import { rechtlicheTexte } from "@/lib/rechtliches";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -145,6 +147,7 @@ export default async function Verzeichnis({ searchParams }: PageProps<"/mein-ber
         </section>
       ))}
       {liste.length === 0 && <p className="mt-6 rounded-3xl border-2 border-dashed border-line p-8 text-center text-ink-soft">{t.niemand}</p>}
+      <RechtlicheLinks {...rechtlicheTexte(l)} className="mt-12 border-t border-line pt-6 text-ink-soft" />
     </main>
     </>
   );

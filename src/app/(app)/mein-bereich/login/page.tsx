@@ -1,3 +1,5 @@
+import { RechtlicheLinks } from "@/components/RechtlicheLinks";
+import { rechtlicheTexte } from "@/lib/rechtliches";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
@@ -21,6 +23,7 @@ export default async function Login({ searchParams }: PageProps<"/mein-bereich/l
       <p className="mt-3 text-ink-soft">{t.loginIntro}</p>
       {fehler && <p role="alert" className="mt-6 rounded-2xl bg-rot-hell p-4 text-sm font-semibold text-rot">{t.loginLinkAbgelaufen}</p>}
       <div className="karte mt-8"><LoginFormular key={l} l={l} /></div>
+      <RechtlicheLinks {...rechtlicheTexte(l)} className="mt-10 justify-center text-ink-soft" />
     </main>
   );
 }
