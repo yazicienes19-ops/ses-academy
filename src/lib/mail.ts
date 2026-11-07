@@ -186,6 +186,52 @@ export async function sendeBewerbungEingang(an: { email: string; vorname: string
   return ergebnis;
 }
 
+const bewerbungStatusTexte = {
+  de: {
+    abgelehnt: {
+      betreff: "Deine Bewerbung für die SES Academy",
+      text: "vielen Dank für deine Bewerbung und dein Interesse an der SES Academy. Leider können wir dir in diesem Jahrgang keinen Platz anbieten. Die Zahl der Plätze ist begrenzt, und uns haben viele Bewerbungen erreicht. Für deinen weiteren Weg wünschen wir dir alles Gute.",
+    },
+    warteliste: {
+      betreff: "Deine Bewerbung: Warteliste",
+      text: "vielen Dank für deine Bewerbung für die SES Academy. Im Moment sind alle Plätze vergeben, deshalb stehst du auf unserer Warteliste. Sobald ein Platz frei wird, melden wir uns bei dir. Du musst dafür nichts weiter tun.",
+    },
+    fragen: "Bei Fragen antworte einfach auf diese Mail.",
+  },
+  tr: {
+    abgelehnt: {
+      betreff: "SES Academy başvurun hakkında",
+      text: "SES Academy'ye başvurduğun ve gösterdiğin ilgi için çok teşekkürler. Maalesef bu dönem sana yer veremiyoruz. Kontenjanımız sınırlı ve çok sayıda başvuru aldık. Bundan sonraki yolunda sana başarılar dileriz.",
+    },
+    warteliste: {
+      betreff: "Başvurun: bekleme listesi",
+      text: "SES Academy'ye başvurduğun için çok teşekkürler. Şu anda tüm yerler dolu, bu yüzden bekleme listesindesin. Bir yer açılınca sana haber vereceğiz. Bunun için başka bir şey yapmana gerek yok.",
+    },
+    fragen: "Sorun olursa bu e-postayı yanıtlaman yeterli.",
+  },
+} as const;
+
+/** Betreff einer Mail zu Absage bzw. Warteliste (für die Rückfrage im Team-Bereich). */
+export function bewerbungStatusBetreff(status: "abgelehnt" | "warteliste", sprache: string | null) {
+  return bewerbungStatusTexte[bereichSprache(sprache)][status].betreff;
+}
+
+/** Mail an Bewerbende bei Absage oder Warteliste, auf Deutsch oder Türkisch nach der Sprache der Bewerbung. */
+export async function sendeBewerbungStatus(an: { email: string; vorname: string; sprache: string | null; status: "abgelehnt" | "warteliste" }, von?: string): Promise<Ergebnis> {
+  const l = bereichSprache(an.sprache);
+  const t = bewerbungStatusTexte[l];
+  const pt = portalTexte[l];
+  const text = [pt.mailAnrede(an.vorname), "", t[an.status].text, "", t.fragen, "", pt.mailGruss].join("\n");
+  const ergebnis = await senden({
+    to: an.email,
+    subject: t[an.status].betreff,
+    text,
+    html: `<div lang="${l}" style="font-family:Arial,Helvetica,sans-serif;color:#13201a;max-width:560px;line-height:1.6;white-space:pre-line">${html(text)}</div>`,
+  });
+  await protokolliere({ participantId: null, art: `bewerbung_${an.status}`, an: an.email, ergebnis, von });
+  return ergebnis;
+}
+
 /** Schutz vor Mail-Flut: Wurde dieser Person in den letzten Minuten schon ein Ticket geschickt? */
 export async function ticketKuerzlichGesendet(participantId: string, minuten = 10): Promise<boolean> {
   const seit = new Date(Date.now() - minuten * 60_000).toISOString();

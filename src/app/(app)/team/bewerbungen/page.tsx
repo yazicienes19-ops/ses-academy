@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { TeamKopf } from "@/components/team/TeamKopf";
 import { MailHinweis } from "@/components/team/MailHinweis";
+import { Rueckfrage } from "@/components/team/Rueckfrage";
 import { annehmen, statusSetzen, ticketErneutSenden } from "@/lib/aktionen/bewerbungen";
 import { requireStaff } from "@/lib/auth";
+import { bewerbungStatusBetreff, mailBereit } from "@/lib/mail";
 import type { Database } from "@/lib/database.types";
 import { createClient } from "@/lib/supabase/server";
 
@@ -25,6 +27,11 @@ const hinweise: Record<string, { text: string; gut: boolean }> = {
   "angenommen-ohne-mail": { text: "Angenommen, aber die Ticket-Mail konnte nicht gesendet werden. Bitte „Ticket erneut senden“ versuchen.", gut: false },
   "annahme-fehler": { text: "Die Annahme hat nicht geklappt. Bitte erneut versuchen.", gut: false },
   gespeichert: { text: "Status gespeichert.", gut: true },
+  "abgelehnt-mail": { text: "Abgelehnt. Die Person hat eine Mail bekommen (in der Sprache ihrer Bewerbung).", gut: true },
+  "warteliste-mail": { text: "Auf die Warteliste gesetzt. Die Person hat eine Mail bekommen (in der Sprache ihrer Bewerbung).", gut: true },
+  "status-mail-aus": { text: "Status gespeichert. Es ist keine Mail rausgegangen: Der Mailversand ist noch nicht eingerichtet. Bitte die Person anders informieren.", gut: false },
+  "status-mail-fehler": { text: "Status gespeichert, aber die Mail konnte nicht gesendet werden. Bitte die Person anders informieren.", gut: false },
+  bestaetigen: { text: "Bitte die Rückfrage bestätigen. Es wurde nichts geändert.", gut: false },
   "ticket-gesendet": { text: "Ticket-Mail erneut gesendet.", gut: true },
   "mail-fehler": { text: "Die Mail konnte nicht gesendet werden. Stimmen die SMTP-Einstellungen?", gut: false },
   fehler: { text: "Das hat nicht geklappt.", gut: false },
@@ -49,6 +56,7 @@ export default async function BewerbungenSeite({ searchParams }: PageProps<"/tea
   const anzahl = (f: Status | "offen") => (alleStatus ?? []).filter((b) => (f === "offen" ? b.status === "eingegangen" || b.status === "in_pruefung" : b.status === f)).length;
   const h = hinweis ? hinweise[String(hinweis)] : null;
 
+  const bereit = mailBereit();
   const knopf = "rounded-full px-4 py-2 text-sm font-semibold ring-1 ring-line bg-white hover:bg-paper-deep";
 
   return (
@@ -101,14 +109,35 @@ export default async function BewerbungenSeite({ searchParams }: PageProps<"/tea
               <div className="mt-4 flex flex-wrap gap-2">
                 {b.status !== "angenommen" ? (
                   <>
-                    <form action={annehmen}>
+                    <form action={annehmen} className="contents">
                       <input type="hidden" name="id" value={b.id} /><input type="hidden" name="filter" value={filter} />
-                      <button type="submit" className="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-paper hover:bg-forest">Annehmen und Ticket senden</button>
+                      <Rueckfrage knopf="Annehmen und Ticket senden" knopfKlasse="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-paper hover:bg-forest"
+                        frage={`${b.first_name} ${b.last_name} annehmen? Die Person wird für alle kommenden Module des Jahrgangs angemeldet und bekommt ihr Ticket an ${b.email}.`}
+                        ja="Ja, annehmen">
+                        {!bereit && <p className="font-semibold text-rot">Mailversand ist nicht eingerichtet: Das Ticket geht im Moment nicht raus.</p>}
+                      </Rueckfrage>
                     </form>
-                    {(["in_pruefung", "warteliste", "abgelehnt"] as const).filter((s) => s !== b.status).map((s) => (
-                      <form key={s} action={statusSetzen}>
+                    {b.status !== "in_pruefung" && (
+                      <form action={statusSetzen}>
+                        <input type="hidden" name="id" value={b.id} /><input type="hidden" name="status" value="in_pruefung" /><input type="hidden" name="filter" value={filter} />
+                        <button type="submit" className={knopf}>{statusName.in_pruefung}</button>
+                      </form>
+                    )}
+                    {(["warteliste", "abgelehnt"] as const).filter((s) => s !== b.status).map((s) => (
+                      <form key={s} action={statusSetzen} className="contents">
                         <input type="hidden" name="id" value={b.id} /><input type="hidden" name="status" value={s} /><input type="hidden" name="filter" value={filter} />
-                        <button type="submit" className={knopf}>{statusName[s]}</button>
+                        <Rueckfrage knopf={s === "abgelehnt" ? "Ablehnen" : "Warteliste"} knopfKlasse={knopf} gefahr={s === "abgelehnt"}
+                          frage={s === "abgelehnt" ? `Bewerbung von ${b.first_name} ${b.last_name} ablehnen?` : `${b.first_name} ${b.last_name} auf die Warteliste setzen?`}
+                          ja={s === "abgelehnt" ? "Ja, ablehnen" : "Ja, auf die Warteliste"}>
+                          {bereit ? (
+                            <label className="flex gap-2">
+                              <input type="checkbox" name="mail" value="ja" defaultChecked className="mt-0.5" />
+                              <span>Mail an {b.email} senden, auf {b.language === "tr" ? "Türkisch" : "Deutsch"}: „{bewerbungStatusBetreff(s, b.language)}“</span>
+                            </label>
+                          ) : (
+                            <p className="font-semibold text-rot">Mailversand ist nicht eingerichtet: Die Person bekommt keine Mail. Bitte anders informieren.</p>
+                          )}
+                        </Rueckfrage>
                       </form>
                     ))}
                   </>

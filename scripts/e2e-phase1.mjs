@@ -72,6 +72,7 @@ const admin = await login(browser, "admin@ses.test");
 await admin.goto(`${BASIS}/team/bewerbungen/`);
 const karte = admin.locator("li", { hasText: "Testa Neumann" });
 await karte.getByRole("button", { name: "Annehmen und Ticket senden" }).click();
+await karte.getByRole("button", { name: "Ja, annehmen" }).click(); // Rückfrage (seit 07.11.2026)
 await admin.getByText("Angenommen. Die Person ist für alle kommenden Module angemeldet").waitFor({ timeout: 15000 });
 ok(true, "Annahme bestätigt");
 

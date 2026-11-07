@@ -230,6 +230,89 @@ if (teil("rundmail")) {
   sql("delete from email_log where kind like 'nachricht:%'; delete from approvals where summary like '%TestWunsch%'");
 }
 
+// ---------------------------------------------------------------------------
+// 4./5. Bewerbungen: Zähler an den Reitern, Rückfrage, Mails bei Ablehnung und Warteliste (Deutsch/Türkisch)
+// ---------------------------------------------------------------------------
+if (teil("bewerbungen")) {
+  await mailsLeeren();
+  sql("delete from applications where last_name like 'TestWunsch%'");
+  sql(`insert into applications (cohort_id, first_name, last_name, email, birth_year, country, city, motivation, consent_at, language) values
+    ('00000000-0000-4000-8000-000000002026', 'Elif', 'TestWunschAbsage', 'elif.tw@example.test', 2003, 'Deutschland', 'Köln', 'x', now(), 'tr'),
+    ('00000000-0000-4000-8000-000000002026', 'Jonas', 'TestWunschWarte', 'jonas.tw@example.test', 2003, 'Deutschland', 'Bonn', 'x', now(), 'de'),
+    ('00000000-0000-4000-8000-000000002026', 'Mara', 'TestWunschStill', 'mara.tw@example.test', 2003, 'Deutschland', 'Bonn', 'x', now(), 'en'),
+    ('00000000-0000-4000-8000-000000002026', 'Nils', 'TestWunschAnnahme', 'nils.tw@example.test', 2003, 'Deutschland', 'Bonn', 'x', now(), 'de')`);
+  const zahl = (status) => Number(sql(`select count(*) from applications where cohort_id = '00000000-0000-4000-8000-000000002026' and status in (${status})`));
+  const admin = await teamLogin(browser, "admin@ses.test");
+  await admin.goto(`${BASIS}/team/bewerbungen/`);
+  const reiter = admin.getByRole("navigation", { name: "Filter" });
+  ok(await reiter.getByRole("link", { name: `Offen ${zahl("'eingegangen','in_pruefung'")}` }).isVisible() &&
+     await reiter.getByRole("link", { name: `Angenommen ${zahl("'angenommen'")}` }).isVisible() &&
+     await reiter.getByRole("link", { name: "Abgelehnt 0" }).isVisible(), "Zähler an den Reitern");
+
+  // Ablehnen: Rückfrage, Mail auf Türkisch
+  const elif = admin.locator("li", { hasText: "TestWunschAbsage" });
+  await elif.getByRole("button", { name: "Ablehnen" }).click();
+  ok(await elif.getByText("Mail an elif.tw@example.test senden, auf Türkisch: „SES Academy başvurun hakkında“").isVisible(), "Rückfrage nennt Adresse, Sprache und Betreff");
+  await elif.getByRole("button", { name: "Abbrechen" }).click();
+  ok(sql("select status from applications where last_name = 'TestWunschAbsage'") === "eingegangen", "Abbrechen ändert nichts");
+  await elif.getByRole("button", { name: "Ablehnen" }).click();
+  await elif.getByRole("button", { name: "Ja, ablehnen" }).click();
+  await admin.getByText("Abgelehnt. Die Person hat eine Mail bekommen").waitFor();
+  const absage = (await mailsWarten("elif.tw@example.test"))[0];
+  ok(absage?.Subject === "SES Academy başvurun hakkında" && absage.Text.startsWith("Merhaba Elif,") && absage.Text.includes("Maalesef"), "Absage auf Türkisch");
+  ok(await admin.getByRole("navigation", { name: "Filter" }).getByRole("link", { name: "Abgelehnt 1" }).isVisible(), "Zähler zählt mit");
+
+  // Warteliste: Mail auf Deutsch
+  const jonas = admin.locator("li", { hasText: "TestWunschWarte" });
+  await jonas.getByRole("button", { name: "Warteliste" }).click();
+  await jonas.getByRole("button", { name: "Ja, auf die Warteliste" }).click();
+  await admin.getByText("Auf die Warteliste gesetzt.").waitFor();
+  const warteMail = (await mailsWarten("jonas.tw@example.test"))[0];
+  ok(warteMail?.Subject === "Deine Bewerbung: Warteliste" && warteMail.Text.startsWith("Hallo Jonas,"), "Warteliste-Mail auf Deutsch");
+
+  // Ohne Mail (Häkchen weg), englische Bewerbung wäre Deutsch
+  const mara = admin.locator("li", { hasText: "TestWunschStill" });
+  await mara.getByRole("button", { name: "Ablehnen" }).click();
+  ok(await mara.getByText("auf Deutsch: „Deine Bewerbung für die SES Academy“").isVisible(), "Andere Sprachen bekommen Deutsch");
+  await mara.getByLabel(/Mail an mara/).uncheck();
+  await mara.getByRole("button", { name: "Ja, ablehnen" }).click();
+  await admin.getByText("Status gespeichert.").waitFor();
+  await warte(500);
+  ok(sql("select status from applications where last_name = 'TestWunschStill'") === "abgelehnt" && (await mailsAn("mara.tw@example.test")).length === 0, "Ohne Häkchen: abgelehnt, keine Mail");
+
+  // Annehmen nur nach Rückfrage
+  const nils = admin.locator("li", { hasText: "TestWunschAnnahme" });
+  await nils.getByRole("button", { name: "Annehmen und Ticket senden" }).click();
+  ok(await nils.getByText("bekommt ihr Ticket an nils.tw@example.test").isVisible(), "Rückfrage vor dem Annehmen");
+  await nils.getByRole("button", { name: "Ja, annehmen" }).click();
+  await admin.getByText("Angenommen. Die Person ist für alle kommenden Module angemeldet").waitFor();
+  ok((await mailsWarten("nils.tw@example.test", "Ticket")).length === 1, "Nach Bestätigung angenommen, Ticket verschickt");
+
+  // Ohne JavaScript geht nichts aus Versehen durch
+  sql("update applications set status = 'eingegangen' where last_name = 'TestWunschWarte'");
+  const ohneJs = await (await browser.newContext({ javaScriptEnabled: false })).newPage();
+  await ohneJs.goto(`${BASIS}/team/login/`);
+  await ohneJs.fill("#email", "admin@ses.test");
+  await ohneJs.fill("#passwort", "test1234");
+  await ohneJs.click("button[type=submit]");
+  await ohneJs.waitForURL(`${BASIS}/team/`).catch(() => {});
+  if (ohneJs.url() === `${BASIS}/team/`) {
+    await ohneJs.goto(`${BASIS}/team/bewerbungen/`);
+    await ohneJs.locator("li", { hasText: "TestWunschWarte" }).getByRole("button", { name: "Ablehnen" }).click();
+    await warte(800);
+    ok(sql("select status from applications where last_name = 'TestWunschWarte'") === "eingegangen", "Ohne JavaScript: Ablehnen ohne Rückfrage ändert nichts");
+  }
+
+  const handy = await teamLogin(browser, "admin@ses.test", 390);
+  await handy.goto(`${BASIS}/team/bewerbungen/`);
+  await handy.locator("li", { hasText: "TestWunschWarte" }).getByRole("button", { name: "Ablehnen" }).click();
+  ok(await keinUeberlauf(handy), "Bewerbungen mit offener Rückfrage am Handy ohne seitliches Scrollen");
+
+  const nilsId = sql("select participant_id from applications where last_name = 'TestWunschAnnahme'");
+  if (nilsId) sql(`delete from email_log where participant_id = '${nilsId}'; delete from applications where last_name like 'TestWunsch%'; delete from participants where id = '${nilsId}'`);
+  sql("delete from applications where last_name like 'TestWunsch%'; delete from email_log where recipient like '%.tw@example.test'");
+}
+
 await browser.close();
 console.log(fehler ? `\n${fehler} Fehler` : "\nAlles in Ordnung.");
 process.exit(fehler ? 1 : 0);
