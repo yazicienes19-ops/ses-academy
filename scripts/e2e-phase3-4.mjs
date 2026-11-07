@@ -59,7 +59,8 @@ ok(/Amina Yilmaz/.test(text) && /Offline vorgemerkt/.test(text), "Offline: volle
 text = await code(helfer, warte);
 ok(/Warteliste/.test(text), "Offline: Warteliste rot");
 text = await code(helfer, "FFFFFFFF");
-ok(/Code unbekannt/.test(text), "Offline: unbekannter Code rot");
+// Text seit 02.11.2026: offline wird nur gegen die Liste der Angemeldeten geprüft
+ok(/Nicht in der Offline-Liste/.test(text), "Offline: unbekannter Code rot");
 ok(await helfer.getByText("2 Check-ins warten auf Übertragung").isVisible(), "Warteschlange zeigt 2");
 
 await helferCtx.setOffline(false);
@@ -80,7 +81,8 @@ await orga.fill("#wi-email", "walter@example.test");
 await orga.check("input[name=einwilligung]");
 await orga.click("button:has-text('Erfassen und einchecken')");
 await orga.getByText("Walter Spontan").first().waitFor({ timeout: 10000 });
-text = await karte(orga);
+// Zugehörigkeit steht seit 02.11.2026 erst ab Tablet-Breite sichtbar auf der Karte: textContent statt innerText
+text = await orga.locator("[role=status][aria-live=assertive]").textContent();
 ok(/Erfolgreich eingecheckt/.test(text) && /Gast/.test(text), "Walk-in grün, Zugehörigkeit Gast");
 await orga.waitForTimeout(1000);
 ok((await mails()).some((m) => m.To[0].Address === "walter@example.test"), "Walk-in mit E-Mail bekommt Ticket");
@@ -126,10 +128,11 @@ ok(anonym.status() >= 300 && anonym.status() < 400, "CSV ohne Login: Weiterleitu
 // 4. Teilnehmer-Detailseite mit Kennzahlen und Zeitleiste
 const yid = sql("select id from participants where email='yusuf@example.test'");
 await vorstand.goto(`${BASIS}/team/teilnehmende/${yid}/`);
-const teilnahme = await vorstand.locator("section", { hasText: "Rekord-Serie" }).innerText();
-ok(/Verfassungen[\s\S]*Verpasst \/ No-Show/.test(teilnahme), "Zeitleiste: Verfassungen verpasst");
+// Personenseite seit 02.11.2026: Kurzbilanz oben, „Module und Anwesenheit“ als Liste (statt Kacheln mit Serie und Quote)
+const teilnahme = await vorstand.locator("section", { hasText: "Module und Anwesenheit" }).innerText();
+ok(/Verfassungen[\s\S]*Nicht gekommen/.test(teilnahme), "Zeitleiste: Verfassungen verpasst");
 ok(/Auftakt[\s\S]*Teilgenommen · 2\/2 Tage/.test(teilnahme), "Zeitleiste: Auftakt 2/2 Tage");
-ok(/71,4 %/.test(teilnahme), "Kachel: Quote 71,4 % (5 da inkl. heute offline, 2 verpasst)");
+ok(/5 von 7\s*Tagen da/.test(await vorstand.locator("main").innerText()), "Kurzbilanz: 5 von 7 Tagen da (inkl. heute offline, 2 verpasst; früher 71,4 %)");
 
 await browser.close();
 console.log(fehler === 0 ? "\nALLES GRÜN" : `\n${fehler} FEHLER`);

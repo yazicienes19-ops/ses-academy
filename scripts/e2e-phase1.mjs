@@ -108,13 +108,15 @@ const pruefe = async (code) => {
 };
 let karteText = await pruefe(kurzcode.toLowerCase());
 ok(/Testa Neumann/.test(karteText) && /Erfolgreich eingecheckt um \d\d:\d\d:\d\d Uhr/.test(karteText), "Kurzcode klein mit Bindestrich: grün mit Name und Uhrzeit");
-ok(/Academy-Teilnehmer:in/.test(karteText) && /Probe-Einlass/.test(karteText), "Karte zeigt Zugehörigkeit und Veranstaltung");
+// Seit 02.11.2026 am Handy ausgeblendet (Ergebnis im Blick), ab Tablet-Breite sichtbar: daher textContent statt innerText
+const karteVoll = await helfer.locator("[role=status][aria-live=assertive]").textContent();
+ok(/Academy-Teilnehmer:in/.test(karteVoll) && /Probe-Einlass/.test(karteVoll), "Karte enthält Zugehörigkeit und Veranstaltung (ab Tablet-Breite sichtbar)");
 const ersteZeit = karteText.match(/\d\d:\d\d:\d\d/)?.[0];
 karteText = await pruefe(kurzcode.replace("-", " "));
 ok(/Bereits eingecheckt um/.test(karteText) && karteText.includes(ersteZeit), "Zweitscan: gelb mit ursprünglicher Uhrzeit");
 karteText = await pruefe("hallo");
 ok(/Ungültiger Code/.test(karteText), "Unsinn: rot, ungültig");
-ok(/1 von|2 von|3 von|4 von|5 von/.test(await helfer.locator("[aria-label='Live-Stand']").innerText()), "Zähler sichtbar");
+ok(/1 von|2 von|3 von|4 von|5 von/.test(await helfer.locator("[aria-label='Live-Stand']:visible").innerText()), "Zähler sichtbar");
 
 // 6. Einlass als Orga: Liste, Warteliste, abhaken, zurücknehmen
 const orga = await login(browser, "orga@ses.test");
@@ -132,8 +134,9 @@ await orga.locator("li", { hasText: "Leila Haddad" }).getByRole("button", { name
 ok(true, "Orga nimmt Check-in zurück");
 
 // 7. Modul ohne Ticket: kein Scanner
-const ohne = await orga.locator("#tag option", { hasText: "Probe ohne Ticket" }).getAttribute("value");
-await orga.goto(`${BASIS}/team/einlass/?tag=${ohne}`);
+// Tagauswahl seit 02.11.2026 als Leiste mit Tageskarten (Links) statt Auswahlfeld
+const ohne = await orga.getByRole("navigation", { name: "Modultag wählen" }).getByRole("link", { name: /Probe ohne Ticket/ }).first().getAttribute("href");
+await orga.goto(`${BASIS}${ohne}`);
 ok(await orga.getByText("Für dieses Modul gibt es kein Ticket").isVisible() && !(await orga.getByRole("button", { name: "Kamera starten" }).count()),
   "Modul ohne Ticket: Hinweis statt Scanner");
 
