@@ -55,6 +55,13 @@ export type PortalTexte = {
   wiederAngemeldet: string;
   wiederWarteliste: string;
   nichtMehrMoeglich: string;
+  walletHinzufuegen: string;
+  walletName: string;
+  walletNaechstes: string;
+  walletOrt: string;
+  walletKeinTermin: string;
+  walletTicketSeite: string;
+  walletHinweis: string;
   mailAbmeldungBetreff: (titel: string) => string;
   mailAbmeldungText: (titel: string) => string;
   mailAbmeldungZurueck: string;
@@ -112,6 +119,13 @@ export const portalTexte: Record<Sprache, PortalTexte> = {
     wiederAngemeldet: "Schön, dass du doch dabei bist. Deine Anmeldung gilt wieder.",
     wiederWarteliste: "Du stehst wieder auf der Warteliste. Wir melden uns, sobald ein Platz frei ist.",
     nichtMehrMoeglich: "Das geht hier leider nicht mehr. Bitte schreib uns an ses@islamrat.de.",
+    walletHinzufuegen: "Zu Apple Wallet hinzufügen",
+    walletName: "Name",
+    walletNaechstes: "Nächstes Modul",
+    walletOrt: "Ort",
+    walletKeinTermin: "Kein Termin geplant",
+    walletTicketSeite: "Ticket-Seite",
+    walletHinweis: "Dieser Pass gilt für alle deine Module. Neue Termine siehst du auf der Ticket-Seite; dort kannst du den Pass auch neu laden.",
     mailAbmeldungBetreff: (t) => `Abmeldung gespeichert: ${t}`,
     mailAbmeldungText: (t) => `du hast dich von „${t}“ abgemeldet. Danke, dass du Bescheid gesagt hast.`,
     mailAbmeldungZurueck: "Falls das ein Versehen war oder du doch kommen kannst: Auf deiner Ticket-Seite kannst du die Abmeldung bis zum Beginn des Moduls zurücknehmen. Wenn du dich nicht selbst abgemeldet hast, antworte bitte auf diese Mail.",
@@ -167,6 +181,13 @@ export const portalTexte: Record<Sprache, PortalTexte> = {
     wiederAngemeldet: "Aramızda olacağına sevindik. Kaydın tekrar geçerli.",
     wiederWarteliste: "Tekrar bekleme listesindesin. Yer açılınca sana haber vereceğiz.",
     nichtMehrMoeglich: "Maalesef bu artık buradan mümkün değil. Lütfen ses@islamrat.de adresine yaz.",
+    walletHinzufuegen: "Apple Cüzdan’a ekle",
+    walletName: "İsim",
+    walletNaechstes: "Sıradaki modül",
+    walletOrt: "Yer",
+    walletKeinTermin: "Planlanmış tarih yok",
+    walletTicketSeite: "Bilet sayfası",
+    walletHinweis: "Bu kart tüm modüllerin için geçerlidir. Yeni tarihleri bilet sayfasında görürsün; kartı orada yeniden de yükleyebilirsin.",
     mailAbmeldungBetreff: (t) => `Kaydın iptal edildi: ${t}`,
     mailAbmeldungText: (t) => `„${t}“ programına katılamayacağını bildirdin. Haber verdiğin için teşekkürler.`,
     mailAbmeldungZurueck: "Yanlışlıkla olduysa ya da yine de gelebileceksen: Bilet sayfanda modül başlayana kadar iptali geri alabilirsin. Kaydını sen iptal etmediysen lütfen bu e-postayı yanıtla.",
@@ -222,6 +243,13 @@ export const portalTexte: Record<Sprache, PortalTexte> = {
     wiederAngemeldet: "Great that you can make it after all. Your registration is valid again.",
     wiederWarteliste: "You are back on the waiting list. We will let you know as soon as a place is free.",
     nichtMehrMoeglich: "This is no longer possible here. Please write to ses@islamrat.de.",
+    walletHinzufuegen: "Add to Apple Wallet",
+    walletName: "Name",
+    walletNaechstes: "Next module",
+    walletOrt: "Location",
+    walletKeinTermin: "No date scheduled",
+    walletTicketSeite: "Ticket page",
+    walletHinweis: "This pass is valid for all your modules. New dates appear on the ticket page, where you can also reload the pass.",
     mailAbmeldungBetreff: (t) => `Cancellation saved: ${t}`,
     mailAbmeldungText: (t) => `you cancelled your place for “${t}”. Thanks for letting us know.`,
     mailAbmeldungZurueck: "If this was a mistake or you can come after all, you can undo the cancellation on your ticket page until the module begins. If you did not cancel yourself, please reply to this email.",
@@ -277,6 +305,13 @@ export const portalTexte: Record<Sprache, PortalTexte> = {
     wiederAngemeldet: "Super que tu puisses venir. Ton inscription est de nouveau valable.",
     wiederWarteliste: "Tu es de nouveau sur la liste d’attente. Nous te prévenons dès qu’une place se libère.",
     nichtMehrMoeglich: "Ce n’est plus possible ici. Écris-nous à ses@islamrat.de.",
+    walletHinzufuegen: "Ajouter à Apple Wallet",
+    walletName: "Nom",
+    walletNaechstes: "Prochain module",
+    walletOrt: "Lieu",
+    walletKeinTermin: "Aucune date prévue",
+    walletTicketSeite: "Page du billet",
+    walletHinweis: "Ce pass est valable pour tous tes modules. Les nouvelles dates sont sur la page du billet, où tu peux aussi recharger le pass.",
     mailAbmeldungBetreff: (t) => `Désinscription enregistrée : ${t}`,
     mailAbmeldungText: (t) => `tu t’es désinscrit·e de « ${t} ». Merci de nous avoir prévenus.`,
     mailAbmeldungZurueck: "Si c’était une erreur ou si tu peux finalement venir, tu peux annuler la désinscription sur ta page de billet jusqu’au début du module. Si tu ne t’es pas désinscrit·e toi-même, réponds à cet e-mail.",
@@ -332,6 +367,13 @@ export const portalTexte: Record<Sprache, PortalTexte> = {
     wiederAngemeldet: "Fijn dat je toch komt. Je aanmelding geldt weer.",
     wiederWarteliste: "Je staat weer op de wachtlijst. We laten het weten zodra er een plek vrij is.",
     nichtMehrMoeglich: "Dat kan hier helaas niet meer. Schrijf ons op ses@islamrat.de.",
+    walletHinzufuegen: "Toevoegen aan Apple Wallet",
+    walletName: "Naam",
+    walletNaechstes: "Volgende module",
+    walletOrt: "Locatie",
+    walletKeinTermin: "Geen datum gepland",
+    walletTicketSeite: "Ticketpagina",
+    walletHinweis: "Deze pas geldt voor al je modules. Nieuwe data zie je op de ticketpagina; daar kun je de pas ook opnieuw laden.",
     mailAbmeldungBetreff: (t) => `Afmelding opgeslagen: ${t}`,
     mailAbmeldungText: (t) => `je hebt je afgemeld voor „${t}”. Bedankt voor het laten weten.`,
     mailAbmeldungZurueck: "Was dit een vergissing of kun je toch komen? Op je ticketpagina kun je de afmelding tot het begin van de module terugdraaien. Heb je je niet zelf afgemeld, beantwoord dan deze mail.",
