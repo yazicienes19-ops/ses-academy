@@ -56,6 +56,7 @@ export type PortalTexte = {
   wiederWarteliste: string;
   nichtMehrMoeglich: string;
   walletHinzufuegen: string;
+  googleWalletHinzufuegen: string;
   walletName: string;
   walletNaechstes: string;
   walletOrt: string;
@@ -120,6 +121,7 @@ export const portalTexte: Record<Sprache, PortalTexte> = {
     wiederWarteliste: "Du stehst wieder auf der Warteliste. Wir melden uns, sobald ein Platz frei ist.",
     nichtMehrMoeglich: "Das geht hier leider nicht mehr. Bitte schreib uns an ses@islamrat.de.",
     walletHinzufuegen: "Zu Apple Wallet hinzufügen",
+    googleWalletHinzufuegen: "In Google Wallet speichern",
     walletName: "Name",
     walletNaechstes: "Nächstes Modul",
     walletOrt: "Ort",
@@ -182,6 +184,7 @@ export const portalTexte: Record<Sprache, PortalTexte> = {
     wiederWarteliste: "Tekrar bekleme listesindesin. Yer açılınca sana haber vereceğiz.",
     nichtMehrMoeglich: "Maalesef bu artık buradan mümkün değil. Lütfen ses@islamrat.de adresine yaz.",
     walletHinzufuegen: "Apple Cüzdan’a ekle",
+    googleWalletHinzufuegen: "Google Cüzdan’a ekle",
     walletName: "İsim",
     walletNaechstes: "Sıradaki modül",
     walletOrt: "Yer",
@@ -244,6 +247,7 @@ export const portalTexte: Record<Sprache, PortalTexte> = {
     wiederWarteliste: "You are back on the waiting list. We will let you know as soon as a place is free.",
     nichtMehrMoeglich: "This is no longer possible here. Please write to ses@islamrat.de.",
     walletHinzufuegen: "Add to Apple Wallet",
+    googleWalletHinzufuegen: "Add to Google Wallet",
     walletName: "Name",
     walletNaechstes: "Next module",
     walletOrt: "Location",
@@ -306,6 +310,7 @@ export const portalTexte: Record<Sprache, PortalTexte> = {
     wiederWarteliste: "Tu es de nouveau sur la liste d’attente. Nous te prévenons dès qu’une place se libère.",
     nichtMehrMoeglich: "Ce n’est plus possible ici. Écris-nous à ses@islamrat.de.",
     walletHinzufuegen: "Ajouter à Apple Wallet",
+    googleWalletHinzufuegen: "Ajouter à Google Wallet",
     walletName: "Nom",
     walletNaechstes: "Prochain module",
     walletOrt: "Lieu",
@@ -368,6 +373,7 @@ export const portalTexte: Record<Sprache, PortalTexte> = {
     wiederWarteliste: "Je staat weer op de wachtlijst. We laten het weten zodra er een plek vrij is.",
     nichtMehrMoeglich: "Dat kan hier helaas niet meer. Schrijf ons op ses@islamrat.de.",
     walletHinzufuegen: "Toevoegen aan Apple Wallet",
+    googleWalletHinzufuegen: "Toevoegen aan Google Wallet",
     walletName: "Naam",
     walletNaechstes: "Volgende module",
     walletOrt: "Locatie",

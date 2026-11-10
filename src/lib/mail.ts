@@ -9,6 +9,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { infoMailInhalt, ladeInfoMail } from "@/lib/infomail";
 import { ladeTicket, modulZeitraum } from "@/lib/teilnahme";
 import { kurzcodeAnzeige, qrPng } from "@/lib/tickets";
+import { googleWalletAktiv } from "@/lib/google-wallet";
 import { walletAktiv } from "@/lib/wallet";
 
 /** Ist der Mailversand eingerichtet (SMTP-Zugangsdaten in der .env)? */
@@ -84,6 +85,7 @@ export async function sendeTicketMail(participantId: string, ausgeloestVon?: str
   const t = portalTexte[l];
   const link = seitenUrl(`/ticket/${p.link_token}/`);
   const wallet = walletAktiv() ? seitenUrl(`/ticket/${p.checkin_token}/wallet/`) : null;
+  const googleWallet = googleWalletAktiv() ? seitenUrl(`/ticket/${p.checkin_token}/google-wallet/`) : null;
   const code = kurzcodeAnzeige(p.short_code ?? "");
   const aktiv = daten.module.filter((m) => !m.abgesagt && (m.status === "confirmed" || m.status === "waitlist" || m.status === "pending"));
 
@@ -99,6 +101,7 @@ export async function sendeTicketMail(participantId: string, ausgeloestVon?: str
   const text = [
     t.mailAnrede(p.first_name), "", einleitung, "", `${t.kurzcode}: ${code}`, `${t.mailTicketLink}: ${link}`,
     ...(wallet ? [`${t.walletHinzufuegen}: ${wallet}`] : []),
+    ...(googleWallet ? [`${t.googleWalletHinzufuegen}: ${googleWallet}`] : []),
     ...(willkommen ? [`${t.mailWillkommenLogin}: ${login}`] : []), "",
     t.moduleTitel + ":", ...modulZeilen.map((z) => z.text), "", t.mailAbmeldeHinweis, "", t.mailGruss,
   ].join("\n");
@@ -112,7 +115,7 @@ export async function sendeTicketMail(participantId: string, ausgeloestVon?: str
     <p style="margin:16px 0 4px;font-size:13px;color:#3c4a42">${html(t.kurzcode)}</p>
     <p style="margin:0;font-family:Menlo,Consolas,monospace;font-size:26px;font-weight:bold;letter-spacing:.12em">${html(code)}</p>
   </div>
-  <p style="text-align:center;margin:0 0 28px"><a href="${html(link)}" style="display:inline-block;background:#13201a;color:#f3efe4;text-decoration:none;padding:14px 28px;border-radius:999px;font-weight:bold">${html(t.mailTicketLink)}</a>${wallet ? `<br><a href="${html(wallet)}" style="display:inline-block;margin-top:12px;background:#000000;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:12px;font-weight:bold">${html(t.walletHinzufuegen)}</a>` : ""}${willkommen ? `<br><a href="${html(login)}" style="display:inline-block;margin-top:12px;color:#13201a;font-weight:bold">${html(t.mailWillkommenLogin)}</a>` : ""}</p>
+  <p style="text-align:center;margin:0 0 28px"><a href="${html(link)}" style="display:inline-block;background:#13201a;color:#f3efe4;text-decoration:none;padding:14px 28px;border-radius:999px;font-weight:bold">${html(t.mailTicketLink)}</a>${wallet ? `<br><a href="${html(wallet)}" style="display:inline-block;margin-top:12px;background:#000000;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:12px;font-weight:bold">${html(t.walletHinzufuegen)}</a>` : ""}${googleWallet ? `<br><a href="${html(googleWallet)}" style="display:inline-block;margin-top:12px;background:#000000;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:12px;font-weight:bold">${html(t.googleWalletHinzufuegen)}</a>` : ""}${willkommen ? `<br><a href="${html(login)}" style="display:inline-block;margin-top:12px;color:#13201a;font-weight:bold">${html(t.mailWillkommenLogin)}</a>` : ""}</p>
   <p style="font-weight:bold;margin:0 0 8px">${html(t.moduleTitel)}</p>
   <ul style="padding-left:18px;line-height:1.6;margin:0 0 24px">${modulZeilen.map((z) => z.html).join("")}</ul>
   <p style="font-size:14px;line-height:1.6;color:#3c4a42">${html(t.mailAbmeldeHinweis)}</p>
