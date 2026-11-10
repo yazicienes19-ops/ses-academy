@@ -154,7 +154,7 @@ export default async function HotelSeite({ params, searchParams }: PageProps<"/t
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="font-display mr-auto text-xl font-bold">Zimmer</h2>
               {hotel && <span className="text-sm text-ink-soft">{zimmer.length} Zimmer · {belegt} von {betten} Betten belegt{hotel.quota_rooms ? ` · Kontingent ${hotel.quota_rooms}` : ""}</span>}
-              {hotel && <Link href={`/team/module/${id}/zimmerliste/?hotel=${hotel.id}`} target="_blank" className="knopf-hell">Zimmerliste als PDF</Link>}
+              {hotel && <a href={`/team/module/${id}/zimmerliste/pdf/?hotel=${hotel.id}`} className="knopf-hell">Zimmerliste als PDF</a>}
               {hotel && <a href={`/team/module/${id}/zimmerplan/liste/?hotel=${hotel.id}`} className="knopf-hell">als Excel</a>}
             </div>
             {!hotel ? <p className="mt-3 text-ink-soft">{neu ? "Zuerst das Hotel anlegen, dann seine Zimmer." : "Zuerst das Hotel anlegen."}</p> : (

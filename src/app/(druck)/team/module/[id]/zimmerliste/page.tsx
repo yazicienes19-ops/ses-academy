@@ -60,6 +60,8 @@ export default async function Zimmerliste({ params, searchParams }: PageProps<"/
   const gaeste = zimmer.reduce((n, z) => n + z.gaeste.length, 0);
   const ohne = echt ? d.personen.filter((p) => p.nights.length > 0 && !p.room_id).length : 0;
   const heute = stand.format(new Date());
+  // Fertige PDF vom Server (unabhängig vom Druckdialog des Browsers), mit denselben Angaben wie diese Seite
+  const pdfAdresse = `/team/module/${id}/zimmerliste/pdf/?${new URLSearchParams({ groesse: String(groesse), ...(d.hotel ? { hotel: d.hotel.id } : {}) })}`;
 
   return (
     <>
@@ -96,8 +98,9 @@ export default async function Zimmerliste({ params, searchParams }: PageProps<"/
 
       <div className="nur-bildschirm sticky top-0 z-10 flex flex-wrap items-center gap-3 border-b border-line bg-paper px-5 py-3 text-sm">
         <p className="mr-auto"><span className="font-semibold">Zimmerliste · {d.modul.title}{d.hotels.length > 1 && d.hotel ? ` · ${d.hotel.name}` : ""}</span> · {zimmer.length} Zimmer, {gaeste} Gäste{echt ? "" : ` · automatische Einteilung mit ${zimmerArt[groesse]}n`}</p>
-        <p className="text-ink-soft">Druckdialog: A4, 100 %, Kopf- und Fußzeilen aus. „Als PDF sichern“ zum Verschicken ans Hotel.</p>
-        <button id="drucken" className="rounded-full bg-ink px-5 py-2 font-semibold text-paper">Drucken / als PDF sichern</button>
+        <p className="text-ink-soft">Zum Verschicken ans Hotel die PDF herunterladen. Drucken auf Papier: A4, 100 %, Kopf- und Fußzeilen aus.</p>
+        <a href={pdfAdresse} className="rounded-full bg-ink px-5 py-2 font-semibold text-paper">PDF herunterladen</a>
+        <button id="drucken" className="rounded-full px-5 py-2 font-semibold ring-1 ring-line">Drucken</button>
         <script dangerouslySetInnerHTML={{ __html: "document.getElementById('drucken').onclick=()=>window.print()" }} />
       </div>
 

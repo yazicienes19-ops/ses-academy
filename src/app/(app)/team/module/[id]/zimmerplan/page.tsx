@@ -152,7 +152,7 @@ export default async function ZimmerplanSeite({ params, searchParams }: PageProp
               })}
             </div>
             <div className="mt-4 flex flex-wrap items-center gap-2">
-              <a href={mitHotel({ groesse: String(groesse) }, `/team/module/${id}/zimmerliste/`)} target="_blank" className="knopf">Zimmerliste als PDF (fürs Hotel)</a>
+              <a href={mitHotel({ groesse: String(groesse) }, `/team/module/${id}/zimmerliste/pdf/`)} className="knopf">Zimmerliste als PDF (fürs Hotel)</a>
               <a href={mitHotel({ groesse: String(groesse) }, `/team/module/${id}/zimmerplan/liste/`)} className="knopf-hell">Excel-Liste herunterladen</a>
               <form action={probeUebernehmen}>
                 <input type="hidden" name="module_id" value={id} /><input type="hidden" name="groesse" value={groesse} />{hotelFeld}
@@ -219,7 +219,7 @@ export default async function ZimmerplanSeite({ params, searchParams }: PageProp
               <div className="flex flex-wrap items-center gap-3">
                 <h2 className="font-display mr-auto text-2xl font-bold">Aktueller Zimmerplan</h2>
                 <Link href={mitHotel({}, `/team/module/${id}/hotel/`)} className="knopf-hell">Einzeln umsetzen (Logistik)</Link>
-                <Link href={mitHotel({}, `/team/module/${id}/zimmerliste/`)} target="_blank" className="knopf-hell">Zimmerliste als PDF (fürs Hotel)</Link>
+                <a href={mitHotel({}, `/team/module/${id}/zimmerliste/pdf/`)} className="knopf-hell">Zimmerliste als PDF (fürs Hotel)</a>
                 <a href={mitHotel({}, `/team/module/${id}/zimmerplan/liste/`)} className="knopf-hell">Zimmerliste als Excel</a>
                 {eingeteilt.some((p) => p.source === "auto") && (
                   <form action={vorschlagZuruecksetzen}>
