@@ -58,6 +58,7 @@ export type PortalTexte = {
   walletHinzufuegen: string;
   googleWalletHinzufuegen: string;
   walletName: string;
+  walletDatum: string;
   walletNaechstes: string;
   walletOrt: string;
   walletKeinTermin: string;
@@ -122,7 +123,8 @@ export const portalTexte: Record<Sprache, PortalTexte> = {
     nichtMehrMoeglich: "Das geht hier leider nicht mehr. Bitte schreib uns an ses@islamrat.de.",
     walletHinzufuegen: "Zu Apple Wallet hinzufügen",
     googleWalletHinzufuegen: "In Google Wallet speichern",
-    walletName: "Name",
+    walletName: "Teilnehmer:in",
+    walletDatum: "Datum",
     walletNaechstes: "Nächstes Modul",
     walletOrt: "Ort",
     walletKeinTermin: "Kein Termin geplant",
@@ -185,7 +187,8 @@ export const portalTexte: Record<Sprache, PortalTexte> = {
     nichtMehrMoeglich: "Maalesef bu artık buradan mümkün değil. Lütfen ses@islamrat.de adresine yaz.",
     walletHinzufuegen: "Apple Cüzdan’a ekle",
     googleWalletHinzufuegen: "Google Cüzdan’a ekle",
-    walletName: "İsim",
+    walletName: "Katılımcı",
+    walletDatum: "Tarih",
     walletNaechstes: "Sıradaki modül",
     walletOrt: "Yer",
     walletKeinTermin: "Planlanmış tarih yok",
@@ -248,7 +251,8 @@ export const portalTexte: Record<Sprache, PortalTexte> = {
     nichtMehrMoeglich: "This is no longer possible here. Please write to ses@islamrat.de.",
     walletHinzufuegen: "Add to Apple Wallet",
     googleWalletHinzufuegen: "Add to Google Wallet",
-    walletName: "Name",
+    walletName: "Participant",
+    walletDatum: "Date",
     walletNaechstes: "Next module",
     walletOrt: "Location",
     walletKeinTermin: "No date scheduled",
@@ -311,7 +315,8 @@ export const portalTexte: Record<Sprache, PortalTexte> = {
     nichtMehrMoeglich: "Ce n’est plus possible ici. Écris-nous à ses@islamrat.de.",
     walletHinzufuegen: "Ajouter à Apple Wallet",
     googleWalletHinzufuegen: "Ajouter à Google Wallet",
-    walletName: "Nom",
+    walletName: "Participant",
+    walletDatum: "Date",
     walletNaechstes: "Prochain module",
     walletOrt: "Lieu",
     walletKeinTermin: "Aucune date prévue",
@@ -374,7 +379,8 @@ export const portalTexte: Record<Sprache, PortalTexte> = {
     nichtMehrMoeglich: "Dat kan hier helaas niet meer. Schrijf ons op ses@islamrat.de.",
     walletHinzufuegen: "Toevoegen aan Apple Wallet",
     googleWalletHinzufuegen: "Toevoegen aan Google Wallet",
-    walletName: "Naam",
+    walletName: "Deelnemer",
+    walletDatum: "Datum",
     walletNaechstes: "Volgende module",
     walletOrt: "Locatie",
     walletKeinTermin: "Geen datum gepland",

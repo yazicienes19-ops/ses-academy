@@ -73,12 +73,9 @@ export async function erzeugeWalletPass(daten: TicketDaten): Promise<Buffer | nu
     eventTicket: {
       primaryFields: [{ key: "name", label: t.walletName, value: name }],
       secondaryFields: naechstes
-        ? [{ key: "modul", label: t.walletNaechstes, value: naechstes.titel }]
+        ? [{ key: "modul", label: t.walletNaechstes, value: naechstes.titel }, { key: "datum", label: t.walletDatum, value: modulZeitraum(naechstes, locale[l]) || "–" }]
         : [{ key: "modul", label: t.walletNaechstes, value: t.walletKeinTermin }],
-      auxiliaryFields: [
-        ...(naechstes ? [{ key: "datum", value: modulZeitraum(naechstes, locale[l]) || "–" }] : []),
-        ...(naechstes ? [{ key: "ort", label: t.walletOrt, value: naechstes.ort ?? t.ortOffen }] : []),
-      ],
+      auxiliaryFields: naechstes ? [{ key: "ort", label: t.walletOrt, value: naechstes.ort ?? t.ortOffen }] : [],
       backFields: [
         { key: "kurzcode", label: t.kurzcode, value: kurzcodeAnzeige(p.short_code ?? "") },
         { key: "hinweis", label: t.ticketTitel, value: `${t.ticketIntro}\n\n${t.walletHinweis}` },
@@ -94,6 +91,6 @@ export async function erzeugeWalletPass(daten: TicketDaten): Promise<Buffer | nu
   for (const [datei, b64] of Object.entries(walletBilder)) dateien[datei] = Buffer.from(b64, "base64");
 
   const pass = new PKPass(dateien, { wwdr: WWDR_G4, signerCert: k.signerCert, signerKey: k.signerKey, signerKeyPassphrase: k.signerKeyPassphrase });
-  pass.setBarcodes({ format: "PKBarcodeFormatQR", message: qrInhalt(p.checkin_token), messageEncoding: "iso-8859-1", altText: kurzcodeAnzeige(p.short_code ?? "") });
+  pass.setBarcodes({ format: "PKBarcodeFormatQR", message: qrInhalt(p.checkin_token), messageEncoding: "iso-8859-1", altText: "CHECK-IN" });
   return pass.getAsBuffer();
 }

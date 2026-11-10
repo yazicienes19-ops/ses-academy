@@ -110,9 +110,13 @@ export function googleWalletInhalt(daten: TicketDaten, issuerId: string) {
     classId: klasse.id,
     state: "ACTIVE",
     ticketHolderName: `${p.first_name} ${p.last_name}`.trim(),
-    barcode: { type: "QR_CODE", value: qrInhalt(p.checkin_token), alternateText: kurzcode },
+    barcode: { type: "QR_CODE", value: qrInhalt(p.checkin_token), alternateText: "CHECK-IN" },
     textModulesData: [
-      { id: "naechstes", header: t.walletNaechstes, body: naechstes ? `${naechstes.titel}\n${modulZeitraum(naechstes, locale[l])} · ${naechstes.ort ?? t.ortOffen}` : t.walletKeinTermin },
+      { id: "naechstes", header: t.walletNaechstes, body: naechstes ? naechstes.titel : t.walletKeinTermin },
+      ...(naechstes ? [
+        { id: "datum", header: t.walletDatum, body: modulZeitraum(naechstes, locale[l]) || "–" },
+        { id: "ort", header: t.walletOrt, body: naechstes.ort ?? t.ortOffen },
+      ] : []),
       { id: "kurzcode", header: t.kurzcode, body: kurzcode },
       ...(aktiv.length ? [{ id: "module", header: t.moduleTitel, body: aktiv.map((m) => `${m.titel}: ${modulZeitraum(m, locale[l])}, ${m.ort ?? t.ortOffen} (${t.status[m.status]})`).join("\n") }] : []),
       { id: "hinweis", header: t.ticketTitel, body: t.ticketIntro },
