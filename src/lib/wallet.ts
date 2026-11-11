@@ -70,13 +70,11 @@ export async function erzeugeWalletPass(daten: TicketDaten): Promise<Buffer | nu
     labelColor: "rgb(63, 110, 87)",
     sharingProhibited: true,
     eventTicket: {
-      primaryFields: [],
+      primaryFields: [{ key: "name", label: "PARTICIPANT", value: name }],
       secondaryFields: naechstes
-        ? [{ key: "name", label: "PARTICIPANT", value: name }, { key: "datum", label: "DATE", value: walletDatum(naechstes) }]
-        : [{ key: "name", label: "PARTICIPANT", value: name }],
-      auxiliaryFields: naechstes
-        ? [{ key: "modul", label: "EVENT", value: walletEventName(naechstes) }, { key: "ort", label: "LOCATION", value: naechstes.ort ?? t.ortOffen }]
+        ? [{ key: "modul", label: "EVENT", value: walletEventName(naechstes) }, { key: "datum", label: "DATE", value: walletDatum(naechstes) }]
         : [{ key: "modul", label: "EVENT", value: t.walletKeinTermin }],
+      auxiliaryFields: naechstes ? [{ key: "ort", label: "LOCATION", value: naechstes.ort ?? t.ortOffen }] : [],
       backFields: [
         { key: "kurzcode", label: t.kurzcode, value: kurzcodeAnzeige(p.short_code ?? "") },
         { key: "hinweis", label: t.ticketTitel, value: `${t.ticketIntro}\n\n${t.walletHinweis}` },

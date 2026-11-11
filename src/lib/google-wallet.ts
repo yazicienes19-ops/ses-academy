@@ -99,7 +99,7 @@ export function googleWalletInhalt(daten: TicketDaten, issuerId: string) {
     issuerName: "SES Academy",
     eventName: text("SES Academy", "de"),
     reviewStatus: "UNDER_REVIEW",
-    hexBackgroundColor: "#f3efe4",
+    hexBackgroundColor: "#173226",
     logo: { sourceUri: { uri: seitenUrl("/wallet/google-logo.png") }, contentDescription: text("SES Academy", "de") },
     heroImage: { sourceUri: { uri: seitenUrl("/wallet/google-hero.png") }, contentDescription: text("SES Academy", "de") },
   };
