@@ -1,13 +1,12 @@
 import "server-only";
 
 import { PKPass } from "passkit-generator";
-import { locale } from "@/i18n/typ";
 import { seitenUrl } from "./mail";
-import { portalTexte, sprachOder } from "./portal-texte";
+import { portalTexte } from "./portal-texte";
 import type { TicketDaten } from "./teilnahme";
-import { modulZeitraum } from "./teilnahme";
 import { kurzcodeAnzeige, qrInhalt } from "./codes";
 import { walletBilder } from "./wallet-bilder";
+import { WALLET_SPRACHE, walletDatum, walletEventName } from "./wallet-anzeige";
 
 /**
  * Apple-Wallet-Pass (.pkpass) zum Ticket. Inhalt des Barcodes ist derselbe wie beim QR auf der Ticket-Seite
@@ -47,7 +46,7 @@ export async function erzeugeWalletPass(daten: TicketDaten): Promise<Buffer | nu
   const k = konfiguration();
   if (!k) return null;
   const p = daten.participant;
-  const l = sprachOder(p.preferred_language);
+  const l = WALLET_SPRACHE;
   const t = portalTexte[l];
   const jetzt = Date.now();
 
@@ -56,7 +55,7 @@ export async function erzeugeWalletPass(daten: TicketDaten): Promise<Buffer | nu
   const kommendeTage = aktiv.filter((m) => m.ticketNoetig && m.status === "confirmed")
     .flatMap((m) => m.tage).filter((d) => Date.parse(d.ende) > jetzt).slice(0, 10);
 
-  const modulListe = aktiv.map((m) => `${m.titel}\n${modulZeitraum(m, locale[l])} · ${m.ort ?? t.ortOffen} · ${t.status[m.status]}`).join("\n\n");
+  const modulListe = aktiv.map((m) => `${walletEventName(m)}\n${walletDatum(m)} · ${m.ort ?? t.ortOffen} · ${t.status[m.status]}`).join("\n\n");
   const name = `${p.first_name} ${p.last_name}`.trim();
 
   const passJson = {
@@ -71,11 +70,11 @@ export async function erzeugeWalletPass(daten: TicketDaten): Promise<Buffer | nu
     labelColor: "rgb(63, 110, 87)",
     sharingProhibited: true,
     eventTicket: {
-      primaryFields: [{ key: "name", label: t.walletName, value: name }],
+      primaryFields: [{ key: "name", label: "PARTICIPANT", value: name }],
       secondaryFields: naechstes
-        ? [{ key: "modul", label: t.walletNaechstes, value: naechstes.titel }, { key: "datum", label: t.walletDatum, value: modulZeitraum(naechstes, locale[l]) || "–" }]
-        : [{ key: "modul", label: t.walletNaechstes, value: t.walletKeinTermin }],
-      auxiliaryFields: naechstes ? [{ key: "ort", label: t.walletOrt, value: naechstes.ort ?? t.ortOffen }] : [],
+        ? [{ key: "modul", label: "EVENT", value: walletEventName(naechstes) }, { key: "datum", label: "DATE", value: walletDatum(naechstes) }]
+        : [{ key: "modul", label: "EVENT", value: t.walletKeinTermin }],
+      auxiliaryFields: naechstes ? [{ key: "ort", label: "LOCATION", value: naechstes.ort ?? t.ortOffen }] : [],
       backFields: [
         { key: "kurzcode", label: t.kurzcode, value: kurzcodeAnzeige(p.short_code ?? "") },
         { key: "hinweis", label: t.ticketTitel, value: `${t.ticketIntro}\n\n${t.walletHinweis}` },

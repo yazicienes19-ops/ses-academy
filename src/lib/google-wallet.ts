@@ -1,12 +1,11 @@
 import "server-only";
 
 import { createSign } from "node:crypto";
-import { locale } from "@/i18n/typ";
 import { seitenUrl } from "./mail";
-import { portalTexte, sprachOder } from "./portal-texte";
+import { portalTexte } from "./portal-texte";
 import type { TicketDaten } from "./teilnahme";
-import { modulZeitraum } from "./teilnahme";
 import { kurzcodeAnzeige, qrInhalt } from "./codes";
+import { WALLET_SPRACHE, walletDatum, walletEventName } from "./wallet-anzeige";
 
 /**
  * Google-Wallet-Ticket. Gegenstück zum Apple-Pass (wallet.ts): derselbe Einlass-QR (checkin_token), ein Ticket pro
@@ -88,7 +87,7 @@ const text = (wert: string, sprache: string) => ({ defaultValue: { language: spr
 /** Klasse (Aussehen, für alle gleich) und Ticket (pro Person) so, wie sie an die Wallet-API gehen. */
 export function googleWalletInhalt(daten: TicketDaten, issuerId: string) {
   const p = daten.participant;
-  const l = sprachOder(p.preferred_language);
+  const l = WALLET_SPRACHE;
   const t = portalTexte[l];
   const jetzt = Date.now();
   const aktiv = daten.module.filter((m) => !m.abgesagt && (m.status === "confirmed" || m.status === "waitlist" || m.status === "pending"));
@@ -112,13 +111,13 @@ export function googleWalletInhalt(daten: TicketDaten, issuerId: string) {
     ticketHolderName: `${p.first_name} ${p.last_name}`.trim(),
     barcode: { type: "QR_CODE", value: qrInhalt(p.checkin_token), alternateText: "CHECK-IN" },
     textModulesData: [
-      { id: "naechstes", header: t.walletNaechstes, body: naechstes ? naechstes.titel : t.walletKeinTermin },
+      { id: "naechstes", header: "EVENT", body: naechstes ? walletEventName(naechstes) : t.walletKeinTermin },
       ...(naechstes ? [
-        { id: "datum", header: t.walletDatum, body: modulZeitraum(naechstes, locale[l]) || "–" },
-        { id: "ort", header: t.walletOrt, body: naechstes.ort ?? t.ortOffen },
+        { id: "datum", header: "DATE", body: walletDatum(naechstes) },
+        { id: "ort", header: "LOCATION", body: naechstes.ort ?? t.ortOffen },
       ] : []),
       { id: "kurzcode", header: t.kurzcode, body: kurzcode },
-      ...(aktiv.length ? [{ id: "module", header: t.moduleTitel, body: aktiv.map((m) => `${m.titel}: ${modulZeitraum(m, locale[l])}, ${m.ort ?? t.ortOffen} (${t.status[m.status]})`).join("\n") }] : []),
+      ...(aktiv.length ? [{ id: "module", header: t.moduleTitel, body: aktiv.map((m) => `${walletEventName(m)}: ${walletDatum(m)}, ${m.ort ?? t.ortOffen} (${t.status[m.status]})`).join("\n") }] : []),
       { id: "hinweis", header: t.ticketTitel, body: t.ticketIntro },
     ],
     // Ticket-Seite über den QR-Token: ohne Abmelden (das geht nur mit dem Link aus der Mail)
